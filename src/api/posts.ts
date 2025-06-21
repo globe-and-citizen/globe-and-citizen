@@ -1,0 +1,170 @@
+import { fetchWithAuth } from "@/api/auth.ts";
+import type { FetchPostsType, NewPostType } from "../models/Posts";
+
+import { API_BASE_URL, POSTS_URL, USER_FEED } from "./constants";
+
+export async function fetchAllPosts(
+  size: number,
+  page: number
+): Promise<FetchPostsType> {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}${POSTS_URL}?size=${size}&page=${page}`
+    );
+    if (!response.ok) {
+      throw new Error(`Error fetching posts: ${response.statusText}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching all posts:", error);
+    throw error;
+  }
+}
+
+export async function fetchUsersFeed(
+  size?: number,
+  page?: number,
+  search?: string
+): Promise<FetchPostsType> {
+  try {
+    const params = new URLSearchParams();
+
+    if (size) params.append("limit", size.toString());
+    if (page) params.append("offset", page.toString());
+    if (search) params.append("search", search);
+
+    const queryString = params.toString();
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}${USER_FEED}${queryString ? `?${queryString}` : ""}`
+    );
+
+    if (!response) {
+      throw new Error(`Error fetching user's feed`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching user's feed:", error);
+    throw error;
+  }
+}
+
+export async function generateSummary(url: string): Promise<string> {
+  try {
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/generate-summary?url=${encodeURIComponent(url)}`,
+      {
+        method: "GET",
+      }
+    );
+
+    if (!response || !response.ok) {
+      throw new Error(
+        `Error generating summary: ${
+          response ? response.statusText : "No response"
+        }`
+      );
+    }
+
+    const data = await response.json();
+    return data.data.summary;
+  } catch (error) {
+    console.error("Error generating summary:", error);
+    throw error;
+  }
+}
+
+export async function postNewsArticle(
+  article: NewPostType
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}${POSTS_URL}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(article),
+    });
+
+    if (!response) {
+      throw new Error(`Error posting news article: ${response}`);
+    }
+
+    const data = await response.json();
+    return { success: true, message: data.message };
+  } catch (error) {
+    console.error("Error posting news article:", error);
+    throw error;
+  }
+}
+
+export async function fetchPostsCount(): Promise<{ data: number }> {
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/posts-count`);
+
+    if (!response || !response.ok) {
+      throw new Error(
+        `Error fetching posts count: ${
+          response ? response.statusText : "No response"
+        }`
+      );
+    }
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching posts count:", error);
+    throw error;
+  }
+}
+
+export async function patchNewsArticle(
+  articleId: number,
+  article: Partial<NewPostType>
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}${POSTS_URL}/${articleId}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(article),
+      }
+    );
+
+    if (!response) {
+      throw new Error(`Error updating news article: ${response}`);
+    }
+
+    const data = await response.json();
+    return { success: true, message: data.message };
+  } catch (error) {
+    console.error("Error updating news article:", error);
+    throw error;
+  }
+}
+
+export async function deleteNewsArticle(
+  articleId: number
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}${POSTS_URL}/${articleId}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response) {
+      throw new Error(`Error deleting news article: ${response}`);
+    }
+
+    return { success: true, message: "Article deleted successfully" };
+  } catch (error) {
+    console.error("Error deleting news article:", error);
+    throw error;
+  }
+}

@@ -1,0 +1,10 @@
+export const API_BASE_URL = "http://localhost:8080/v1";
+
+// Auth
+export const SIGN_IN_URL = "/sign-in";
+export const SIGN_UP_URL = "/sign-up";
+export const REFRESH_TOKEN_URL = "/refresh-token";
+
+// Posts
+export const POSTS_URL = "/posts";
+export const USER_FEED = "/users/feed";
