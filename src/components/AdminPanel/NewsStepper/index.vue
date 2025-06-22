@@ -98,14 +98,6 @@ const summaryMutation = useMutation({
   },
 });
 
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
-
 function onSubmit(values: Record<string, unknown>) {
   console.log(values);
   if (stepIndex.value === 4 && selectedArticle.value) {

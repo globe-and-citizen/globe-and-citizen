@@ -25,7 +25,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -43,8 +42,6 @@ const props = defineProps<{
   onEdit: (user: UserType) => void;
   onDeactivate: (user: UserType) => void;
 }>();
-
-const expanded = ref(false);
 
 function handleView() {
   // Navigate to user profile page
