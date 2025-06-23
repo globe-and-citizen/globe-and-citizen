@@ -10,10 +10,10 @@
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-48 text-center">
-      <DropdownMenuItem @click="handleView" class="flex items-center">
+      <DropdownMenuItem class="flex items-center" @click="handleView">
         View profile
       </DropdownMenuItem>
-      <DropdownMenuItem @click="handleEdit" class="flex items-center">
+      <DropdownMenuItem class="flex items-center" @click="handleEdit">
         Edit user
       </DropdownMenuItem>
       <DropdownMenuSeparator />
