@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { toTypedSchema } from "@vee-validate/zod";
-import { Check, Circle, Dot, Loader2 } from "lucide-vue-next";
+import CircleIcon from "@/assets/icons/circle.svg";
+import LoaderIcon from "@/assets/icons/loader.svg";
+import CheckIcon from "@/assets/icons/check.svg";
+import DotIcon from "@/assets/icons/dot.svg";
 import { ref, computed, watchEffect } from "vue";
 
 import { useQuery, useMutation } from "@tanstack/vue-query";
@@ -97,14 +100,6 @@ const summaryMutation = useMutation({
     toast.error("Failed to generate summary");
   },
 });
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
 
 function onSubmit(values: Record<string, unknown>) {
   console.log(values);
@@ -209,9 +204,13 @@ console.log(generatedSummary.value);
                   ]"
                   :disabled="state !== 'completed' && !meta.valid"
                 >
-                  <Check v-if="state === 'completed'" class="size-5" />
-                  <Circle v-if="state === 'active'" />
-                  <Dot v-if="state === 'inactive'" />
+                  <component
+                    :is="CheckIcon"
+                    v-if="state === 'completed'"
+                    class="size-5"
+                  />
+                  <component :is="CircleIcon" v-if="state === 'active'" />
+                  <component :is="DotIcon" v-if="state === 'inactive'" />
                 </Button>
               </StepperTrigger>
 
@@ -234,7 +233,7 @@ console.log(generatedSummary.value);
                 <h2 class="text-xl font-semibold">Select a News Article</h2>
 
                 <div v-if="isLoadingNews" class="flex justify-center py-8">
-                  <Loader2 class="size-8 animate-spin" />
+                  <component :is="LoaderIcon" class="size-8 animate-spin" />
                   <span class="ml-2">Loading articles...</span>
                 </div>
 
@@ -319,7 +318,8 @@ console.log(generatedSummary.value);
                     class="w-full"
                     @click="handleGenerateSummary"
                   >
-                    <Loader2
+                    <component
+                      :is="LoaderIcon"
                       v-if="summaryMutation.isPending.value"
                       class="size-4 animate-spin mr-2"
                     />
@@ -554,7 +554,8 @@ console.log(generatedSummary.value);
                 type="submit"
                 :disabled="publishMutation.isPending.value"
               >
-                <Loader2
+                <component
+                  :is="LoaderIcon"
                   v-if="publishMutation.isPending.value"
                   class="size-4 animate-spin mr-2"
                 />

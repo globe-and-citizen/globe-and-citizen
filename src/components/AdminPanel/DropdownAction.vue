@@ -3,14 +3,17 @@
     <DropdownMenuTrigger as-child class="bg-gray-100 cursor-pointer float-end">
       <Button variant="ghost" class="h-8 w-8 p-0">
         <span class="sr-only">Open menu</span>
-        <ChevronDown class="h-4 w-4" />
+        <component
+          :is="ChevronDown"
+          class="h-4 w-4 text-gray-500 hover:text-gray-700 transition-colors"
+        />
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" class="w-48 text-center">
-      <DropdownMenuItem @click="handleView" class="flex items-center">
+      <DropdownMenuItem class="flex items-center" @click="handleView">
         View profile
       </DropdownMenuItem>
-      <DropdownMenuItem @click="handleEdit" class="flex items-center">
+      <DropdownMenuItem class="flex items-center" @click="handleEdit">
         Edit user
       </DropdownMenuItem>
       <DropdownMenuSeparator />
@@ -25,7 +28,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -34,7 +36,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-vue-next";
+import ChevronDown from "@/assets/icons/chevron-down.svg";
 import type { UserType } from "@/models/Auth";
 
 const props = defineProps<{
@@ -44,13 +46,11 @@ const props = defineProps<{
   onDeactivate: (user: UserType) => void;
 }>();
 
-const expanded = ref(false);
-
 function handleView() {
   // Navigate to user profile page
   window.open(`/profile/${props.user.id}`, "_blank");
 }
-
+console.log("DropdownAction component loaded");
 function handleEdit() {
   props.onEdit(props.user);
 }

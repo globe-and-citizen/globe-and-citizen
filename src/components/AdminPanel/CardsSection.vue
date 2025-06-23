@@ -5,7 +5,7 @@
         class="flex flex-row items-center justify-between space-y-0 pb-2"
       >
         <CardTitle class="text-sm font-medium"> Total Users </CardTitle>
-        <component :is="Users" class="h-4 w-4" />
+        <component :is="UsersIcon" class="h-4 w-4" />
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ usersCount?.data }}</div>
@@ -16,7 +16,7 @@
         class="flex flex-row items-center justify-between space-y-0 pb-2"
       >
         <CardTitle class="text-sm font-medium"> Total posts </CardTitle>
-        <component :is="Newspaper" class="h-4 w-4" />
+        <component :is="JournalsIcon" class="h-4 w-4" />
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ postsCount?.data }}</div>
@@ -28,7 +28,7 @@
         class="flex flex-row items-center justify-between space-y-0 pb-2"
       >
         <CardTitle class="text-sm font-medium"> Total Ads </CardTitle>
-        <component :is="Package" class="h-4 w-4" />
+        <component :is="Advertisement" class="h-4 w-4" />
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">101</div>
@@ -40,7 +40,7 @@
         class="flex flex-row items-center justify-between space-y-0 pb-2"
       >
         <CardTitle class="text-sm font-medium"> Total Users </CardTitle>
-        <component :is="Users" class="h-4 w-4" />
+        <component :is="UsersIcon" class="h-4 w-4" />
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">101</div>
@@ -54,7 +54,10 @@ import { fetchPostsCount } from "@/api/posts";
 import { fetchUsersCount } from "@/api/user";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/vue-query";
-import { Users, Newspaper, Package } from "lucide-vue-next";
+
+import UsersIcon from "@/assets/icons/users.svg";
+import JournalsIcon from "@/assets/icons/journals.svg";
+import Advertisement from "@/assets/icons/advertisement.svg";
 
 const { data: postsCount } = useQuery<{ data: number }>({
   queryKey: ["postsCount"],

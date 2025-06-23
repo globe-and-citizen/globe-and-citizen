@@ -231,7 +231,9 @@ import {
   getSortedRowModel,
   useVueTable,
 } from "@tanstack/vue-table";
-import { ArrowUpDown, ChevronDown } from "lucide-vue-next";
+
+import SortCircle from "@/assets/icons/sort-circle.svg";
+import ChevronDown from "@/assets/icons/chevron-down.svg";
 import { computed, h, ref } from "vue";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -385,7 +387,7 @@ const columns: ColumnDef<UserType>[] = [
           variant: "ghost",
           onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
         },
-        () => ["Username", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })]
+        () => ["Username", h(SortCircle, { class: "ml-2 h-4 w-4" })]
       );
     },
     cell: ({ row }) =>
@@ -416,7 +418,7 @@ const columns: ColumnDef<UserType>[] = [
           variant: "ghost",
           onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
         },
-        () => ["Email", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })]
+        () => ["Email", h(SortCircle, { class: "ml-2 h-4 w-4" })]
       );
     },
     cell: ({ row }) =>
