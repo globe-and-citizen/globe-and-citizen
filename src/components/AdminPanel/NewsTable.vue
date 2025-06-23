@@ -14,7 +14,7 @@
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
           <Button variant="outline">
-            Columns <ChevronDown class="ml-2 h-4 w-4" />
+            Columns <component :is="ChevronDown" class="ml-2 h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -241,7 +241,11 @@ import {
   getSortedRowModel,
   useVueTable,
 } from "@tanstack/vue-table";
-import { ArrowUpDown, ChevronDown, ExternalLink } from "lucide-vue-next";
+
+import SortCircle from "@/assets/icons/sort-circle.svg";
+import ChevronDown from "@/assets/icons/chevron-down.svg";
+import ExternalLink from "@/assets/icons/external-link.svg";
+
 import { computed, h, ref } from "vue";
 import { Button } from "@/components/ui/button";
 import {
@@ -483,7 +487,7 @@ const columns: ColumnDef<Post>[] = [
           variant: "ghost",
           onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
         },
-        () => ["Title", h(ArrowUpDown, { class: "ml-2 h-4 w-4" })]
+        () => ["Title", h(SortCircle, { class: "ml-2 h-4 w-4" })]
       );
     },
     cell: ({ row }) =>

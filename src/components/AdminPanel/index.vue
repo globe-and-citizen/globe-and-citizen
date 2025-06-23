@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import {
-  Home,
-  NewspaperIcon,
-  Search,
-  Settings,
-  Users,
-  Files,
-} from "lucide-vue-next";
+import UsersIcon from "@/assets/icons/users.svg";
+import SettingsIcon from "@/assets/icons/settings.svg";
+
+import Advertisement from "@/assets/icons/advertisement.svg";
+import HomeIcon from "@/assets/icons/home.svg";
+import JournalsIcon from "@/assets/icons/journals.svg";
+import SearchIcon from "@/assets/icons/search.svg";
+
 import {
   Sidebar,
   SidebarContent,
@@ -22,32 +22,32 @@ const items = [
   {
     title: "Home",
     url: "/admin/home",
-    icon: Home,
+    icon: HomeIcon,
   },
   {
     title: "Users",
     url: "/admin/users",
-    icon: Users,
+    icon: UsersIcon,
   },
   {
     title: "News portal",
     url: "/admin/news-processor",
-    icon: NewspaperIcon,
+    icon: Advertisement,
   },
   {
     title: "Posted news",
     url: "/admin/posted-news",
-    icon: Files,
+    icon: JournalsIcon,
   },
   {
     title: "Search",
     url: "/admin/home",
-    icon: Search,
+    icon: SearchIcon,
   },
   {
     title: "Settings",
     url: "/admin/home",
-    icon: Settings,
+    icon: SettingsIcon,
   },
 ];
 </script>
@@ -74,10 +74,7 @@ const items = [
                   :to="item.url"
                   class="flex items-center gap-2 text-[16px]"
                 >
-                  <component
-                    :is="item.icon"
-                    style="width: 14px; height: 14px"
-                  />
+                  <component :is="item.icon" />
                   <span>{{ item.title }}</span>
                 </router-link>
               </SidebarMenuButton>
