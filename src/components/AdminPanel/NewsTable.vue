@@ -116,7 +116,9 @@
 
   <!-- Preview Dialog -->
   <Dialog v-model:open="previewDialogOpen">
-    <DialogContent class="w-[90vw] max-w-[625px] max-h-[85vh] overflow-y-auto">
+    <DialogContent
+      class="max-h-[85vh] overflow-y-auto no-scrollbar max-w-max w-[90vw]"
+    >
       <DialogHeader>
         <DialogTitle>Article Preview</DialogTitle>
         <DialogDescription>
@@ -159,7 +161,9 @@
 
   <!-- Edit Dialog -->
   <Dialog v-model:open="editDialogOpen">
-    <DialogContent class="max-h-[85vh] md:max-w-[85vw] overflow-y-auto">
+    <DialogContent
+      class="max-h-[85vh] md:max-w-[max] overflow-y-auto no-scrollbar"
+    >
       <DialogHeader>
         <DialogTitle>Edit Article</DialogTitle>
         <DialogDescription>

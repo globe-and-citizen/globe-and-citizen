@@ -35,12 +35,12 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import VerticalCard from "../../components/ArticleCard/Vertical/VerticalCard.vue";
+import VerticalCard from "../../../components/ArticleCard/Vertical/VerticalCard.vue";
 
-import Button from "../../components/Button/Button.vue";
-import nextArrow from "../../assets/nav-arrow-next.svg";
-import prevArrow from "../../assets/nav-arrow-prev.svg";
-import type { Post } from "../../models/Posts";
+import Button from "../../../components/Button/Button.vue";
+import nextArrow from "../../../assets/nav-arrow-next.svg";
+import prevArrow from "../../../assets/nav-arrow-prev.svg";
+import type { Post } from "../../../models/Posts";
 
 defineProps<{
   posts: Post[];

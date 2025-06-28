@@ -1,6 +1,5 @@
 <template>
-  <div>
-    <h1>Trending Posts</h1>
+  <div class="gc-container my-8">
     <div class="post-cards">
       <VerticalCard
         v-for="post in data?.data"
