@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import UsersIcon from "@/assets/icons/users.svg";
-import SettingsIcon from "@/assets/icons/settings.svg";
-
 import Advertisement from "@/assets/icons/advertisement.svg";
 import HomeIcon from "@/assets/icons/home.svg";
 import JournalsIcon from "@/assets/icons/journals.svg";
-import SearchIcon from "@/assets/icons/search.svg";
 
 import {
   Sidebar,
@@ -38,16 +35,6 @@ const items = [
     title: "Posted news",
     url: "/admin/posted-news",
     icon: JournalsIcon,
-  },
-  {
-    title: "Search",
-    url: "/admin/home",
-    icon: SearchIcon,
-  },
-  {
-    title: "Settings",
-    url: "/admin/home",
-    icon: SettingsIcon,
   },
 ];
 </script>

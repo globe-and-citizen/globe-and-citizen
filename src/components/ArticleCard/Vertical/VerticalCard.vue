@@ -27,7 +27,6 @@
       </div>
     </div>
 
-    <!-- Right Content Section -->
     <div class="flex-1 py-4 px-2 flex flex-col justify-between">
       <div class="flex items-center gap-2 mb-4">
         <img
@@ -36,7 +35,11 @@
           class="w-8 h-8 rounded-full"
         />
         <p class="font-semibold font-lato text-black">
-          {{ post?.author?.substring(0, 13) + "..." }}
+          {{
+            post?.author
+              ? post?.author?.substring(0, 13) + "..."
+              : post.user.username.substring(0, 20) || "Unknown Author"
+          }}
         </p>
         <p class="font-medium text-black-60 font-lato text-xs">
           {{
@@ -56,7 +59,12 @@
         {{ post?.title }}
       </h5>
       <p class="text-black-80 mb-3 font-lato font-normal text-base">
-        {{ post?.description?.substring(0, 48) + "..." }}
+        {{
+          post?.description
+            ? post?.description?.substring(0, 48) + "..."
+            : post?.content?.substring(0, 48) + "..." ||
+              "No description available"
+        }}
       </p>
       <div v-if="showTags" class="flex gap-3 mb-4 font-lato font-bold text-xs">
         <span

@@ -23,5 +23,5 @@
 
 <script setup lang="ts">
 import heroImage from "./img.png";
-import Button from "../../components/Button/Button.vue";
+import Button from "../../../components/Button/Button.vue";
 </script>

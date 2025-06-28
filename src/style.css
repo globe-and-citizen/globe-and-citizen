@@ -60,6 +60,10 @@
   }
 }
 
+@utility no-scrollbar {
+  @apply [scrollbar-width:none] [&::-webkit-scrollbar]:hidden;
+}
+
 :root {
   font-family: "Libre Bodoni", serif;
   line-height: 1.5;

@@ -22,8 +22,8 @@
 </template>
 <script setup lang="ts">
 import NowTrending from "../components/NowTrending/NowTrending.vue";
-import ExploreMore from "../sections/ExploreMore/ExploreMore.vue";
-import HeroSection from "../sections/HomeHeroSection/HeroSection.vue";
+import ExploreMore from "@/sections/HomePage/ExploreMore/ExploreMore.vue";
+import HeroSection from "@/sections/HomePage/HomeHeroSection/HeroSection.vue";
 import AdvertisementCard from "../components/AdvertisementCard/AdvertisementCard.vue";
 import { useWindowSize } from "@vueuse/core";
 import { useQuery } from "@tanstack/vue-query";

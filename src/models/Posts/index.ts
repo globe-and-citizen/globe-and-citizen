@@ -24,6 +24,12 @@ export type Post = {
     username: string;
     email: string;
     created_at: string;
+    updated_at: string | null;
+    bio: string;
+    location: string;
+    website: string;
+    profile_picture_url: string;
+    date_of_birth: string | null;
     role_id: number;
     role: {
       id: number;
@@ -33,6 +39,7 @@ export type Post = {
     };
   };
 
+  entries?: Post[];
   comments_count?: number;
   userId?: number;
 };

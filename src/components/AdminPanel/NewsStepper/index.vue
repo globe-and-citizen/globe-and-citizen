@@ -447,7 +447,7 @@ console.log(generatedSummary.value);
             <!-- Step 4: Approve & Publish -->
             <template v-if="stepIndex === 4">
               <div class="space-y-4">
-                <h2 class="text-xl font-semibold">Review & Approve</h2>
+                <h2 class="text-xl font-semibold">Review & Publish</h2>
 
                 <Card class="pt-0">
                   <img
@@ -491,37 +491,6 @@ console.log(generatedSummary.value);
                     </p>
                   </CardContent>
                 </Card>
-
-                <FormField v-slot="{ value, handleChange }" name="approved">
-                  <FormItem
-                    class="flex flex-row items-start space-x-3 space-y-0"
-                  >
-                    <FormControl>
-                      <input
-                        type="checkbox"
-                        :checked="!!value"
-                        class="mt-1"
-                        @change="
-                          handleChange(
-                            $event.target && 'checked' in $event.target
-                              ? ($event.target as HTMLInputElement).checked
-                              : false
-                          )
-                        "
-                      />
-                    </FormControl>
-                    <div class="space-y-1 leading-none">
-                      <FormLabel class="text-sm font-medium">
-                        I approve this article for publication
-                      </FormLabel>
-                      <p class="text-xs text-muted-foreground">
-                        This will save the article to the database and publish
-                        it on the website.
-                      </p>
-                    </div>
-                  </FormItem>
-                  <FormMessage />
-                </FormField>
               </div>
             </template>
           </div>
