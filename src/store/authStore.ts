@@ -45,6 +45,8 @@ export const useAuthStore = defineStore("authStore", {
     initializeAuth(): void {
       if (this.token && this.user?.id) {
         this.isUserAuthenticated = true;
+      } else {
+        this.isUserAuthenticated = false;
       }
       this.isInitialized = true;
     },
