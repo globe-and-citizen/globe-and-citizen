@@ -105,7 +105,7 @@
               </svg>
             </button>
             <img
-              src="https://static-00.iconduck.com/assets.00/user-circle-icon-2048x2048-rbk3fbd1.png"
+              src="@/assets/user-placeholder.png"
               alt="User Avatar"
               class="w-8 h-8 rounded-full object-cover cursor-pointer"
               @click="$router.push('/profile')"

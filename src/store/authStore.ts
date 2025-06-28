@@ -26,10 +26,16 @@ export const useAuthStore = defineStore("authStore", {
   actions: {
     setUser(user: UserType): void {
       this.user = user;
+      if (this.token) {
+        this.isUserAuthenticated = true;
+      }
     },
 
     setToken(token: string): void {
       this.token = token;
+      if (this.user?.id) {
+        this.isUserAuthenticated = true;
+      }
     },
 
     clearToken(): void {
