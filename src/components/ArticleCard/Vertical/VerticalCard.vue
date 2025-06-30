@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'flex flex-col bg-white overflow-hidden rounded-sm cursor-pointer hover:shadow-card-soft transition',
+      'flex flex-col overflow-hidden rounded-sm cursor-pointer hover:shadow-card-soft transition',
       {
         'max-w-[276px]': scrollCard,
         'max-w-[378px]': !scrollCard,
@@ -9,7 +9,7 @@
     ]"
   >
     <!-- Left Image Section -->
-    <div class="h-[200px] relative">
+    <div class="h-[160px] relative">
       <img
         :src="
           post?.url_to_image ||
@@ -55,14 +55,14 @@
         </p>
       </div>
 
-      <h5 class="font-libre text-xl font-medium mb-2">
+      <h5 class="font-lato text-small font-semibold mb-2">
         {{ post?.title }}
       </h5>
       <p class="text-black-80 mb-3 font-lato font-normal text-base">
         {{
           post?.description
-            ? post?.description?.substring(0, 48) + "..."
-            : post?.content?.substring(0, 48) + "..." ||
+            ? post?.description?.substring(0, 110) + "..."
+            : post?.content?.substring(0, 110) + "..." ||
               "No description available"
         }}
       </p>
