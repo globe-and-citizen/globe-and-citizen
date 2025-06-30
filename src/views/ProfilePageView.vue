@@ -106,10 +106,12 @@
           </div>
         </div>
         <DialogFooter class="flex-col-reverse sm:flex-row md:gap-2 sm:gap-0">
-          <Button variant="secondary" @click="editDialogOpen = false"
-            >Cancel</Button
-          >
-          <Button type="submit" @click="handleSaveEdit">Save changes</Button>
+          <Button
+            variant="secondary"
+            title="Cancel"
+            @click="editDialogOpen = false"
+          />
+          <Button type="submit" title="Save changes" @click="handleSaveEdit" />
         </DialogFooter>
       </DialogContent>
     </Dialog>
