@@ -271,7 +271,7 @@ import {
 } from "@/components/ui/table";
 import DropdownAction from "./DropdownAction.vue";
 import { valueUpdater } from "@/components/ui/table/utils.ts";
-import { useMutation, useQuery } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { fetchAllUsers, updateUser } from "@/api/user.ts";
 import { useSearchStore } from "@/store/searchStore.ts";
 import type { Role, UserType } from "@/models/Auth";
@@ -283,11 +283,14 @@ const { data } = useQuery<{ data: UserType[] }>({
   refetchOnWindowFocus: true,
 });
 const tableData = computed(() => data.value?.data ?? []);
+const queryClient = useQueryClient();
 
 const { mutate: updateUserMutation } = useMutation({
   mutationFn: (user: Partial<UserType>) =>
     updateUser(selectedUser.value!.id, user),
-  onSuccess: () => {},
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+  },
   onError: (error) => {
     console.error("Error updating user:", error);
   },

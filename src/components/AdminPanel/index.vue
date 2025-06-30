@@ -17,7 +17,7 @@ import logo from "@/assets/logo.svg";
 
 const items = [
   {
-    title: "Home",
+    title: "Dashboard",
     url: "/admin/home",
     icon: HomeIcon,
   },
@@ -42,7 +42,7 @@ const items = [
 <template>
   <Sidebar class="[&>div]:bg-[#f5f5f5]">
     <SidebarContent>
-      <SidebarGroup>
+      <SidebarGroup class="h-full overflow-hidden">
         <RouterLink
           to="/"
           class="flex items-center space-x-1 mt-5 ext-lg font-semibold text-gray-800"
@@ -52,8 +52,8 @@ const items = [
             >Globe & Citizen</span
           >
         </RouterLink>
-        <SidebarGroupContent>
-          <SidebarMenu class="mt-5">
+        <SidebarGroupContent class="h-full">
+          <SidebarMenu class="mt-5 h-full pb-28">
             <SidebarMenuItem v-for="item in items" :key="item.title">
               <SidebarMenuButton as-child>
                 <router-link
@@ -66,6 +66,14 @@ const items = [
                 </router-link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <!-- Back Home Button -->
+            <RouterLink
+              to="/"
+              class="flex items-center space-x-2 text-lg underline text-gray-800 hover:text-red-500 mt-auto"
+            >
+              <span>Back Home</span>
+            </RouterLink>
+            <!-- Existing Logo and Sidebar Content -->
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>

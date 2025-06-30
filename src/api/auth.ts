@@ -48,13 +48,11 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
       } else {
         authStore.clearToken();
         console.error("Token refresh failed.");
-        // return window.location.replace(SIGN_IN_URL);
       }
     } catch (err) {
       console.error("Error refreshing token", err);
       authStore.clearToken();
       console.error("Token refresh failed.");
-      // return window.location.replace(SIGN_IN_URL);
     }
   }
 
@@ -76,7 +74,6 @@ export async function signIn(
     });
     const responseData: SignInResponse | { data: string } =
       await response.json();
-    console.log("Sign-in response:", response);
     if (!response.ok) {
       throw new Error(
         typeof responseData.data === "string"
@@ -92,7 +89,7 @@ export async function signIn(
     ) {
       authStore.setToken(responseData.data.token);
       authStore.setUser(responseData.data.user);
-      console.log(responseData);
+
       return responseData as SignInResponse;
     } else {
       throw new Error(
@@ -106,16 +103,6 @@ export async function signIn(
     throw error;
   }
 }
-
-// first_name: string;
-// email: string;
-// username: string;
-// password: string;
-// }) => {
-//   const res = await .post("sign-up", data);
-//   console.log("Sign-up response:", res);
-//   if (res.status !== 201) throw new Error("Sign-up failed");
-//   return res.data;
 
 type SignUpData = {
   first_name: string;

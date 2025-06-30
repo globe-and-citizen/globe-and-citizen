@@ -2,15 +2,15 @@ import type { SignInResponse, UserType } from "@/models/Auth";
 import { fetchWithAuth } from "./auth";
 import { API_BASE_URL } from "./constants";
 
-export async function getUser(userId: number): Promise<SignInResponse> {
-  // const authStore = useAuthStore();
+export async function getUser(userId: number): Promise<{ data: UserType }> {
   try {
     const response = await fetchWithAuth(`${API_BASE_URL}/users/${userId}`);
     if (!response) {
       throw new Error("No response received from fetchWithAuth");
     }
     const data = await response.json();
-    return data;
+
+    return data.data;
   } catch (error) {
     console.error("Error fetching user:", error);
     throw error;
