@@ -1,62 +1,64 @@
 <template>
-  <HeadingSection v-if="post" :post="post" />
+  <div class="w-full md:px-8 max-w-7xl mx-auto">
+    <HeadingSection v-if="post" :post="post" />
 
-  <img
-    :src="post?.url_to_image"
-    alt="Post hero image"
-    class="px-4 md:px-8 lg:px-[120px] w-full h-[440px] object-cover rounded-lg mb-8"
-  />
+    <img
+      :src="post?.url_to_image"
+      alt="Post hero image"
+      class="h-[440px] w-full object-cover rounded-lg mb-8"
+    />
 
-  <div class="px-4 md:px-8 lg:px-[120px] lg:pb-10 flex gap-10 font-lato">
-    <div class="w-8/12 border-r border-gray-200 pr-10">
-      <div v-if="post" class="gc-container">
-        <div class="flex flex-col items-center mb-8">
-          <h2 class="text-2xl font-bold mb-2">{{ post.title }}</h2>
-          <p class="text-gray-600 mb-4">
-            By {{ post.author }} on {{ formattedDate }}
-          </p>
-          <p class="text-gray-600">{{ readingTime }} minute read</p>
+    <div class="lg:pb-10 flex gap-10 font-lato">
+      <div class="w-8/12 border-r border-gray-200 pr-10">
+        <div v-if="post" class="gc-container">
+          <div class="flex flex-col items-center mb-8">
+            <h2 class="text-2xl font-bold mb-2">{{ post.title }}</h2>
+            <p class="text-gray-600 mb-4">
+              By {{ post.author }} on {{ formattedDate }}
+            </p>
+            <p class="text-gray-600">{{ readingTime }} minute read</p>
+          </div>
+          <div class="prose prose-lg max-w-none">
+            <p>{{ post.content }}</p>
+          </div>
         </div>
-        <div class="prose prose-lg max-w-none">
-          <p>{{ post.content }}</p>
+        <div v-else class="flex justify-center items-center h-64">
+          <p>Loading post...</p>
         </div>
       </div>
-      <div v-else class="flex justify-center items-center h-64">
-        <p>Loading post...</p>
-      </div>
+      <div class="w-4/12"></div>
     </div>
-    <div class="w-4/12"></div>
-  </div>
 
-  <div class="px-4 md:px-8 lg:px-[120px] mb-12">
-    <div v-if="post && post.entries && post.entries.length > 0" class="mb-8">
-      <h3 class="text-xl font-bold mb-6 border-b pb-2">User Contributions</h3>
-      <div class="flex gap-4">
-        <VerticalCard
-          v-for="entry in displayedEntries"
-          :key="entry.id"
-          :post="entry"
-          :show-avatar="true"
-          :show-tags="false"
-          :show-reading-time-and-comments="false"
-        />
+    <div class="mb-12">
+      <div v-if="post && post.entries && post.entries.length > 0" class="mb-8">
+        <h3 class="text-xl font-bold mb-6 border-b pb-2">User Contributions</h3>
+        <div class="flex gap-4">
+          <VerticalCard
+            v-for="entry in displayedEntries"
+            :key="entry.id"
+            :post="entry"
+            :show-avatar="true"
+            :show-tags="false"
+            :show-reading-time-and-comments="false"
+          />
+        </div>
+        <div v-if="post.entries.length > entriesLimit" class="mt-6 text-center">
+          <button
+            class="text-blue-600 hover:underline font-medium"
+            @click="showAllEntries = !showAllEntries"
+          >
+            {{
+              showAllEntries
+                ? "Show fewer contributions"
+                : `Show all ${post.entries.length} contributions`
+            }}
+          </button>
+        </div>
       </div>
-      <div v-if="post.entries.length > entriesLimit" class="mt-6 text-center">
-        <button
-          class="text-blue-600 hover:underline font-medium"
-          @click="showAllEntries = !showAllEntries"
-        >
-          {{
-            showAllEntries
-              ? "Show fewer contributions"
-              : `Show all ${post.entries.length} contributions`
-          }}
-        </button>
+      <div v-else class="mb-8">
+        <h3 class="text-xl font-bold mb-6 border-b pb-2">Related Articles</h3>
+        <p class="text-gray-500">No related articles to display</p>
       </div>
-    </div>
-    <div v-else class="mb-8">
-      <h3 class="text-xl font-bold mb-6 border-b pb-2">Related Articles</h3>
-      <p class="text-gray-500">No related articles to display</p>
     </div>
   </div>
 </template>
