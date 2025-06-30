@@ -7,7 +7,7 @@
     class="px-4 md:px-8 lg:px-[120px] w-full h-[440px] object-cover rounded-lg mb-8"
   />
 
-  <div class="px-4 md:px-8 lg:px-[120px] lg:pb-10 flex gap-10">
+  <div class="px-4 md:px-8 lg:px-[120px] lg:pb-10 flex gap-10 font-lato">
     <div class="w-8/12 border-r border-gray-200 pr-10">
       <div v-if="post" class="gc-container">
         <div class="flex flex-col items-center mb-8">
