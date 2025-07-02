@@ -141,9 +141,10 @@
             />
           </div>
           <p class="text-sm">{{ selectedPost?.description }}</p>
-          <div class="mt-4">
-            <p>{{ selectedPost?.content }}</p>
-          </div>
+          <div
+            className="ql-editor mt-4 !h-fit"
+            v-html="sanitizedContent"
+          ></div>
         </div>
       </div>
       <DialogFooter class="flex-col-reverse sm:flex-row sm:gap-1 md:gap-2">
@@ -162,7 +163,7 @@
   <!-- Edit Dialog -->
   <Dialog v-model:open="editDialogOpen">
     <DialogContent
-      class="max-h-[85vh] md:max-w-[max] overflow-y-auto no-scrollbar"
+      class="max-h-[95vh] md:max-w-[80vw] overflow-y-auto no-scrollbar"
     >
       <DialogHeader>
         <DialogTitle>Edit Article</DialogTitle>
@@ -185,7 +186,34 @@
         </div>
         <div class="grid gap-2">
           <Label for="content">Content</Label>
-          <Textarea id="content" v-model="editForm.content" rows="5" />
+          <QuillEditor
+            id="content"
+            content-type="html"
+            theme="snow"
+            style="min-height: 200px"
+            :content="editForm.content || ''"
+            :options="{
+              modules: {
+                toolbar: [
+                  ['bold', 'italic', 'underline', 'strike'],
+                  ['blockquote', 'code-block'],
+                  [{ header: 1 }, { header: 2 }],
+                  [{ list: 'ordered' }, { list: 'bullet' }],
+                  [{ script: 'sub' }, { script: 'super' }],
+                  [{ indent: '-1' }, { indent: '+1' }],
+                  [{ direction: 'rtl' }],
+                  [{ size: ['small', false, 'large', 'huge'] }],
+                  [{ header: [1, 2, 3, 4, 5, 6, false] }],
+                  [{ color: [] }, { background: [] }],
+                  [{ font: [] }],
+                  [{ align: [] }],
+                  ['clean'],
+                  ['link', 'image'],
+                ],
+              },
+            }"
+            @update:content="(content) => (editForm.content = content)"
+          />
         </div>
         <div class="grid gap-2">
           <Label for="imageUrl">Image URL</Label>
@@ -250,6 +278,9 @@ import SortCircle from "@/assets/icons/sort-circle.svg";
 import ChevronDown from "@/assets/icons/chevron-down.svg";
 import ExternalLink from "@/assets/icons/external-link.svg";
 
+import { QuillEditor } from "@vueup/vue-quill";
+import "@vueup/vue-quill/dist/vue-quill.snow.css";
+
 import { computed, h, ref } from "vue";
 import { Button } from "@/components/ui/button";
 import {
@@ -289,6 +320,7 @@ import {
 import type { NewPostType, Post, FetchPostsType } from "@/models/Posts";
 
 import { useQueryClient } from "@tanstack/vue-query";
+import DOMPurify from "dompurify";
 
 const queryClient = useQueryClient();
 
@@ -371,6 +403,11 @@ function handleEdit(post: Post) {
   editForm.value = { ...post };
   editDialogOpen.value = true;
 }
+
+const sanitizedContent = computed(() => {
+  if (!selectedPost.value || !selectedPost.value.content) return "";
+  return DOMPurify.sanitize(selectedPost.value.content);
+});
 
 function handleSaveEdit() {
   updatePost({
@@ -584,3 +621,30 @@ const table = useVueTable({
   },
 });
 </script>
+
+<style scoped>
+/* Quill Editor Styles */
+:deep(.ql-editor) {
+  min-height: 200px;
+  font-family: "Times New Roman", serif;
+}
+
+:deep(.ql-toolbar) {
+  border-top: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+:deep(.ql-container) {
+  border-bottom: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-radius: 0 0 0.375rem 0.375rem;
+}
+
+:deep(.ql-editor.ql-blank::before) {
+  font-style: italic;
+  color: #999;
+}
+</style>

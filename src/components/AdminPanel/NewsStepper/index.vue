@@ -7,6 +7,8 @@ import DotIcon from "@/assets/icons/dot.svg";
 import { ref, computed, watchEffect } from "vue";
 
 import { useQuery, useMutation } from "@tanstack/vue-query";
+import { QuillEditor } from "@vueup/vue-quill";
+import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import { Button } from "../../../components/ui/button";
 import {
   Form,
@@ -94,6 +96,7 @@ const summaryMutation = useMutation({
   },
   onSuccess: (data) => {
     generatedSummary.value = data;
+    form.setFieldValue("content", data);
     toast.success("Summary generated successfully!");
   },
   onError: () => {
@@ -102,20 +105,34 @@ const summaryMutation = useMutation({
 });
 
 function onSubmit(values: Record<string, unknown>) {
-  console.log(values);
+  console.log("Form values:", values);
+  console.log("Content from editor:", values.content);
+  console.log("Generated summary:", generatedSummary.value);
+
   if (stepIndex.value === 4 && selectedArticle.value) {
     // Create a new object with only the properties we want
     const finalData = {
-      title: selectedArticle.value.title || "Untitled Article",
-      content: generatedSummary.value,
+      title:
+        (values.title as string) ||
+        selectedArticle.value.title ||
+        "Untitled Article",
+      content: (values.content as string) || generatedSummary.value,
       categories: ["news"],
       is_external: true,
       source_url: selectedArticle.value.url || "",
-      source_name: selectedArticle.value.source?.name || "",
-      url_to_image: selectedArticle.value.urlToImage || "",
-      author: selectedArticle.value.author ?? "Unknown",
-      description: selectedArticle.value.description ?? "",
+      source_name:
+        (values.source as string) || selectedArticle.value.source?.name || "",
+      url_to_image:
+        (values.imageUrl as string) || selectedArticle.value.urlToImage || "",
+      author:
+        (values.author as string) ||
+        (selectedArticle.value.author ?? "Unknown"),
+      description:
+        (values.description as string) ||
+        (selectedArticle.value.description ?? ""),
     };
+
+    console.log("Final data being sent:", finalData);
     publishMutation.mutate(finalData);
   }
 }
@@ -126,32 +143,41 @@ function handleArticleSelect(index: number) {
 
 function handleGenerateSummary() {
   if (selectedArticle.value?.url) {
+    generatedSummary.value = "";
     summaryMutation.mutate(selectedArticle.value.url);
+  } else {
+    toast.error("No article selected or missing URL.");
   }
 }
 
 const { setValues } = useForm();
+
+// Initialize the form
+const form = useForm({
+  validationSchema: toTypedSchema(formSchema[0]),
+});
+
 watchEffect(() => {
   if (stepIndex.value === 3 && selectedArticle.value) {
+    const content =
+      generatedSummary.value || selectedArticle.value.content || "";
+
     setValues({
       title: selectedArticle.value.title || "",
       description: selectedArticle.value.description || "",
-      content: generatedSummary.value || selectedArticle.value.content || "",
+      content: content,
       author: selectedArticle.value.author || "Unknown",
       source: selectedArticle.value.source?.name || "Unknown",
       imageUrl: selectedArticle.value.urlToImage || "",
-      // publishedAt: selectedArticle.value.publishedAt
-      //   ? new Date(selectedArticle.value.publishedAt).toISOString().slice(0, 16)
-      //   : "",
     });
+
+    setTimeout(() => {
+      form.setFieldValue("content", content);
+    }, 0);
   }
 });
 
-const form = useForm({
-  validationSchema: toTypedSchema(formSchema[stepIndex.value - 1]),
-});
-
-console.log(generatedSummary.value);
+console.log(generatedSummary);
 </script>
 
 <template>
@@ -374,10 +400,34 @@ console.log(generatedSummary.value);
                   <FormItem>
                     <FormLabel>Generated content</FormLabel>
                     <FormControl>
-                      <Textarea
-                        v-bind="componentField"
-                        rows="6"
-                        :default-value="generatedSummary || ''"
+                      <QuillEditor
+                        content-type="html"
+                        theme="snow"
+                        :options="{
+                          modules: {
+                            toolbar: [
+                              ['bold', 'italic', 'underline', 'strike'],
+                              ['blockquote', 'code-block'],
+                              [{ header: 1 }, { header: 2 }],
+                              [{ list: 'ordered' }, { list: 'bullet' }],
+                              [{ script: 'sub' }, { script: 'super' }],
+                              [{ indent: '-1' }, { indent: '+1' }],
+                              [{ direction: 'rtl' }],
+                              [{ size: ['small', false, 'large', 'huge'] }],
+                              [{ header: [1, 2, 3, 4, 5, 6, false] }],
+                              [{ color: [] }, { background: [] }],
+                              [{ font: [] }],
+                              [{ align: [] }],
+                              ['clean'],
+                              ['link', 'image'],
+                            ],
+                          },
+                        }"
+                        style="min-height: 200px"
+                        :content="
+                          generatedSummary || componentField.modelValue || ''
+                        "
+                        @update:content="componentField.onChange"
                       />
                     </FormControl>
                     <FormMessage />
@@ -486,9 +536,10 @@ console.log(generatedSummary.value);
                     <p class="text-sm text-muted-foreground mb-2">
                       {{ values.description || selectedArticle?.description }}
                     </p>
-                    <p class="text-sm">
-                      {{ generatedSummary }}
-                    </p>
+                    <div
+                      class="text-sm prose prose-sm max-w-none"
+                      v-html="(values.content as string) || generatedSummary || ''"
+                    ></div>
                   </CardContent>
                 </Card>
               </div>
@@ -541,5 +592,77 @@ console.log(generatedSummary.value);
 <style scoped>
 * {
   font-family: "Times New Roman", serif;
+}
+
+/* Quill Editor Styles */
+:deep(.ql-editor) {
+  min-height: 200px;
+  font-family: "Times New Roman", serif;
+}
+
+:deep(.ql-toolbar) {
+  border-top: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+:deep(.ql-container) {
+  border-bottom: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-radius: 0 0 0.375rem 0.375rem;
+}
+
+:deep(.ql-editor.ql-blank::before) {
+  font-style: italic;
+  color: #999;
+}
+
+/* Prose styles for content preview */
+.prose h1 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.prose h2 {
+  font-size: 1.125rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.prose h3 {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+.prose p {
+  margin-bottom: 0.5rem;
+}
+.prose ul {
+  list-style-type: disc;
+  list-style-position: inside;
+  margin-bottom: 0.5rem;
+}
+.prose ol {
+  list-style-type: decimal;
+  list-style-position: inside;
+  margin-bottom: 0.5rem;
+}
+.prose blockquote {
+  border-left: 4px solid #d1d5db;
+  padding-left: 1rem;
+  font-style: italic;
+  margin-bottom: 0.5rem;
+}
+.prose strong {
+  font-weight: bold;
+}
+.prose em {
+  font-style: italic;
+}
+.prose code {
+  background-color: #f3f4f6;
+  border-radius: 0.25rem;
+  padding: 0 0.25rem;
 }
 </style>
