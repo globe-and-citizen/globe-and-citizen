@@ -105,12 +105,7 @@ const summaryMutation = useMutation({
 });
 
 function onSubmit(values: Record<string, unknown>) {
-  console.log("Form values:", values);
-  console.log("Content from editor:", values.content);
-  console.log("Generated summary:", generatedSummary.value);
-
   if (stepIndex.value === 4 && selectedArticle.value) {
-    // Create a new object with only the properties we want
     const finalData = {
       title:
         (values.title as string) ||
@@ -131,8 +126,6 @@ function onSubmit(values: Record<string, unknown>) {
         (values.description as string) ||
         (selectedArticle.value.description ?? ""),
     };
-
-    console.log("Final data being sent:", finalData);
     publishMutation.mutate(finalData);
   }
 }
@@ -176,8 +169,6 @@ watchEffect(() => {
     }, 0);
   }
 });
-
-console.log(generatedSummary);
 </script>
 
 <template>
