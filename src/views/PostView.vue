@@ -19,7 +19,7 @@
             <p class="text-gray-600">{{ readingTime }} minute read</p>
           </div>
           <div class="prose prose-lg max-w-none">
-            <p>{{ post.content }}</p>
+            <div className="ql-editor" v-html="sanitizedContent"></div>
           </div>
         </div>
         <div v-else class="flex justify-center items-center h-64">
@@ -70,6 +70,8 @@ import { API_BASE_URL, POSTS_URL } from "@/api/constants";
 import type { Post } from "@/models/Posts";
 import HeadingSection from "@/sections/PostView/HeadingSection/HeadingSection.vue";
 import VerticalCard from "@/components/ArticleCard/Vertical/VerticalCard.vue";
+import DOMPurify from "dompurify";
+import "@vueup/vue-quill/dist/vue-quill.snow.css";
 
 const route = useRoute();
 const postId = route.params.id as string;
@@ -85,6 +87,12 @@ const displayedEntries = computed(() => {
   return showAllEntries.value
     ? post.value.entries
     : post.value.entries.slice(0, entriesLimit);
+});
+
+// Sanitize the HTML content
+const sanitizedContent = computed(() => {
+  if (!post.value || !post.value.content) return "";
+  return DOMPurify.sanitize(post.value.content);
 });
 
 // Fetch the post data
@@ -140,3 +148,7 @@ const readingTime = computed(() => {
   return Math.ceil(words / wordsPerMinute);
 });
 </script>
+
+<style>
+/* QuillEditor content styling */
+</style>
