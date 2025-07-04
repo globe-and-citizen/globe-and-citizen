@@ -41,6 +41,7 @@
 
   /*Text Size*/
   --text-heading-h4: 24px;
+  --text-heading-h6: 16px;
 
   /*Shadow*/
   --shadow-card-soft: 2px 4px 7px 0 rgba(0, 0, 0, 0.03);

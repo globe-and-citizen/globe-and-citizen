@@ -95,7 +95,7 @@ import editorsChoice from "../../assets/editors-choice.svg";
 import timeIcon from "../../assets/clock-icon.svg";
 import commentsIcon from "../../assets/comment-icon.svg";
 import type { Post } from "../../models/Posts";
-const props = withDefaults(
+withDefaults(
   defineProps<{
     post?: Post;
     showWinnerTag?: boolean;
@@ -105,5 +105,4 @@ const props = withDefaults(
     showWinnerTag: false,
   }
 );
-console.log(props.post);
 </script>

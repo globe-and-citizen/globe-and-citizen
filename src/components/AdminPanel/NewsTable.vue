@@ -318,6 +318,7 @@ import {
   patchNewsArticle,
 } from "@/api/posts.ts";
 import type { NewPostType, Post, FetchPostsType } from "@/models/Posts";
+import "@/quill.css";
 
 import { useQueryClient } from "@tanstack/vue-query";
 import DOMPurify from "dompurify";
@@ -621,30 +622,3 @@ const table = useVueTable({
   },
 });
 </script>
-
-<style scoped>
-/* Quill Editor Styles */
-:deep(.ql-editor) {
-  min-height: 200px;
-  font-family: "Times New Roman", serif;
-}
-
-:deep(.ql-toolbar) {
-  border-top: 1px solid #ccc;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-  border-radius: 0.375rem 0.375rem 0 0;
-}
-
-:deep(.ql-container) {
-  border-bottom: 1px solid #ccc;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-  border-radius: 0 0 0.375rem 0.375rem;
-}
-
-:deep(.ql-editor.ql-blank::before) {
-  font-style: italic;
-  color: #999;
-}
-</style>

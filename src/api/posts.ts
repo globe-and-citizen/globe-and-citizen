@@ -168,3 +168,25 @@ export async function deleteNewsArticle(
     throw error;
   }
 }
+
+export async function fetchPostById(id: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}${POSTS_URL}/${id}`);
+
+    if (!response.ok) {
+      throw new Error(`Error fetching post: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const postData = data.data || data;
+
+    if (postData.entries && Array.isArray(postData.entries)) {
+      console.log(`Found ${postData.entries.length} entries for post ${id}`);
+    }
+
+    return postData;
+  } catch (error) {
+    console.error("Error fetching post:", error);
+    return null;
+  }
+}

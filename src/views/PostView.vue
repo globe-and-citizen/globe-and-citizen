@@ -60,28 +60,37 @@
         <p class="text-gray-500">No related articles to display</p>
       </div>
     </div>
+    <CommentsSection :post="post" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRoute } from "vue-router";
 import { computed, ref } from "vue";
-import { API_BASE_URL, POSTS_URL } from "@/api/constants";
 import type { Post } from "@/models/Posts";
 import HeadingSection from "@/sections/PostView/HeadingSection/HeadingSection.vue";
 import VerticalCard from "@/components/ArticleCard/Vertical/VerticalCard.vue";
 import DOMPurify from "dompurify";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
+import "@/quill.css";
+import { useQuery } from "@tanstack/vue-query";
+import { fetchPostById } from "@/api/posts";
+import CommentsSection from "@/sections/PostView/CommentsSection/CommentsSection.vue";
 
 const route = useRoute();
 const postId = route.params.id as string;
-const post = ref<Post | null>(null);
 
-// Entries display control
+const { data: post } = useQuery<Post | null, unknown, Post | null, string[]>({
+  queryKey: ["post"],
+  queryFn: async () => {
+    const response = await fetchPostById(postId);
+    return response as Post | null;
+  },
+});
+
 const entriesLimit = 3;
 const showAllEntries = ref(false);
 
-// Computed property to control how many entries to display
 const displayedEntries = computed(() => {
   if (!post.value || !post.value.entries) return [];
   return showAllEntries.value
@@ -89,44 +98,10 @@ const displayedEntries = computed(() => {
     : post.value.entries.slice(0, entriesLimit);
 });
 
-// Sanitize the HTML content
 const sanitizedContent = computed(() => {
   if (!post.value || !post.value.content) return "";
   return DOMPurify.sanitize(post.value.content);
 });
-
-// Fetch the post data
-async function fetchPost(id: string) {
-  try {
-    const response = await fetch(`${API_BASE_URL}${POSTS_URL}/${id}`);
-
-    if (!response.ok) {
-      throw new Error(`Error fetching post: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const postData = data.data || data; // Assuming the API returns data in a 'data' property
-
-    // Ensure entries are properly mapped as Post objects
-    if (postData.entries && Array.isArray(postData.entries)) {
-      // Entries are already present in the response
-      console.log(`Found ${postData.entries.length} entries for post ${id}`);
-    }
-
-    return postData;
-  } catch (error) {
-    console.error("Error fetching post:", error);
-    return null;
-  }
-}
-
-// Load the post data
-const loadPost = async () => {
-  post.value = await fetchPost(postId);
-};
-
-// Load the post when the component is mounted
-loadPost();
 
 const formattedDate = computed(() => {
   if (!post.value || !post.value.created_at) return "";
@@ -148,7 +123,3 @@ const readingTime = computed(() => {
   return Math.ceil(words / wordsPerMinute);
 });
 </script>
-
-<style>
-/* QuillEditor content styling */
-</style>
