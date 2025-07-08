@@ -2,7 +2,7 @@
   <router-link
     v-if="post?.id"
     v-slot="{ navigate }"
-    :to="{ name: 'PostView', params: { id: post.id } }"
+    :to="{ name: 'PostView', params: { id: post.slug } }"
     custom
   >
     <div

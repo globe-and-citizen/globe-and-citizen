@@ -93,6 +93,13 @@
               <span class="text-sm text-gray-500">{{
                 formatCommentDate(comment.created_at)
               }}</span>
+              <button
+                v-if="isAdmin"
+                class="text-red-600 hover:underline ml-auto"
+                @click="handleDeleteComment(comment.id)"
+              >
+                Delete
+              </button>
             </div>
             <p class="text-gray-700 leading-relaxed">
               {{ comment.content }}
@@ -122,12 +129,16 @@
 </template>
 
 <script setup lang="ts">
-import { createComment } from "@/api/comments";
+import { createComment, deleteComment } from "@/api/comments";
 import type { Post } from "@/models/Posts";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { computed, ref } from "vue";
 import { formatCommentDate } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
+import { useModal } from "vue-final-modal";
+import ConfirmDeleteModal from "@/modals/ConfirmDeleteModal.vue";
 
+const authStore = useAuthStore();
 const queryClient = useQueryClient();
 
 // Comment form data
@@ -139,24 +150,72 @@ const commentSubmitSuccess = ref(false);
 const commentsLimit = 10;
 const showAllComments = ref(false);
 
-const props = defineProps<{ post: Post | undefined | null }>();
+// Modal control
+const { open, close } = useModal({
+  component: ConfirmDeleteModal,
+  attrs: {
+    title: "Confirm Comment Deletion",
+    onConfirm: () => {
+      if (commentToDelete.value) {
+        deleteCommentMutation.mutate(commentToDelete.value);
+      }
+      close();
+    },
+    onCancel: () => {
+      close();
+    },
+  },
+  slots: {
+    default:
+      "Are you sure you want to delete this comment? This action cannot be undone.",
+  },
+});
+
+// Store ID of comment to delete
+const commentToDelete = ref<number | null>(null);
+
+const props = defineProps<{
+  post: Post | undefined | null;
+  type: "post" | "opinion";
+}>();
+// Check if the current user is an admin
+const isAdmin = computed(() => {
+  return (
+    authStore.user?.role?.name === "admin" ||
+    (authStore.user?.role?.level !== undefined &&
+      authStore.user?.role?.level >= 3)
+  );
+});
 
 // Set up the comment mutation with TanStack Query
 const commentMutation = useMutation({
-  mutationFn: async (data: { postId: number; content: string }) => {
-    return createComment(data.postId, data.content);
+  mutationFn: async (data: { postId: string; content: string }) => {
+    return createComment(data.postId, data.content, props.type);
   },
   onSuccess: () => {
     // Reset the form
     commentContent.value = "";
     commentSubmitSuccess.value = true;
     // Invalidate and refetch the post data to update comments
-    queryClient.invalidateQueries({ queryKey: ["post"] });
+    queryClient.invalidateQueries({
+      queryKey: props.type === "post" ? ["post"] : ["opinion"],
+    });
 
     // Hide success message after 3 seconds
     setTimeout(() => {
       commentSubmitSuccess.value = false;
     }, 3000);
+  },
+});
+
+// Set up the delete comment mutation
+const deleteCommentMutation = useMutation({
+  mutationFn: async (commentId: number) => {
+    // TODO TO IMPLEMENT
+    return deleteComment(commentId);
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["post"] });
   },
 });
 
@@ -183,8 +242,14 @@ const submitComment = async () => {
 
   // Use the mutation to create the comment
   commentMutation.mutate({
-    postId: props.post.id,
+    postId: props.post.slug,
     content: commentContent.value,
   });
+};
+
+// Delete a comment
+const handleDeleteComment = async (commentId: number) => {
+  commentToDelete.value = commentId;
+  open();
 };
 </script>

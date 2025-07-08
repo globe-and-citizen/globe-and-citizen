@@ -1,7 +1,7 @@
 import { fetchWithAuth } from "@/api/auth.ts";
 import type { FetchPostsType, NewPostType } from "../models/Posts";
 
-import { API_BASE_URL, POSTS_URL, USER_FEED } from "./constants";
+import { API_BASE_URL, ENTRIES_URL, POSTS_URL, USER_FEED } from "./constants";
 
 export async function fetchAllPosts(
   size: number,
@@ -120,7 +120,7 @@ export async function fetchPostsCount(): Promise<{ data: number }> {
 }
 
 export async function patchNewsArticle(
-  articleId: number,
+  articleId: string,
   article: Partial<NewPostType>
 ): Promise<{ success: boolean; message: string }> {
   try {
@@ -148,7 +148,7 @@ export async function patchNewsArticle(
 }
 
 export async function deleteNewsArticle(
-  articleId: number
+  articleId: string
 ): Promise<{ success: boolean; message: string }> {
   try {
     const response = await fetchWithAuth(
@@ -188,5 +188,41 @@ export async function fetchPostById(id: string) {
   } catch (error) {
     console.error("Error fetching post:", error);
     return null;
+  }
+}
+
+export async function fetchEntryBySlug(slug: string) {
+  try {
+    const response = await fetch(`${API_BASE_URL}${ENTRIES_URL}/${slug}`);
+
+    if (!response.ok) {
+      throw new Error(`Error fetching entry: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error("Error fetching entry:", error);
+    return null;
+  }
+}
+
+export async function fetchOpinionById(opinionId: string) {
+  try {
+    // For now, we're reusing the same API endpoint but in a real application
+    // you would have a dedicated opinions endpoint
+    const response = await fetch(`${API_BASE_URL}${ENTRIES_URL}/${opinionId}`);
+
+    if (!response.ok) {
+      // Fallback to posts endpoint if dedicated opinion endpoint doesn't exist yet
+      return fetchPostById(opinionId);
+    }
+
+    const data = await response.json();
+    return data.data || data;
+  } catch (error) {
+    console.error("Error fetching opinion:", error);
+    // Fallback to posts endpoint if the opinion endpoint fails
+    return fetchPostById(opinionId);
   }
 }

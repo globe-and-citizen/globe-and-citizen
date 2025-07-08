@@ -11,7 +11,7 @@
       v-for="(post, index) in posts"
       :key="index"
       v-slot="{ navigate, href }"
-      :to="{ name: 'PostView', params: { id: post.id } }"
+      :to="{ name: 'PostView', params: { id: post.slug } }"
       custom
     >
       <VerticalCard

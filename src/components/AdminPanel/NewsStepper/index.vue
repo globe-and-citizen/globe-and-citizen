@@ -45,6 +45,16 @@ const stepIndex = ref(1);
 const selectedArticle = ref<NewsApiArticle | null>(null);
 const generatedSummary = ref<string>("");
 
+// Utility function to generate slug from title
+const generateSlug = (title: string): string => {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "") // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
+};
+
 const steps = [
   {
     step: 1,
@@ -81,7 +91,11 @@ const publishMutation = useMutation({
   mutationFn: postNewsArticle,
   onSuccess: () => {
     toast.success("Article published successfully!");
-    // Reset form or redirect
+    // Reset form and redirect back to step 1
+    stepIndex.value = 1;
+    selectedArticle.value = null;
+    generatedSummary.value = "";
+    form.resetForm();
   },
   onError: () => {
     toast.error("Failed to publish article");
@@ -111,6 +125,9 @@ function onSubmit(values: Record<string, unknown>) {
         (values.title as string) ||
         selectedArticle.value.title ||
         "Untitled Article",
+      slug:
+        (values.slug as string) ||
+        generateSlug(selectedArticle.value.title || "untitled-article"),
       content: (values.content as string) || generatedSummary.value,
       categories: ["news"],
       is_external: true,
@@ -154,9 +171,11 @@ watchEffect(() => {
   if (stepIndex.value === 3 && selectedArticle.value) {
     const content =
       generatedSummary.value || selectedArticle.value.content || "";
+    const generatedSlug = generateSlug(selectedArticle.value.title || "");
 
     setValues({
       title: selectedArticle.value.title || "",
+      slug: generatedSlug,
       description: selectedArticle.value.description || "",
       content: content,
       author: selectedArticle.value.author || "Unknown",
@@ -367,9 +386,38 @@ watchEffect(() => {
                         type="text"
                         v-bind="componentField"
                         :default-value="selectedArticle?.title || ''"
+                        @input="(e: Event) => {
+                          componentField.onChange(e);
+                          // Auto-generate slug when title changes
+                          const target = e.target as HTMLInputElement;
+                          if (target.value) {
+                            form.setFieldValue('slug', generateSlug(target.value));
+                          }
+                        }"
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                </FormField>
+
+                <FormField v-slot="{ componentField }" name="slug">
+                  <FormItem>
+                    <FormLabel>Slug</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="text"
+                        v-bind="componentField"
+                        placeholder="article-slug"
+                        :default-value="
+                          generateSlug(selectedArticle?.title || '')
+                        "
+                      />
+                    </FormControl>
+                    <FormMessage />
+                    <p class="text-xs text-muted-foreground mt-1">
+                      URL-friendly version of the title. Only lowercase letters,
+                      numbers, and hyphens are allowed.
+                    </p>
                   </FormItem>
                 </FormField>
 
@@ -514,13 +562,11 @@ watchEffect(() => {
                       }}
                     </CardDescription>
                     <div class="text-xs text-muted-foreground mt-1">
-                      <!-- {{
-                        values.publishedAt
-                          ? formatDate(values.publishedAt)
-                          : selectedArticle?.publishedAt
-                          ? formatDate(selectedArticle.publishedAt)
-                          : ""
-                      }} -->
+                      <span class="font-medium">Slug:</span>
+                      {{
+                        values.slug ||
+                        generateSlug(selectedArticle?.title || "")
+                      }}
                     </div>
                   </CardHeader>
                   <CardContent>

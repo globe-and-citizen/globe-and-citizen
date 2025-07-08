@@ -15,6 +15,8 @@ export type Post = {
   categories: string[];
   is_external: boolean;
   author: string;
+  post_slug?: string;
+  slug: string;
   description: string;
   source_url: string;
   source_name: string;

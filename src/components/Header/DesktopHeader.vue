@@ -65,6 +65,7 @@
             <a
               href="#"
               class="flex items-center text-gray-700 hover:text-gray-900"
+              @click="open"
               >Write
               <svg
                 width="24"
@@ -147,12 +148,25 @@ import logo from "../../assets/logo.svg";
 import { useRouter } from "vue-router";
 import { useSearchStore } from "@/store/searchStore.ts";
 import { useDebounceFn } from "@vueuse/core";
+import { useModal } from "vue-final-modal";
+import ModalConfirmPlainCss from "./ModalConfirPlainCss.vue";
 
 type HeaderState = "default" | "no-user" | "no-user-search" | "logged-in";
 const authStore = useAuthStore();
 const router = useRouter();
 const searchStore = useSearchStore();
-
+const { open, close } = useModal({
+  component: ModalConfirmPlainCss,
+  attrs: {
+    title: "Hello World!",
+    onConfirm() {
+      close();
+    },
+  },
+  slots: {
+    default: "<p>The content of the modal</p>",
+  },
+});
 const headerState: ComputedRef<HeaderState> = computed(() => {
   return authStore.user?.id ? "logged-in" : "no-user-search";
 });

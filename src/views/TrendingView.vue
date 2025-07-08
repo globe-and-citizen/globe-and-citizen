@@ -7,6 +7,12 @@
         :post="post"
         :show-tags="true"
         :show-reading-time-and-comments="true"
+        @click="
+          () =>
+            post.type === 'post'
+              ? $router.push(`/post/${post.slug}`)
+              : $router.push(`/post/${post.post_slug}/${post.slug}`)
+        "
       />
     </div>
   </div>

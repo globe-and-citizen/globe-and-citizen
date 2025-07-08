@@ -7,6 +7,7 @@ export const REFRESH_TOKEN_URL = "/refresh-token";
 
 // Posts
 export const POSTS_URL = "/posts";
+export const ENTRIES_URL = "/entries";
 export const USER_FEED = "/users/feed";
 
 // Comments

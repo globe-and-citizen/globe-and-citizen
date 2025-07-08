@@ -6,6 +6,7 @@ import BecomeAContributorView from "../views/BecomeAContributorView.vue";
 import TrendingView from "../views/TrendingView.vue";
 import AdvertisementView from "../views/AdvertisementView.vue";
 import PostView from "../views/PostView.vue";
+import OpinionView from "../views/OpinionView.vue";
 import ProfilePageView from "../views/ProfilePageView.vue";
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "../store/authStore";
@@ -22,7 +23,10 @@ const routes = [
     component: PublicLayout,
     children: [
       { path: "", component: HomeView },
-      { path: "trending", component: TrendingView },
+      {
+        path: "trending",
+        component: TrendingView,
+      },
       { path: "about-us", component: AboutView },
       { path: "become-a-contributor", component: BecomeAContributorView },
       { path: "sign-in", component: SignInView },
@@ -31,6 +35,12 @@ const routes = [
         path: "post/:id",
         name: "PostView",
         component: PostView,
+        props: true,
+      },
+      {
+        path: "post/:id/:opinionId",
+        name: "PostEntryView",
+        component: OpinionView,
         props: true,
       },
       { path: "advertisement/:id", component: AdvertisementView },

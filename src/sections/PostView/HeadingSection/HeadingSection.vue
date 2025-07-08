@@ -1,5 +1,5 @@
 <template>
-  <div class="my-8">
+  <div class="my-4">
     <div class="flex flex-col gap-4">
       <h1 class="text-3xl font-bold text-gray-800">{{ post?.title }}</h1>
       <div class="flex items-center gap-4 text-gray-600">

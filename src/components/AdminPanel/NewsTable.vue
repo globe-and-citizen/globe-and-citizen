@@ -177,6 +177,10 @@
           <Input id="title" v-model="editForm.title" />
         </div>
         <div class="grid gap-2">
+          <Label for="slug">Slug</Label>
+          <Input id="slug" v-model="editForm.slug" />
+        </div>
+        <div class="grid gap-2">
           <Label for="author">Author</Label>
           <Input id="author" v-model="editForm.author" />
         </div>
@@ -336,7 +340,7 @@ const { data, isLoading } = useQuery<FetchPostsType>({
 });
 
 const { mutate: deletePost } = useMutation({
-  mutationFn: async (postId: number) => {
+  mutationFn: async (postId: string) => {
     await deleteNewsArticle(postId);
   },
   onSuccess: () => {
@@ -352,7 +356,7 @@ const { mutate: updatePost } = useMutation({
     postId,
     article,
   }: {
-    postId: number;
+    postId: string;
     article: Partial<NewPostType>;
   }) => {
     await patchNewsArticle(postId, article);
@@ -412,9 +416,10 @@ const sanitizedContent = computed(() => {
 
 function handleSaveEdit() {
   updatePost({
-    postId: selectedPost.value?.id || 0,
+    postId: selectedPost.value?.slug || "",
     article: {
       title: editForm.value.title || "",
+      slug: editForm.value.slug || "",
       author: editForm.value.author || "",
       description: editForm.value.description || "",
       url_to_image: editForm.value.url_to_image || "",
@@ -433,7 +438,7 @@ function handleDelete(post: Post) {
 
 function handleConfirmDelete() {
   if (selectedPost.value) {
-    deletePost(selectedPost.value.id);
+    deletePost(selectedPost.value.slug);
   }
   deleteDialogOpen.value = false;
 }
@@ -479,7 +484,7 @@ const ActionsDropdown = ({ row }: { row: { original: Post } }) => {
               h(
                 DropdownMenuItem,
                 {
-                  onClick: () => window.open(`/post/${post.id}`, "_blank"),
+                  onClick: () => window.open(`/post/${post.slug}`, "_blank"),
                   class: "flex items-center justify-between",
                 },
                 {
