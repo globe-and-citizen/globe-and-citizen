@@ -139,7 +139,7 @@
                               </div>
                             </td>
                             <td class="px-3 py-2 whitespace-nowrap">
-                              {{ opinion.author || "Unknown" }}
+                              {{ opinion.user.username || "Unknown" }}
                             </td>
                             <td class="px-3 py-2 whitespace-nowrap">
                               {{ formatDate(opinion.created_at) }}
@@ -435,7 +435,7 @@
         <div class="space-y-2">
           <h2 class="text-xl font-semibold">{{ selectedOpinion?.title }}</h2>
           <p class="text-sm text-muted-foreground">
-            By {{ selectedOpinion?.author || "Unknown" }} |
+            By {{ selectedOpinion?.user.username || "Unknown" }} |
             {{ formatDate(selectedOpinion?.created_at || "") }}
           </p>
           <div v-if="selectedOpinion?.url_to_image" class="my-4">
@@ -480,11 +480,21 @@
         </div>
         <div class="grid gap-2">
           <Label for="author">Author</Label>
-          <Input id="author" v-model="opinionEditForm.author" />
+          <Input
+            id="author"
+            v-model="opinionEditForm.user!.username"
+            readonly
+            class="bg-muted cursor-not-allowed focus-visible:ring-0 focus-visible:text-gray-600 focus-visible:border-transparent"
+          />
         </div>
         <div class="grid gap-2">
           <Label for="description">Description</Label>
-          <Textarea id="description" v-model="opinionEditForm.description" />
+          <Textarea
+            id="description"
+            v-model="opinionEditForm.description"
+            readonly
+            class="bg-muted cursor-not-allowed focus-visible:ring-0 focus-visible:text-gray-600 focus-visible:border-transparent"
+          />
         </div>
         <div class="grid gap-2">
           <Label for="content">Content</Label>
@@ -669,10 +679,22 @@ const { mutate: updateOpinion } = useMutation({
     await patchOpinion(payload);
   },
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["allPosts"] });
+    // Invalidate the specific post query to refresh the post and its opinions
+    const postSlug = tableData.value.find(
+      (post) => post.id === expandedRowId.value
+    )?.slug;
+    if (postSlug) {
+      queryClient.invalidateQueries({
+        queryKey: ["post", postSlug],
+      });
+    }
+    // Also invalidate all posts to ensure consistent data
+    queryClient.invalidateQueries({
+      queryKey: ["allPosts"],
+    });
   },
   onError: (error) => {
-    console.error("Failed to update post:", error);
+    console.error("Failed to update opinion:", error);
   },
 });
 
@@ -821,17 +843,19 @@ function handleSaveOpinionEdit() {
     opinionId: selectedOpinion.value?.slug || "",
     opinion: {
       title: opinionEditForm.value.title || "",
-      author: opinionEditForm.value.author || "",
       url_to_image: opinionEditForm.value.url_to_image || "",
       content: opinionEditForm.value.content || "",
     },
   });
   opinionEditDialogOpen.value = false;
 
-  // Refresh opinions
-  if (expandedRowId.value !== null) {
-    loadOpinions(expandedRowId.value);
-  }
+  // The mutation's onSuccess callback will handle the query invalidation
+  // We'll still manually refresh the opinions in case the UI needs immediate update
+  setTimeout(() => {
+    if (expandedRowId.value !== null) {
+      loadOpinions(expandedRowId.value);
+    }
+  }, 500);
 }
 
 function handleConfirmOpinionDelete() {

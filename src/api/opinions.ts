@@ -6,7 +6,6 @@ export type OpinionPatchPayload = {
   opinion: {
     title: string;
     content: string;
-    author: string;
     url_to_image?: string;
   };
 };
@@ -33,7 +32,7 @@ export async function patchOpinion(
     const data = await response.json();
     return { success: true, message: data.message };
   } catch (error) {
-    console.error("Error updating news article:", error);
+    console.error("Error updating opinion:", error);
     throw error;
   }
 }
