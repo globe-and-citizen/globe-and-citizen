@@ -1,5 +1,3 @@
-import type { Post } from "@/models/Posts";
-
 /**
  * Determines if content should be treated as an opinion
  * Since posts and opinions come from different API endpoints,
