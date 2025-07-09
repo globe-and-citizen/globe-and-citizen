@@ -3710,6 +3710,7 @@ __metadata:
     pinia: "npm:^3.0.2"
     pinia-plugin-persistedstate: "npm:^4.3.0"
     postcss: "npm:^8.5.3"
+    quill-image-uploader: "npm:^1.3.0"
     reka-ui: "npm:^2.3.1"
     tailwind-merge: "npm:^3.3.0"
     tailwindcss: "npm:^4.1.7"
@@ -4137,6 +4138,15 @@ __metadata:
     lodash.clonedeep: "npm:^4.5.0"
     lodash.isequal: "npm:^4.5.0"
   checksum: 10c0/cecd1584c59e360908e642fc159ef931929aecc930af208b79397daf1259df76efc7a12ad5c924171bd9861bfcf80cb20dbe4fcc2468eab5a84a72d0852c15aa
+  languageName: node
+  linkType: hard
+
+"quill-image-uploader@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "quill-image-uploader@npm:1.3.0"
+  peerDependencies:
+    quill: ^1.3.7
+  checksum: 10c0/d2667d0a5b4a54d97fa0a1369987c4fa6880f30213c3e6fe3787c0a520141299a3eb8c0e92abc9960326be23f912b4932d748bef712e29b3a8f9db85da3bd4d2
   languageName: node
   linkType: hard
 

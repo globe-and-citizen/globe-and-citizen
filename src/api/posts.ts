@@ -226,3 +226,25 @@ export async function fetchOpinionById(opinionId: string) {
     return fetchPostById(opinionId);
   }
 }
+
+export async function fetchPostWithEntries(slug: string) {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}${POSTS_URL}/${slug}?include_entries=true`
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Error fetching post with entries: ${response.statusText}`
+      );
+    }
+
+    const data = await response.json();
+    const postData = data.data || data;
+
+    return postData;
+  } catch (error) {
+    console.error("Error fetching post with entries:", error);
+    return null;
+  }
+}

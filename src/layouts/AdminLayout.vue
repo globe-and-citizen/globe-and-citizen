@@ -4,12 +4,11 @@
     <AdminPanel />
     <SidebarTrigger />
     <slot />
-    <div
-      class="flex flex-col px-[45px] m-8 border rounded-xl pt-[28px] w-full bg-white"
+    <SidebarContent
+      class="px-[45px] m-8 border rounded-xl pt-[28px] w-full bg-white"
     >
       <RouterView />
-    </div>
-    <!--    </main>-->
+    </SidebarContent>
   </SidebarProvider>
 </template>
 
@@ -17,4 +16,5 @@
 import { SidebarProvider } from "../components/ui/sidebar";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import AdminPanel from "@/components/AdminPanel/index.vue";
+import SidebarContent from "@/components/ui/sidebar/SidebarContent.vue";
 </script>
