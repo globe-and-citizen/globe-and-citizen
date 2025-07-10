@@ -3,5 +3,5 @@
 </template>
 
 <script setup lang="ts">
-import NewsTable from "@/components/AdminPanel/NewsTable.vue";
+import NewsTable from "@/components/AdminPanel/NewsTable/NewsTable.vue";
 </script>

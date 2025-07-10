@@ -218,7 +218,6 @@
 
 <script setup lang="ts">
 import type {
-  ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
@@ -232,11 +231,9 @@ import {
   useVueTable,
 } from "@tanstack/vue-table";
 
-import SortCircle from "@/assets/icons/sort-circle.svg";
+import { computed, ref } from "vue";
 import ChevronDown from "@/assets/icons/chevron-down.svg";
-import { computed, h, ref } from "vue";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -269,8 +266,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import DropdownAction from "./DropdownAction.vue";
 import { valueUpdater } from "@/components/ui/table/utils.ts";
+import { createUserTableColumns } from "./utils/tableColumns.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { fetchAllUsers, updateUser } from "@/api/user.ts";
 import { useSearchStore } from "@/store/searchStore.ts";
@@ -344,139 +341,23 @@ function handleSaveEdit() {
   editDialogOpen.value = false;
 }
 
-// Function to handle deactivate action
 function handleDeactivate(user: UserType) {
   selectedUser.value = user;
   deactivateDialogOpen.value = true;
 }
 
-// Function to confirm deactivate
 function handleConfirmDeactivate() {
-  // Here you would typically make an API call to deactivate the user
   console.log("Deactivating user:", selectedUser.value?.id);
-  // For now, just close the dialog
   deactivateDialogOpen.value = false;
 }
 
-// Define the columns for the table
-const columns: ColumnDef<UserType>[] = [
-  {
-    id: "select",
-    header: ({ table }) =>
-      h(Checkbox, {
-        modelValue:
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate"),
-        "onUpdate:modelValue": (value) =>
-          table.toggleAllPageRowsSelected(!!value),
-        ariaLabel: "Select all",
-      }),
-    cell: ({ row }) =>
-      h(Checkbox, {
-        modelValue: row.getIsSelected(),
-        "onUpdate:modelValue": (value) => row.toggleSelected(!!value),
-        ariaLabel: "Select row",
-      }),
-    enableSorting: false,
-    enableHiding: false,
-    size: 40,
-  },
-  {
-    accessorKey: "username",
-    header: ({ column }) => {
-      return h(
-        Button,
-        {
-          variant: "ghost",
-          onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
-        },
-        () => ["Username", h(SortCircle, { class: "ml-2 h-4 w-4" })]
-      );
-    },
-    cell: ({ row }) =>
-      h(
-        "div",
-        { class: "capitalize font-medium truncate max-w-[150px]" },
-        row.getValue("username")
-      ),
-    size: 150,
-  },
-  {
-    accessorKey: "role",
-    header: "Role",
-    cell: ({ row }) =>
-      h(
-        "div",
-        { class: "capitalize truncate max-w-[120px]" },
-        (row.getValue("role") as Role).name
-      ),
-    size: 120,
-  },
-  {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return h(
-        Button,
-        {
-          variant: "ghost",
-          onClick: () => column.toggleSorting(column.getIsSorted() === "asc"),
-        },
-        () => ["Email", h(SortCircle, { class: "ml-2 h-4 w-4" })]
-      );
-    },
-    cell: ({ row }) =>
-      h(
-        "div",
-        { class: "lowercase truncate max-w-[200px] md:max-w-[300px]" },
-        row.getValue("email")
-      ),
-    minSize: 150,
-  },
-  {
-    accessorKey: "created_at",
-    header: () => h("div", { class: "text-right" }, "Created at"),
-    cell: ({ row }) => {
-      const dateVal = row.getValue("created_at") as string;
-      const date = new Date(dateVal);
+const columns = createUserTableColumns(handleEdit, handleDeactivate);
 
-      const formatted = new Intl.DateTimeFormat("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }).format(date);
-
-      return h(
-        "div",
-        { class: "text-right font-medium whitespace-nowrap" },
-        formatted
-      );
-    },
-    size: 110,
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    size: 70,
-    cell: ({ row }) => {
-      const user = row.original;
-
-      return h(DropdownAction, {
-        user,
-        onExpand: row.toggleExpanded,
-        onEdit: handleEdit,
-        onDeactivate: handleDeactivate,
-      });
-    },
-  },
-];
-
-// Setup the table state
 const sorting = ref<SortingState>([]);
 const columnFilters = ref<ColumnFiltersState>([]);
 const columnVisibility = ref<VisibilityState>({});
 const rowSelection = ref({});
 
-// Initialize the table
 const table = useVueTable({
   data: tableData,
   columns,
