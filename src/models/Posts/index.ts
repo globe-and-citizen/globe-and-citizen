@@ -25,7 +25,9 @@ export type Post = {
   type?: "entry" | "post";
   comments: Comments;
   user: UserType;
-
+  likes?: number;
+  dislikes?: number;
+  user_vote?: 1 | -1 | 0;
   entries?: Post[];
   comments_count?: number;
   userId?: number;

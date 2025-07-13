@@ -1,9 +1,10 @@
 <template>
   <router-view />
+  <VueQueryDevtools />
 </template>
 
 <script setup lang="ts">
-// No need to import header or layout components here
+import { VueQueryDevtools } from "@tanstack/vue-query-devtools";
 </script>
 
 <style scoped></style>

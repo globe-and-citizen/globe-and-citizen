@@ -21,16 +21,14 @@ app.use(VueQueryPlugin, {
   queryClientConfig: {
     defaultOptions: {
       queries: {
-        staleTime: 5000 * 60, // Cache for 5 minutes
-        refetchOnReconnect: "always", // Refetch on reconnect
-        refetchOnWindowFocus: false,
+        staleTime: 5000 * 60,
+        refetchOnReconnect: "always",
+        refetchOnWindowFocus: true,
       },
     },
   },
+  enableDevtoolsV6Plugin: true,
 });
 const authStore = useAuthStore();
 authStore.initializeAuth();
-app.use(VueQueryPlugin, {
-  enableDevtoolsV6Plugin: true,
-});
 app.use(router).mount("#app");

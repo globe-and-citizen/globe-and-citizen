@@ -133,15 +133,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Call to action -->
-            <div class="border-t border-gray-200 pt-4">
-              <button
-                class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
-              >
-                Cast Your Vote
-              </button>
-            </div>
           </div>
         </div>
       </div>

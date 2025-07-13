@@ -31,11 +31,11 @@
               <button
                 :class="[
                   'flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg border transition-colors text-sm md:text-base',
-                  isLiked
+                  post.user_vote === 1
                     ? 'bg-green-50 border-green-300 text-green-700'
                     : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100',
                 ]"
-                @click="handleLike"
+                @click="handleReaction(1)"
               >
                 <svg
                   class="w-4 h-4 md:w-5 md:h-5"
@@ -46,17 +46,17 @@
                     d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"
                   />
                 </svg>
-                <span class="text-sm font-medium">{{ likeCount }}</span>
+                <span class="text-sm font-medium">{{ post?.likes }}</span>
               </button>
 
               <button
                 :class="[
                   'flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg border transition-colors text-sm md:text-base',
-                  isDisliked
+                  post.user_vote === -1
                     ? 'bg-red-50 border-red-300 text-red-700'
                     : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100',
                 ]"
-                @click="handleDislike"
+                @click="handleReaction(-1)"
               >
                 <svg
                   class="w-4 h-4 md:w-5 md:h-5 rotate-180"
@@ -67,7 +67,7 @@
                     d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"
                   />
                 </svg>
-                <span class="text-sm font-medium">{{ dislikeCount }}</span>
+                <span class="text-sm font-medium">{{ post?.dislikes }}</span>
               </button>
             </div>
 
@@ -101,7 +101,7 @@
             </div>
           </div>
           <div class="prose prose-sm md:prose-lg max-w-none">
-            <div className="ql-editor" v-html="sanitizedContent"></div>
+            <div class="ql-editor" v-html="sanitizedContent"></div>
           </div>
         </div>
       </div>
@@ -182,6 +182,11 @@
           <h3 class="text-xl font-bold mb-6">Related Opinions</h3>
           <p class="text-gray-500">No related opinions to display</p>
         </div>
+        <div class="mt-5">
+          <h3 class="text-xl font-bold mb-6">Stats Summary</h3>
+
+          <AppBarChart v-if="post" :post="post" />
+        </div>
       </div>
     </div>
 
@@ -242,9 +247,11 @@ import VerticalCard from "@/components/ArticleCard/Vertical/VerticalCard.vue";
 import DOMPurify from "dompurify";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import "@/quill.css";
-import { useQuery, useQueryClient } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { fetchPostById } from "@/api/posts";
 import CommentsSection from "@/sections/PostView/CommentsSection/CommentsSection.vue";
+import AppBarChart from "@/components/Charts/AppBarChart.vue";
+import { postReaction } from "@/api/reactions";
 
 const route = useRoute();
 const postId = route.params.id as string;
@@ -257,6 +264,21 @@ const { data: post } = useQuery<Post | null, unknown, Post | null, string[]>({
     const response = await fetchPostById(postId);
     return response as Post | null;
   },
+  enabled: !!postId,
+  staleTime: 0,
+  refetchOnMount: true,
+});
+
+// Likes Mutation
+const publishMutation = useMutation({
+  mutationFn: postReaction,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["postReaction", postId] });
+    queryClient.invalidateQueries({ queryKey: ["post", postId] });
+  },
+  onError: () => {
+    console.error("Failed to publish article");
+  },
 });
 
 onBeforeRouteUpdate(async (to) => {
@@ -267,7 +289,6 @@ onBeforeRouteUpdate(async (to) => {
   }
 });
 
-// Also scroll to top on initial component mount
 onMounted(() => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
@@ -280,52 +301,11 @@ const sanitizedContent = computed(() => {
 const entriesLimit = 3;
 const showAllEntries = ref(false);
 
-// Like/Dislike functionality
-const isLiked = ref(false);
-const isDisliked = ref(false);
-const likeCount = ref(0);
-const dislikeCount = ref(0);
-
-const handleLike = () => {
-  if (isLiked.value) {
-    // Unlike
-    isLiked.value = false;
-    likeCount.value--;
-  } else {
-    // Like
-    isLiked.value = true;
-    likeCount.value++;
-
-    // Remove dislike if it was disliked
-    if (isDisliked.value) {
-      isDisliked.value = false;
-      dislikeCount.value--;
-    }
-  }
-
-  // TODO: Implement API call here
-  console.log("Like action:", { postId, isLiked: isLiked.value });
-};
-
-const handleDislike = () => {
-  if (isDisliked.value) {
-    // Un-dislike
-    isDisliked.value = false;
-    dislikeCount.value--;
-  } else {
-    // Dislike
-    isDisliked.value = true;
-    dislikeCount.value++;
-
-    // Remove like if it was liked
-    if (isLiked.value) {
-      isLiked.value = false;
-      likeCount.value--;
-    }
-  }
-
-  // TODO: Implement API call here
-  console.log("Dislike action:", { postId, isDisliked: isDisliked.value });
+const handleReaction = (score: 1 | -1) => {
+  publishMutation.mutate({
+    post_id: post.value!.id,
+    score,
+  });
 };
 
 const displayedEntries = computed(() => {

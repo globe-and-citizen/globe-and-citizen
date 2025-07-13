@@ -12,3 +12,8 @@ export const USER_FEED = "/users/feed";
 
 // Comments
 export const COMMENTS_URL = "/comment";
+
+// Reactions
+export const POST_REACTIONS_URL = "/vote/post";
+export const OPINION_REACTIONS_URL = "/vote/entry";
+export const GET_USER_VOTES_URL = "/vote";

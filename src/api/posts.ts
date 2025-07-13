@@ -1,5 +1,6 @@
 import { fetchWithAuth } from "@/api/auth.ts";
 import type { FetchPostsType, NewPostType } from "../models/Posts";
+import { useAuthStore } from "../store/authStore";
 
 import { API_BASE_URL, ENTRIES_URL, POSTS_URL, USER_FEED } from "./constants";
 
@@ -170,25 +171,52 @@ export async function deleteNewsArticle(
 }
 
 export async function fetchPostById(id: string) {
-  try {
-    const response = await fetch(`${API_BASE_URL}${POSTS_URL}/${id}`);
+  const authStore = useAuthStore();
 
-    if (!response.ok) {
-      throw new Error(`Error fetching post: ${response.statusText}`);
+  if (authStore.isUserAuthenticated && authStore.token) {
+    try {
+      const response = await fetchWithAuth(`${API_BASE_URL}${POSTS_URL}/${id}`);
+      console.log("Fetching post with auth token", response);
+
+      // Check if we have a valid response (not redirected)
+      if (response && !response.ok) {
+        throw new Error(`Error getting post: ${response.statusText}`);
+      }
+
+      if (response) {
+        const data = await response.json();
+        const postData = data.data || data;
+
+        if (postData.entries && Array.isArray(postData.entries)) {
+          console.log(
+            `Found ${postData.entries.length} entries for post ${id}`
+          );
+        }
+
+        return postData;
+      }
+      return;
+    } catch (error) {
+      console.error("Error creating authenticated comment:", error);
+      // If token refresh failed, fall through to guest comment as fallback
     }
-
-    const data = await response.json();
-    const postData = data.data || data;
-
-    if (postData.entries && Array.isArray(postData.entries)) {
-      console.log(`Found ${postData.entries.length} entries for post ${id}`);
-    }
-
-    return postData;
-  } catch (error) {
-    console.error("Error fetching post:", error);
-    return null;
   }
+
+  // Fall back to guest comment functionality if user is not authenticated
+  const response = await fetch(`${API_BASE_URL}${POSTS_URL}/${id}`);
+
+  if (!response.ok) {
+    throw new Error(`Error creating comment: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const postData = data.data || data;
+
+  if (postData.entries && Array.isArray(postData.entries)) {
+    console.log(`Found ${postData.entries.length} entries for post ${id}`);
+  }
+
+  return postData;
 }
 
 export async function fetchEntryBySlug(slug: string) {
