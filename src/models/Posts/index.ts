@@ -65,4 +65,5 @@ export type NewPostType = Omit<
   | "userId"
   | "version"
   | "comments"
+  | "sentences"
 >;
