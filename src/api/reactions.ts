@@ -1,6 +1,7 @@
 import type {
   OpinionReactionRequestPayload,
   PostReactionRequestPayload,
+  SentenceReactionRequestPayload,
 } from "@/models/Reactions/reactions";
 import { fetchWithAuth } from "./auth";
 import {
@@ -8,6 +9,7 @@ import {
   GET_USER_VOTES_URL,
   OPINION_REACTIONS_URL,
   POST_REACTIONS_URL,
+  POST_SENTENCE_REACTION_URL,
   POSTS_URL,
 } from "./constants";
 
@@ -75,6 +77,33 @@ export async function fetchUsersPostReaction(postId: string): Promise<unknown> {
     return data;
   } catch (error) {
     console.error("Error fetching post reactions:", error);
+    throw error;
+  }
+}
+
+export async function postSentenceReaction(
+  payload: SentenceReactionRequestPayload
+): Promise<unknown> {
+  const { postType, ...payloadNoPostType } = payload;
+  console.log("payload:", payload);
+  try {
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}${POST_SENTENCE_REACTION_URL}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payloadNoPostType),
+      }
+    );
+    if (!response) {
+      throw new Error(`Post reactions api error`);
+    }
+    console.log("Sentence reaction response:", response);
+    return response;
+  } catch (error) {
+    console.error("Error adding/removing sentence reaction:", error);
     throw error;
   }
 }

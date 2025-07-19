@@ -252,7 +252,6 @@ import { fetchPostById } from "@/api/posts";
 import CommentsSection from "@/sections/PostView/CommentsSection/CommentsSection.vue";
 import AppBarChart from "@/components/Charts/AppBarChart.vue";
 import { postReaction } from "@/api/reactions";
-
 const route = useRoute();
 const postId = route.params.id as string;
 const queryClient = useQueryClient();

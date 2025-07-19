@@ -34,7 +34,13 @@
             <p class="text-gray-600">{{ readingTime }} minute read</p>
           </div>
           <div class="prose prose-lg max-w-none">
-            <div className="ql-editor" v-html="sanitizedContent"></div>
+            <!--            <div className="ql-editor" v-html="sanitizedContent"></div>-->
+            <div class="ql-editor">
+              <Segmented
+                :content="sanitizedContent"
+                :sentences="opinion.sentences"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -153,21 +159,24 @@ import "@/quill.css";
 import { useQuery } from "@tanstack/vue-query";
 import { fetchOpinionById } from "@/api/posts";
 import CommentsSection from "@/sections/PostView/CommentsSection/CommentsSection.vue";
+import Segmented from "@/views/Segmented.vue";
 
 const route = useRoute();
 const opinionId = route.params.opinionId as string;
 console.log(route.params);
 // Fetch the opinion
-const { data: opinion } = useQuery<Post | null, unknown, Post | null, string[]>(
-  {
+const {
+  value: { data: opinion },
+} = computed(() =>
+  useQuery<Post | null, unknown, Post | null, string[]>({
     queryKey: ["opinion", opinionId],
     queryFn: async () => {
       const response = await fetchOpinionById(opinionId);
       return response as Post | null;
     },
-  }
+  })
 );
-
+console.log(opinion.value?.sentences, "");
 // Handle route updates for opinion changes
 onBeforeRouteUpdate(async (to) => {
   const newOpinionId = to.params.opinionId as string;
@@ -223,4 +232,6 @@ const readingTime = computed(() => {
   const words = opinion.value.content.split(" ").length;
   return Math.ceil(words / wordsPerMinute);
 });
+
+console.log(opinion?.value);
 </script>

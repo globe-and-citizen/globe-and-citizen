@@ -25,12 +25,33 @@ export type Post = {
   type?: "entry" | "post";
   comments: Comments;
   user: UserType;
+  sentences: Sentence[];
   likes?: number;
   dislikes?: number;
   user_vote?: 1 | -1 | 0;
   entries?: Post[];
   comments_count?: number;
   userId?: number;
+};
+
+export type Sentence = {
+  id: string;
+  position: number;
+  entry_id: number;
+  content: string;
+  opinions: SentenceOpinion;
+};
+
+type SentenceOpinion = {
+  comments: SentenceOpinionComment[];
+  dislikes: number;
+  likes: number;
+  sentence_id: string;
+};
+
+type SentenceOpinionComment = {
+  user: number;
+  text: string;
 };
 
 export type NewPostType = Omit<

@@ -17,3 +17,4 @@ export const COMMENTS_URL = "/comment";
 export const POST_REACTIONS_URL = "/vote/post";
 export const OPINION_REACTIONS_URL = "/vote/entry";
 export const GET_USER_VOTES_URL = "/vote";
+export const POST_SENTENCE_REACTION_URL = "/annotation";
