@@ -62,11 +62,13 @@
         <template v-if="headerState === 'logged-in'">
           <div class="flex gap-2">
             <!-- User Info -->
-            <a
-              href="#"
-              class="flex items-center text-gray-700 hover:text-gray-900"
-              @click="open"
-              >Write
+            <button
+              v-if="postView"
+              class="flex cursor-pointer items-center text-gray-700 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="isLoading || !post"
+              @click="openModal()"
+            >
+              Write
               <svg
                 width="24"
                 height="24"
@@ -83,7 +85,7 @@
                   fill="#0E0C0C"
                 />
               </svg>
-            </a>
+            </button>
 
             <button
               class="text-gray-700 hover:text-gray-900 cursor-pointer"
@@ -142,31 +144,84 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type ComputedRef } from "vue";
+import { computed, type ComputedRef, ref, watch, watchEffect } from "vue";
 import { useAuthStore } from "@/store/authStore.ts";
 import logo from "../../assets/logo.svg";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/store/searchStore.ts";
 import { useDebounceFn } from "@vueuse/core";
 import { useModal } from "vue-final-modal";
-import ModalConfirmPlainCss from "./ModalConfirPlainCss.vue";
+import CreateOpinionModal from "@/modals/CreateOpinionModal.vue";
+import { useQuery } from "@tanstack/vue-query";
+import type { Post } from "@/models/Posts";
+import { fetchPostById } from "@/api/posts.ts";
 
 type HeaderState = "default" | "no-user" | "no-user-search" | "logged-in";
 const authStore = useAuthStore();
 const router = useRouter();
 const searchStore = useSearchStore();
-const { open, close } = useModal({
-  component: ModalConfirmPlainCss,
-  attrs: {
-    title: "Hello World!",
-    onConfirm() {
-      close();
-    },
-  },
-  slots: {
-    default: "<p>The content of the modal</p>",
-  },
+
+const route = useRoute();
+const postView = computed(() => {
+  return route.name === "PostView";
 });
+
+const postId = computed(() => route.params.id as string);
+
+const { data: post, isLoading } = useQuery<
+  Post | null,
+  unknown,
+  Post | null,
+  string[]
+>({
+  queryKey: ["post", postId],
+  queryFn: async () => {
+    const response = await fetchPostById(postId.value);
+    return response as Post | null;
+  },
+  enabled: computed(() => postView.value && !!postId.value),
+});
+
+const modalInstance = ref();
+
+const createModal = () => {
+  if (!post.value) return null;
+  return useModal({
+    component: CreateOpinionModal,
+    attrs: {
+      post_id: post.value.id || 0,
+      post_name: post.value.title || "",
+      post_slug: post.value.slug || "",
+    },
+  });
+};
+
+watch(postId, () => {
+  modalInstance.value = null;
+});
+
+watchEffect(() => {
+  if (post.value && postView.value) {
+    modalInstance.value = createModal();
+  }
+});
+
+const openModal = () => {
+  if (!post.value) {
+    console.warn("Post data not loaded yet");
+    return;
+  }
+  if (!modalInstance.value) {
+    modalInstance.value = createModal();
+  }
+
+  if (modalInstance.value) {
+    modalInstance.value.open();
+  } else {
+    console.error("Failed to create modal instance");
+  }
+};
+
 const headerState: ComputedRef<HeaderState> = computed(() => {
   return authStore.user?.id ? "logged-in" : "no-user-search";
 });

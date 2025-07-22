@@ -227,10 +227,10 @@
       </div>
       <div v-else class="mb-8">
         <h3 class="text-lg md:text-xl font-bold mb-4 md:mb-6 border-b pb-2">
-          Related Articles
+          Related Opinions
         </h3>
         <p class="text-gray-500 text-sm md:text-base">
-          No related articles to display
+          No related opinions to display
         </p>
       </div>
     </div>

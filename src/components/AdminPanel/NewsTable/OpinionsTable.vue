@@ -135,8 +135,9 @@ interface Emits {
   (e: "delete", opinion: Post): void;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 defineEmits<Emits>();
+console.log(props.opinions);
 
 // Function to format date
 function formatDate(dateString: string): string {

@@ -58,14 +58,21 @@
       <h5 class="font-lato text-small font-semibold mb-2">
         {{ post?.title }}
       </h5>
-      <p class="text-black-80 mb-3 font-lato font-normal text-base">
-        {{
-          post?.description
-            ? post?.description?.substring(0, 110) + "..."
-            : post?.content?.substring(0, 110) + "..." ||
-              "No description available"
-        }}
-      </p>
+      <div
+        class="text-black-80 mb-3 font-lato font-normal text-base"
+        v-html="
+          post?.content.substring(0, 110) + '...' ||
+          post?.description ||
+          'No content available'
+        "
+      />
+      <!--        {{-->
+      <!--          post?.description-->
+      <!--            ? post?.description?.substring(0, 110) + "..."-->
+      <!--            : post?.content?.substring(0, 110) + "..." ||-->
+      <!--              "No description available"-->
+      <!--        }}-->
+      <!--      </div>-->
       <div v-if="showTags" class="flex gap-3 mb-4 font-lato font-bold text-xs">
         <span
           v-for="(tag, index) in post?.categories"

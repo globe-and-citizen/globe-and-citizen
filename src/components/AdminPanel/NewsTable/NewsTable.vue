@@ -82,7 +82,7 @@
 
                     <!-- Loading state -->
                     <div
-                      v-if="opinionsLoading"
+                      v-if="isOpinionLoading"
                       class="flex justify-center items-center py-4"
                     >
                       <div
@@ -92,7 +92,10 @@
 
                     <!-- No opinions -->
                     <div
-                      v-else-if="opinions.length === 0"
+                      v-else-if="
+                        !opinionsByPostId?.entries ||
+                        opinionsByPostId.entries.length === 0
+                      "
                       class="text-center py-4 text-gray-500"
                     >
                       No related opinions found.
@@ -101,7 +104,7 @@
                     <!-- Opinions table -->
                     <OpinionsTable
                       v-else
-                      :opinions="opinions"
+                      :opinions="opinionsByPostId.entries"
                       @preview="handleOpinionPreview"
                       @edit="handleOpinionEdit"
                       @delete="handleOpinionDelete"
@@ -249,7 +252,8 @@ import type { NewPostType, Post, FetchPostsType } from "@/models/Posts";
 import "@/quill.css";
 
 import { useQueryClient } from "@tanstack/vue-query";
-import { patchOpinion, type OpinionPatchPayload } from "@/api/opinions";
+import { deleteOpinion, patchOpinion } from "@/api/opinions";
+import type { OpinionPatchPayload } from "@/models/Opinions";
 
 const queryClient = useQueryClient();
 
@@ -317,6 +321,30 @@ const { mutate: updateOpinion } = useMutation({
   },
 });
 
+const { mutate: deleteOpinionMutation } = useMutation({
+  mutationFn: async (opinionId: string) => {
+    await deleteOpinion(opinionId);
+  },
+  onSuccess: () => {
+    // Invalidate the specific post query to refresh the post and its opinions
+    const postSlug = tableData.value.find(
+      (post) => post.id === expandedRowId.value
+    )?.slug;
+    if (postSlug) {
+      queryClient.invalidateQueries({
+        queryKey: ["post", postSlug],
+      });
+    }
+    // Also invalidate all posts to ensure consistent data
+    queryClient.invalidateQueries({
+      queryKey: ["allPosts"],
+    });
+  },
+  onError: (error) => {
+    console.error("Failed to delete opinion:", error);
+  },
+});
+
 const tableData = computed(() => data.value?.data ?? []);
 
 // State for dialogs
@@ -325,10 +353,8 @@ const editDialogOpen = ref(false);
 const deleteDialogOpen = ref(false);
 const selectedPost = ref<Post | null>(null);
 
-// State for expandable rows and opinions
+// State for expandable rows
 const expandedRowId = ref<number | null>(null);
-const opinionsLoading = ref(false);
-const opinions = ref<Post[]>([]);
 const selectedOpinion = ref<Post | null>(null);
 const opinionViewDialogOpen = ref(false);
 const opinionEditDialogOpen = ref(false);
@@ -345,12 +371,39 @@ function formatDate(dateString: string): string {
   }).format(date);
 }
 
+// Query for opinions by post ID
+const { data: opinionsByPostId, isLoading: isOpinionLoading } = useQuery({
+  queryKey: [
+    "post",
+    computed(() => {
+      const post = tableData.value.find(
+        (post) => post.id === expandedRowId.value
+      );
+      return post?.slug;
+    }),
+  ],
+  queryFn: async ({ queryKey }) => {
+    const [, postSlug] = queryKey;
+    if (!postSlug) return null;
+    return fetchPostById(postSlug);
+  },
+  enabled: computed(() => {
+    const post = tableData.value.find(
+      (post) => post.id === expandedRowId.value
+    );
+    return !!post?.slug;
+  }),
+  refetchOnWindowFocus: true,
+});
+
 // Function to open original article in new tab
 function openOriginalArticle() {
   if (selectedPost.value?.source_url) {
     window.open(selectedPost.value.source_url, "_blank");
   }
 }
+
+console.log(opinionsByPostId, "");
 
 // Function to handle preview action
 function handlePreview(post: Post) {
@@ -393,36 +446,12 @@ function handleConfirmDelete() {
   deleteDialogOpen.value = false;
 }
 
-// Function to toggle row expansion and load opinions
-async function toggleRowExpansion(rowId: number) {
+// Function to toggle row expansion
+function toggleRowExpansion(rowId: number) {
   if (expandedRowId.value === rowId) {
     expandedRowId.value = null;
   } else {
     expandedRowId.value = rowId;
-    await loadOpinions(rowId);
-  }
-}
-
-// Function to load opinions for a news article
-async function loadOpinions(postId: number) {
-  try {
-    opinionsLoading.value = true;
-    const post = tableData.value.find((post) => post.id === postId);
-
-    if (!post) return;
-
-    const postWithEntries = await fetchPostById(post.slug);
-
-    if (postWithEntries && Array.isArray(postWithEntries.entries)) {
-      opinions.value = postWithEntries.entries;
-    } else {
-      opinions.value = [];
-    }
-  } catch (error) {
-    console.error("Error loading opinions:", error);
-    opinions.value = [];
-  } finally {
-    opinionsLoading.value = false;
   }
 }
 
@@ -452,26 +481,13 @@ function handleSaveOpinionEdit(formData: Partial<Post>) {
     },
   });
   opinionEditDialogOpen.value = false;
-
-  // The mutation's onSuccess callback will handle the query invalidation
-  // We'll still manually refresh the opinions in case the UI needs immediate update
-  setTimeout(() => {
-    if (expandedRowId.value !== null) {
-      loadOpinions(expandedRowId.value);
-    }
-  }, 500);
 }
 
 function handleConfirmOpinionDelete() {
   if (selectedOpinion.value) {
-    deletePost(selectedOpinion.value.slug);
+    deleteOpinionMutation(selectedOpinion.value.slug);
   }
   opinionDeleteDialogOpen.value = false;
-
-  // Refresh opinions
-  if (expandedRowId.value !== null) {
-    loadOpinions(expandedRowId.value);
-  }
 }
 
 // Define the columns for the table
@@ -493,10 +509,9 @@ const table = useVueTable({
   data: tableData,
   columns,
   getCoreRowModel: getCoreRowModel(),
-  // Remove client-side pagination as we're using server-side pagination
   getSortedRowModel: getSortedRowModel(),
   getFilteredRowModel: getFilteredRowModel(),
-  manualPagination: true, // Tell the table we're handling pagination manually
+  manualPagination: true,
   onSortingChange: (updaterOrValue) => valueUpdater(updaterOrValue, sorting),
   onColumnFiltersChange: (updaterOrValue) =>
     valueUpdater(updaterOrValue, columnFilters),

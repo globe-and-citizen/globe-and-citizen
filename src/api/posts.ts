@@ -192,7 +192,7 @@ export async function fetchPostById(id: string) {
             `Found ${postData.entries.length} entries for post ${id}`
           );
         }
-
+        console.log(postData);
         return postData;
       }
       return;

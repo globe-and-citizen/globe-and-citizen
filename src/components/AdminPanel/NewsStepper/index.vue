@@ -43,6 +43,7 @@ import { generateSummary, postNewsArticle } from "../../../api/posts";
 import { Cloudinary } from "@cloudinary/url-gen";
 import { auto } from "@cloudinary/url-gen/actions/resize";
 import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
+import { generateSlug } from "@/lib/utils.ts";
 
 // Type for QuillEditor instance
 interface QuillEditorInstance {
@@ -99,14 +100,6 @@ const selectedArticle = ref<NewsApiArticle | null>(null);
 const generatedSummary = ref<string>("");
 
 // Utility function to generate slug from title
-const generateSlug = (title: string): string => {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "") // Remove special characters except spaces and hyphens
-    .replace(/\s+/g, "-") // Replace spaces with hyphens
-    .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
-    .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
-};
 
 const steps = [
   {
