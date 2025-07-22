@@ -68,8 +68,8 @@ function handleSaveEdit(data: OpinionPayload) {
       </div>
 
       <div>
-        <div class="grid gap-2">
-          <Label for="content">Content</Label>
+        <div class="grid">
+          <Label class="mb-2" for="content">Content</Label>
           <QuillEditor
             id="content"
             content-type="html"

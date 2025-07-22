@@ -16,112 +16,261 @@
       v-if="opinion"
       :src="opinion?.url_to_image"
       alt="Opinion hero image"
-      class="h-[300px] md:h-[400px] lg:h-[440px] w-full object-cover rounded-lg mb-6 md:mb-8"
+      class="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[400px] xl:h-[440px] w-full object-cover rounded-lg mb-4 md:mb-6 lg:mb-8"
     />
 
     <div v-if="!opinion" class="flex justify-center items-center h-64">
-      <p>Loading opinion article...</p>
+      <p class="text-sm md:text-base">Loading opinion article...</p>
     </div>
 
-    <div v-if="opinion" class="lg:pb-10 flex gap-10 font-lato">
-      <div class="w-8/12 border-r border-gray-200 pr-10">
-        <div class="gc-container">
-          <div class="flex flex-col items-center mb-8">
-            <h2 class="text-2xl font-bold mb-2">{{ opinion.title }}</h2>
-            <p class="text-gray-600 mb-4">
-              Opinion by {{ opinion.author }} on {{ formattedDate }}
-            </p>
-            <p class="text-gray-600">{{ readingTime }} minute read</p>
+    <div v-if="opinion" class="lg:pb-10 font-lato">
+      <!-- Mobile and Tablet Layout (< lg) -->
+      <div class="lg:hidden">
+        <!-- Main Content -->
+        <div class="mb-6">
+          <div class="gc-container">
+            <div class="flex flex-col items-center mb-6 md:mb-8">
+              <h2
+                class="text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-center px-2"
+              >
+                {{ opinion.title }}
+              </h2>
+              <p class="text-gray-600 mb-2 text-sm md:text-base text-center">
+                Opinion by {{ opinion.author }} on {{ formattedDate }}
+              </p>
+              <p class="text-gray-600 text-sm md:text-base">
+                {{ readingTime }} minute read
+              </p>
+            </div>
+            <div class="prose prose-sm md:prose-lg max-w-none">
+              <div class="ql-editor">
+                <Segmented
+                  :content="sanitizedContent"
+                  :sentences="opinion.sentences"
+                />
+              </div>
+            </div>
           </div>
-          <div class="prose prose-lg max-w-none">
-            <!--            <div className="ql-editor" v-html="sanitizedContent"></div>-->
-            <div class="ql-editor">
-              <Segmented
-                :content="sanitizedContent"
-                :sentences="opinion.sentences"
-              />
+        </div>
+
+        <!-- Opinion Stats for Mobile/Tablet -->
+        <div class="mt-8 mb-8">
+          <h3 class="text-lg md:text-xl font-bold mb-4 md:mb-6">
+            Opinion Stats
+          </h3>
+          <div class="bg-gray-50 rounded-lg p-4 md:p-6 shadow-sm">
+            <div class="space-y-4 md:space-y-6">
+              <!-- Votes section -->
+              <div class="border-b border-gray-200 pb-4">
+                <h4 class="font-semibold text-base md:text-lg mb-3">
+                  Reader Votes
+                </h4>
+
+                <!-- Agree votes -->
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-gray-600 text-sm md:text-base">Agree</span>
+                  <div class="flex items-center">
+                    <span class="font-bold mr-2 text-sm md:text-base">{{
+                      totals?.likes
+                    }}</span>
+                    <div
+                      class="w-16 sm:w-20 md:w-24 bg-gray-200 rounded-full h-2"
+                    >
+                      <div
+                        class="bg-green-500 h-2 rounded-full"
+                        :style="`width: ${
+                          totals && (totals?.likes / totals?.total) * 100
+                        }%`"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Disagree votes -->
+                <div class="flex items-center justify-between mb-3">
+                  <span class="text-gray-600 text-sm md:text-base"
+                    >Disagree</span
+                  >
+                  <div class="flex items-center">
+                    <span class="font-bold mr-2 text-sm md:text-base">{{
+                      totals?.dislikes
+                    }}</span>
+                    <div
+                      class="w-16 sm:w-20 md:w-24 bg-gray-200 rounded-full h-2"
+                    >
+                      <div
+                        class="bg-red-500 h-2 rounded-full"
+                        :style="`width: ${
+                          totals ? (totals?.dislikes / totals.total) * 100 : 0
+                        }%`"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Commented -->
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-600 text-sm md:text-base"
+                    >Commented</span
+                  >
+                  <div class="flex items-center">
+                    <span class="font-bold mr-2 text-sm md:text-base">{{
+                      totals?.comments
+                    }}</span>
+                    <div
+                      class="w-16 sm:w-20 md:w-24 bg-gray-200 rounded-full h-2"
+                    >
+                      <div
+                        class="bg-blue-400 h-2 rounded-full"
+                        :style="`width: ${
+                          totals ? (totals?.comments / totals?.total) * 100 : 0
+                        }%`"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-3 text-center">
+                  <p class="text-xs md:text-sm text-gray-500">
+                    Total votes: {{ totals?.total }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Engagement metrics -->
+              <div>
+                <h4 class="font-semibold text-base md:text-lg mb-3">
+                  Engagement
+                </h4>
+                <div class="grid grid-cols-2 gap-3 md:gap-4">
+                  <div class="bg-white p-3 rounded-md shadow-sm">
+                    <p class="text-gray-500 text-xs md:text-sm">Views</p>
+                    <p class="font-bold text-lg md:text-xl">1200</p>
+                  </div>
+                  <div class="bg-white p-3 rounded-md shadow-sm">
+                    <p class="text-gray-500 text-xs md:text-sm">Comments</p>
+                    <p class="font-bold text-lg md:text-xl">
+                      {{ totals?.comments }}
+                    </p>
+                  </div>
+                  <div class="bg-white p-3 rounded-md shadow-sm">
+                    <p class="text-gray-500 text-xs md:text-sm">Shares</p>
+                    <p class="font-bold text-lg md:text-xl">0</p>
+                  </div>
+                  <div class="bg-white p-3 rounded-md shadow-sm">
+                    <p class="text-gray-500 text-xs md:text-sm">Avg. Time</p>
+                    <p class="font-bold text-lg md:text-xl">
+                      {{ readingTime }}m
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div class="w-4/12">
-        <h3 class="text-xl font-bold mb-6">Opinion Stats</h3>
-        <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
-          <div class="space-y-6">
-            <!-- Votes section -->
-            <div class="border-b border-gray-200 pb-4">
-              <h4 class="font-semibold text-lg mb-3">Reader Votes</h4>
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-gray-600">Agree</span>
-                <div class="flex items-center">
-                  <span class="font-bold mr-2">{{ totals?.likes }}</span>
-                  <div class="w-24 bg-gray-200 rounded-full h-2">
-                    <div
-                      class="bg-green-500 h-2 rounded-full"
-                      :style="`width: ${
-                        totals && (totals?.likes / totals?.total) * 100
-                      }%`"
-                    ></div>
-                  </div>
-                </div>
-              </div>
 
-              <div class="flex items-center justify-between">
-                <span class="text-gray-600">Disagree</span>
-                <div class="flex items-center">
-                  <span class="font-bold mr-2">{{ totals?.dislikes }}</span>
-                  <div class="w-24 bg-gray-200 rounded-full h-2">
-                    <div
-                      class="bg-red-500 h-2 rounded-full"
-                      :style="`width: ${
-                        totals ? (totals?.dislikes / totals.total) * 100 : 0
-                      }%`"
-                    ></div>
-                  </div>
-                </div>
-              </div>
-              <div class="flex items-center justify-between mt-2">
-                <span class="text-gray-600">Commented</span>
-                <div class="flex items-center">
-                  <span class="font-bold mr-2">{{ totals?.comments }}</span>
-                  <div class="w-24 bg-gray-200 rounded-full h-2">
-                    <div
-                      class="bg-blue-400 h-2 rounded-full"
-                      :style="`width: ${
-                        totals ? (totals?.comments / totals?.total) * 100 : 0
-                      }%`"
-                    ></div>
-                  </div>
-                </div>
-              </div>
-              <div class="mt-4 text-center">
-                <p class="text-sm text-gray-500">
-                  Total votes: {{ totals?.total }}
-                </p>
+      <!-- Desktop Layout (>= lg) -->
+      <div class="hidden lg:flex gap-10">
+        <div class="w-8/12 border-r border-gray-200 pr-10">
+          <div class="gc-container">
+            <div class="flex flex-col items-center mb-8">
+              <h2 class="text-2xl font-bold mb-2">{{ opinion.title }}</h2>
+              <p class="text-gray-600 mb-4">
+                Opinion by {{ opinion.author }} on {{ formattedDate }}
+              </p>
+              <p class="text-gray-600">{{ readingTime }} minute read</p>
+            </div>
+            <div class="prose prose-lg max-w-none">
+              <div class="ql-editor">
+                <Segmented
+                  :content="sanitizedContent"
+                  :sentences="opinion.sentences"
+                />
               </div>
             </div>
+          </div>
+        </div>
 
-            <!-- Engagement metrics -->
-            <div>
-              <h4 class="font-semibold text-lg mb-3">Engagement</h4>
-              <div class="grid grid-cols-2 gap-4">
-                <div class="bg-white p-3 rounded-md shadow-sm">
-                  <p class="text-gray-500 text-sm">Views</p>
-                  <p class="font-bold text-xl">1200</p>
+        <div class="w-4/12">
+          <h3 class="text-xl font-bold mb-6">Opinion Stats</h3>
+          <div class="bg-gray-50 rounded-lg p-6 shadow-sm">
+            <div class="space-y-6">
+              <!-- Votes section -->
+              <div class="border-b border-gray-200 pb-4">
+                <h4 class="font-semibold text-lg mb-3">Reader Votes</h4>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-gray-600">Agree</span>
+                  <div class="flex items-center">
+                    <span class="font-bold mr-2">{{ totals?.likes }}</span>
+                    <div class="w-24 bg-gray-200 rounded-full h-2">
+                      <div
+                        class="bg-green-500 h-2 rounded-full"
+                        :style="`width: ${
+                          totals && (totals?.likes / totals?.total) * 100
+                        }%`"
+                      ></div>
+                    </div>
+                  </div>
                 </div>
-                <div class="bg-white p-3 rounded-md shadow-sm">
-                  <p class="text-gray-500 text-sm">Comments</p>
-                  <p class="font-bold text-xl">
-                    {{ totals?.comments }}
+
+                <div class="flex items-center justify-between">
+                  <span class="text-gray-600">Disagree</span>
+                  <div class="flex items-center">
+                    <span class="font-bold mr-2">{{ totals?.dislikes }}</span>
+                    <div class="w-24 bg-gray-200 rounded-full h-2">
+                      <div
+                        class="bg-red-500 h-2 rounded-full"
+                        :style="`width: ${
+                          totals ? (totals?.dislikes / totals.total) * 100 : 0
+                        }%`"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center justify-between mt-2">
+                  <span class="text-gray-600">Commented</span>
+                  <div class="flex items-center">
+                    <span class="font-bold mr-2">{{ totals?.comments }}</span>
+                    <div class="w-24 bg-gray-200 rounded-full h-2">
+                      <div
+                        class="bg-blue-400 h-2 rounded-full"
+                        :style="`width: ${
+                          totals ? (totals?.comments / totals?.total) * 100 : 0
+                        }%`"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="mt-4 text-center">
+                  <p class="text-sm text-gray-500">
+                    Total votes: {{ totals?.total }}
                   </p>
                 </div>
-                <div class="bg-white p-3 rounded-md shadow-sm">
-                  <p class="text-gray-500 text-sm">Shares</p>
-                  <p class="font-bold text-xl">0</p>
-                </div>
-                <div class="bg-white p-3 rounded-md shadow-sm">
-                  <p class="text-gray-500 text-sm">Avg. Time</p>
-                  <p class="font-bold text-xl">{{ readingTime }}m</p>
+              </div>
+
+              <!-- Engagement metrics -->
+              <div>
+                <h4 class="font-semibold text-lg mb-3">Engagement</h4>
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="bg-white p-3 rounded-md shadow-sm">
+                    <p class="text-gray-500 text-sm">Views</p>
+                    <p class="font-bold text-xl">1200</p>
+                  </div>
+                  <div class="bg-white p-3 rounded-md shadow-sm">
+                    <p class="text-gray-500 text-sm">Comments</p>
+                    <p class="font-bold text-xl">
+                      {{ totals?.comments }}
+                    </p>
+                  </div>
+                  <div class="bg-white p-3 rounded-md shadow-sm">
+                    <p class="text-gray-500 text-sm">Shares</p>
+                    <p class="font-bold text-xl">0</p>
+                  </div>
+                  <div class="bg-white p-3 rounded-md shadow-sm">
+                    <p class="text-gray-500 text-sm">Avg. Time</p>
+                    <p class="font-bold text-xl">{{ readingTime }}m</p>
+                  </div>
                 </div>
               </div>
             </div>
