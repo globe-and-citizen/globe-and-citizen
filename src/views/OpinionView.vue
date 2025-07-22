@@ -54,51 +54,41 @@
               <div class="flex items-center justify-between mb-2">
                 <span class="text-gray-600">Agree</span>
                 <div class="flex items-center">
-                  <span class="font-bold mr-2">{{
-                    opinionStats.votes.agree
-                  }}</span>
+                  <span class="font-bold mr-2">{{ totals?.likes }}</span>
                   <div class="w-24 bg-gray-200 rounded-full h-2">
                     <div
                       class="bg-green-500 h-2 rounded-full"
                       :style="`width: ${
-                        (opinionStats.votes.agree / opinionStats.votes.total) *
-                        100
+                        totals && (totals?.likes / totals?.total) * 100
                       }%`"
                     ></div>
                   </div>
                 </div>
               </div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-gray-600">Neutral</span>
-                <div class="flex items-center">
-                  <span class="font-bold mr-2">{{
-                    opinionStats.votes.neutral
-                  }}</span>
-                  <div class="w-24 bg-gray-200 rounded-full h-2">
-                    <div
-                      class="bg-blue-400 h-2 rounded-full"
-                      :style="`width: ${
-                        (opinionStats.votes.neutral /
-                          opinionStats.votes.total) *
-                        100
-                      }%`"
-                    ></div>
-                  </div>
-                </div>
-              </div>
+
               <div class="flex items-center justify-between">
                 <span class="text-gray-600">Disagree</span>
                 <div class="flex items-center">
-                  <span class="font-bold mr-2">{{
-                    opinionStats.votes.disagree
-                  }}</span>
+                  <span class="font-bold mr-2">{{ totals?.dislikes }}</span>
                   <div class="w-24 bg-gray-200 rounded-full h-2">
                     <div
                       class="bg-red-500 h-2 rounded-full"
                       :style="`width: ${
-                        (opinionStats.votes.disagree /
-                          opinionStats.votes.total) *
-                        100
+                        totals ? (totals?.dislikes / totals.total) * 100 : 0
+                      }%`"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between mt-2">
+                <span class="text-gray-600">Commented</span>
+                <div class="flex items-center">
+                  <span class="font-bold mr-2">{{ totals?.comments }}</span>
+                  <div class="w-24 bg-gray-200 rounded-full h-2">
+                    <div
+                      class="bg-blue-400 h-2 rounded-full"
+                      :style="`width: ${
+                        totals ? (totals?.comments / totals?.total) * 100 : 0
                       }%`"
                     ></div>
                   </div>
@@ -106,7 +96,7 @@
               </div>
               <div class="mt-4 text-center">
                 <p class="text-sm text-gray-500">
-                  Total votes: {{ opinionStats.votes.total }}
+                  Total votes: {{ totals?.total }}
                 </p>
               </div>
             </div>
@@ -117,25 +107,21 @@
               <div class="grid grid-cols-2 gap-4">
                 <div class="bg-white p-3 rounded-md shadow-sm">
                   <p class="text-gray-500 text-sm">Views</p>
-                  <p class="font-bold text-xl">
-                    {{ opinionStats.impressions }}
-                  </p>
+                  <p class="font-bold text-xl">1200</p>
                 </div>
                 <div class="bg-white p-3 rounded-md shadow-sm">
                   <p class="text-gray-500 text-sm">Comments</p>
                   <p class="font-bold text-xl">
-                    {{ opinionStats.commentCount }}
+                    {{ totals?.comments }}
                   </p>
                 </div>
                 <div class="bg-white p-3 rounded-md shadow-sm">
                   <p class="text-gray-500 text-sm">Shares</p>
-                  <p class="font-bold text-xl">{{ opinionStats.shares }}</p>
+                  <p class="font-bold text-xl">0</p>
                 </div>
                 <div class="bg-white p-3 rounded-md shadow-sm">
                   <p class="text-gray-500 text-sm">Avg. Time</p>
-                  <p class="font-bold text-xl">
-                    {{ opinionStats.avgReadTime }}m
-                  </p>
+                  <p class="font-bold text-xl">{{ readingTime }}m</p>
                 </div>
               </div>
             </div>
@@ -150,7 +136,7 @@
 
 <script setup lang="ts">
 import { useRoute, onBeforeRouteUpdate } from "vue-router";
-import { computed, ref, onMounted } from "vue";
+import { computed, onMounted } from "vue";
 import type { Post } from "@/models/Posts";
 import HeadingSection from "@/sections/PostView/HeadingSection/HeadingSection.vue";
 import DOMPurify from "dompurify";
@@ -196,20 +182,21 @@ const sanitizedContent = computed(() => {
   return DOMPurify.sanitize(opinion.value.content);
 });
 
-// Mock opinion stats (this would typically come from an API)
-// In a real implementation, you would fetch opinion stats and metrics from a backend
-const opinionStats = ref({
-  votes: {
-    agree: 128,
-    neutral: 43,
-    disagree: 62,
-    total: 233, // Pre-calculated total for convenience
-  },
-  impressions: 1842,
-  commentCount: 37,
-  shares: 98,
-  avgReadTime: 4, // Average minutes users spend reading this opinion
-});
+const totals = computed(() =>
+  opinion.value?.sentences.reduce(
+    (acc, sentence) => {
+      acc.likes += sentence.opinions.likes;
+      acc.dislikes += sentence.opinions.dislikes;
+      acc.comments += sentence.opinions.comments.length;
+      acc.total +=
+        sentence.opinions.likes +
+        sentence.opinions.dislikes +
+        sentence.opinions.comments.length;
+      return acc;
+    },
+    { likes: 0, dislikes: 0, comments: 0, total: 0 }
+  )
+);
 
 // Format date for the opinion
 const formattedDate = computed(() => {
