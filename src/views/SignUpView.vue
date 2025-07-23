@@ -70,10 +70,10 @@
 
           <button
             type="submit"
-            :disabled="signUpMutation.isPending"
+            :disabled="isPending"
             class="w-full bg-black text-white py-3 rounded font-bold mt-4 text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
           >
-            <span v-if="signUpMutation.isPending">Creating account...</span>
+            <span v-if="isPending">Creating account...</span>
             <span v-else>Join the conversation</span>
           </button>
 
@@ -120,7 +120,7 @@ const email = ref("");
 const username = ref("");
 const password = ref("");
 
-const signUpMutation = useMutation({
+const { mutate: signUpMutation, isPending } = useMutation({
   mutationFn: signUpApi,
   onSuccess: () => {
     console.log("Sign-up successful");
@@ -134,7 +134,7 @@ const signUpMutation = useMutation({
 // Handle form submit
 function onSubmit(e: Event) {
   e.preventDefault();
-  signUpMutation.mutate({
+  signUpMutation({
     first_name: first_name.value,
     email: email.value,
     username: username.value,

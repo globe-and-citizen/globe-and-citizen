@@ -57,9 +57,9 @@
           <button
             type="submit"
             class="w-full bg-black text-white py-3 rounded font-bold mt-4 text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
-            :disabled="signInMutation.isPending"
+            :disabled="isPending"
           >
-            <span v-if="signInMutation.isPending">Joining...</span>
+            <span v-if="isPending">Joining...</span>
             <span v-else>Join the conversation</span>
           </button>
 
