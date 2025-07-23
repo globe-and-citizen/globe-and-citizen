@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col md:flex-row h-[calc(100vh-81px)]">
+  <div class="flex flex-col md:flex-row h-[calc(100vh-141px)]">
     <!-- Left side with gradient background and heading -->
     <div
       class="h-[150px] md:h-full md:flex-1/2 bg-cover bg-center"
