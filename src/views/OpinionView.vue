@@ -168,7 +168,7 @@
             </div>
           </div>
           <RouterLink
-            to="/stats"
+            :to="$route.fullPath + '/stats'"
             class="mt-4 inline-block text-blue-600 hover:underline"
           >
             View all stats
