@@ -10,6 +10,8 @@ import type { Post } from "@/models/Posts";
 import type { OpinionPayload } from "@/models/Opinions";
 import { Button } from "@/components/ui/button";
 import { generateSlug } from "@/lib/utils.ts";
+import { uploadToCloudinary } from "@/api/images.ts";
+import type { QuillEditorInstance } from "@/components/AdminPanel/NewsStepper/index.vue";
 
 const props = defineProps<{
   // eslint-disable-next-line vue/prop-name-casing
@@ -23,6 +25,7 @@ const queryClient = useQueryClient();
 const formData = ref<Partial<Post>>({});
 const vfm = useVfm();
 const { closeAll } = vfm;
+const quillRef = ref<QuillEditorInstance | null>(null);
 
 const { mutate: postOpinion } = useMutation({
   mutationFn: async (payload: OpinionPayload) => {
@@ -38,6 +41,52 @@ const { mutate: postOpinion } = useMutation({
     closeAll();
   },
 });
+
+const toolbarConfig = [
+  ["bold", "italic", "underline", "strike"],
+  ["blockquote", "code-block"],
+  [{ header: 1 }, { header: 2 }],
+  [{ list: "ordered" }, { list: "bullet" }],
+  [{ script: "sub" }, { script: "super" }],
+  [{ indent: "-1" }, { indent: "+1" }],
+  [{ direction: "rtl" }],
+  [{ size: ["small", false, "large", "huge"] }],
+  [{ header: [1, 2, 3, 4, 5, 6, false] }],
+  [{ color: [] }, { background: [] }],
+  [{ font: [] }],
+  [{ align: [] }],
+  ["clean"],
+  ["link", "image"],
+];
+
+const customHandlers = {
+  image: function () {
+    // File upload option
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) {
+        try {
+          const cloudinaryUrl = await uploadToCloudinary(file);
+          if (quillRef.value) {
+            const quill = quillRef.value.getQuill();
+            const range = quill.getSelection();
+            if (range) {
+              quill.insertEmbed(range.index, "image", cloudinaryUrl);
+              quill.setSelection(range.index + 1);
+            }
+          }
+        } catch (error) {
+          console.error("Upload failed:", error);
+        }
+      }
+    };
+  },
+};
 
 function handleSaveEdit(data: OpinionPayload) {
   const { post_id, slug, ...otherData } = data;
@@ -72,28 +121,17 @@ function handleSaveEdit(data: OpinionPayload) {
           <Label class="mb-2" for="content">Content</Label>
           <QuillEditor
             id="content"
+            ref="quillRef"
             content-type="html"
             theme="snow"
             style="min-height: 200px"
             :content="formData.content || ''"
             :options="{
               modules: {
-                toolbar: [
-                  ['bold', 'italic', 'underline', 'strike'],
-                  ['blockquote', 'code-block'],
-                  [{ header: 1 }, { header: 2 }],
-                  [{ list: 'ordered' }, { list: 'bullet' }],
-                  [{ script: 'sub' }, { script: 'super' }],
-                  [{ indent: '-1' }, { indent: '+1' }],
-                  [{ direction: 'rtl' }],
-                  [{ size: ['small', false, 'large', 'huge'] }],
-                  [{ header: [1, 2, 3, 4, 5, 6, false] }],
-                  [{ color: [] }, { background: [] }],
-                  [{ font: [] }],
-                  [{ align: [] }],
-                  ['clean'],
-                  ['link', 'image'],
-                ],
+                toolbar: {
+                  container: toolbarConfig,
+                  handlers: customHandlers,
+                },
               },
             }"
             @update:content="(content) => (formData.content = content)"

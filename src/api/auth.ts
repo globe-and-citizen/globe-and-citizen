@@ -8,12 +8,16 @@ import {
   SIGN_UP_URL,
 } from "./constants";
 
-export async function fetchWithAuth(url: string, options: RequestInit = {}) {
+export async function fetchWithAuth(
+  url: string,
+  options: RequestInit = {}
+): Promise<Response> {
   const authStore = useAuthStore();
   const token = authStore.token;
 
   if (!token) {
-    return window.location.replace(SIGN_IN_URL);
+    window.location.replace(SIGN_IN_URL);
+    throw new Error("Redirecting to sign-in page");
   }
 
   options.headers = {
@@ -22,7 +26,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   };
   options.credentials = "include";
 
-  const response = await fetch(url, options);
+  const response = (await fetch(url, options)) as Response;
 
   if (response.status === 401) {
     try {
@@ -44,7 +48,8 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
           ...(options.headers || {}),
           Authorization: `Bearer ${newToken}`,
         };
-        return fetch(url, options);
+
+        return (await fetch(url, options)) as Response;
       } else {
         authStore.clearToken();
         console.error("Token refresh failed.");
@@ -56,7 +61,7 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}) {
     }
   }
 
-  return response;
+  return response as Response;
 }
 
 export async function signIn(

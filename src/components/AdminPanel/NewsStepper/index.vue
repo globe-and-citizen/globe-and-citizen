@@ -35,18 +35,16 @@ import {
   CardContent,
 } from "../../../components/ui/card";
 import { toast } from "vue-sonner";
-import { fetchNewsApi } from "../../../api/news.ts";
-import type { NewsApiResponse, NewsApiArticle } from "../../../models/News";
+import { fetchNewsApi } from "@/api/news.ts";
+import type { NewsApiResponse, NewsApiArticle } from "@/models/News";
 import { useForm } from "vee-validate";
 import { formSchema } from "./types";
-import { generateSummary, postNewsArticle } from "../../../api/posts";
-import { Cloudinary } from "@cloudinary/url-gen";
-import { auto } from "@cloudinary/url-gen/actions/resize";
-import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
+import { generateSummary, postNewsArticle } from "@/api/posts.ts";
 import { generateSlug } from "@/lib/utils.ts";
+import { uploadToCloudinary } from "@/api/images.ts";
 
 // Type for QuillEditor instance
-interface QuillEditorInstance {
+export interface QuillEditorInstance {
   getQuill(): {
     getSelection(): { index: number; length: number } | null;
     insertEmbed(index: number, type: string, value: string): void;
@@ -60,40 +58,6 @@ interface QuillEditorInstance {
     format(format: string, value: boolean): void;
   };
 }
-
-const cld = new Cloudinary({
-  cloud: {
-    cloudName: "dw8qmbwge",
-    apiKey: "991974218825242",
-    apiSecret: "lgkxuRQmVGieI5AoyrxDzzNt4Co",
-  },
-});
-
-// Cloudinary upload function
-const uploadToCloudinary = async (file: File): Promise<string> => {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", "unsigned_upload");
-  try {
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/dw8qmbwge/image/upload`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Upload failed");
-    }
-
-    const data = await response.json();
-    return data.secure_url;
-  } catch (error) {
-    console.error("Cloudinary upload error:", error);
-    throw error;
-  }
-};
 
 const stepIndex = ref(1);
 const selectedArticle = ref<NewsApiArticle | null>(null);
@@ -154,103 +118,30 @@ const toolbarConfig = [
 // Custom handlers
 const customHandlers = {
   image: function () {
-    // Create a modal/dialog to choose between options
-    const choice = prompt(
-      "Choose image source:\n1. Upload file (type '1')\n2. Use Cloudinary sample (type '2')\n3. Enter URL (type '3')"
-    );
+    // File upload option
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
 
-    if (choice === "1") {
-      // File upload option
-      const input = document.createElement("input");
-      input.setAttribute("type", "file");
-      input.setAttribute("accept", "image/*");
-      input.click();
-
-      input.onchange = async () => {
-        const file = input.files?.[0];
-        console.log(file);
-        if (file) {
-          try {
-            // Show loading toast
-            toast.loading("Uploading image to Cloudinary...");
-
-            // Upload to Cloudinary
-            const cloudinaryUrl = await uploadToCloudinary(file);
-
-            // Insert the Cloudinary URL into the editor
-            if (quillRef.value) {
-              const quill = quillRef.value.getQuill();
-              const range = quill.getSelection();
-              if (range) {
-                quill.insertEmbed(range.index, "image", cloudinaryUrl);
-                quill.setSelection(range.index + 1);
-              }
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) {
+        try {
+          const cloudinaryUrl = await uploadToCloudinary(file);
+          if (quillRef.value) {
+            const quill = quillRef.value.getQuill();
+            const range = quill.getSelection();
+            if (range) {
+              quill.insertEmbed(range.index, "image", cloudinaryUrl);
+              quill.setSelection(range.index + 1);
             }
-
-            toast.success("Image uploaded and inserted successfully!");
-          } catch (error) {
-            console.error("Upload failed:", error);
-            toast.error("Failed to upload image. Please try again.");
           }
-        }
-      };
-    } else if (choice === "2") {
-      // Use Cloudinary sample image
-      const img = cld
-        .image("cld-sample-5")
-        .format("auto") // Optimize delivery by resizing and applying auto-format and auto-quality
-        .quality("auto")
-        .resize(auto().gravity(autoGravity()).width(500).height(500)); // Transform the image: auto-crop to square aspect_ratio
-
-      const cloudinaryUrl = img.toURL();
-
-      if (quillRef.value) {
-        const quill = quillRef.value.getQuill();
-        const range = quill.getSelection();
-        if (range) {
-          quill.insertEmbed(range.index, "image", cloudinaryUrl);
-          quill.setSelection(range.index + 1);
+        } catch (error) {
+          console.error("Upload failed:", error);
         }
       }
-      toast.success("Cloudinary sample image inserted!");
-    } else if (choice === "3") {
-      // URL input option
-      const imageUrl = prompt("Enter the image URL");
-      if (!imageUrl) return;
-
-      // Validate image URL
-      const urlPattern = /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|svg|webp))$/i;
-      if (!urlPattern.test(imageUrl)) {
-        toast.error(
-          "Invalid image URL. Please provide a valid image link ending with .png, .jpg, .jpeg, .gif, .svg, or .webp"
-        );
-        return;
-      }
-
-      if (quillRef.value) {
-        const quill = quillRef.value.getQuill();
-        const range = quill.getSelection();
-        if (range) {
-          quill.insertEmbed(range.index, "image", imageUrl);
-          quill.setSelection(range.index + 1);
-        }
-      }
-    }
-  },
-  link: function (value: unknown) {
-    if (value) {
-      const href = prompt("Enter the URL");
-      if (href && quillRef.value) {
-        const quill = quillRef.value.getQuill();
-        const range = quill.getSelection();
-        if (range) {
-          quill.formatText(range.index, range.length, "link", href);
-        }
-      }
-    } else if (quillRef.value) {
-      const quill = quillRef.value.getQuill();
-      quill.format("link", false);
-    }
+    };
   },
 };
 const articles = computed(() => newsData.value?.data.articles ?? []);
