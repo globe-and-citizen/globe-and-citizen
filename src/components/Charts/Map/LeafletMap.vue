@@ -67,15 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  nextTick,
-  ref,
-  toRaw,
-  watch,
-  watchEffect,
-  type Ref,
-} from "vue";
+import { computed, nextTick, ref, toRaw, watch, watchEffect } from "vue";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import CustomSelect from "@/components/CustomSelect/CustomSelect.vue";
@@ -319,12 +311,12 @@ const countryWithMostParticipants = computed<CountryWithMostParticipants>(
   }
 );
 
-// Map handling functions
+// Map handling functions - Fixed parameter types
 const handleLikesAndDislikes = (
   data: CountryData[],
-  mapRef: Ref<L.Map | null>
+  map: L.Map | null
 ): void => {
-  if (!Array.isArray(data)) return;
+  if (!Array.isArray(data) || !map) return;
 
   const interactionCounts = data.map(
     (item) => item.interactions.likes + item.interactions.dislikes || 0
@@ -363,20 +355,17 @@ const handleLikesAndDislikes = (
         weight: 1.4,
       };
 
-      if (countryInfo.coordinates && mapRef.value) {
+      if (countryInfo.coordinates) {
         L.circle(countryInfo.coordinates, circleOptions)
-          .addTo(toRaw(mapRef.value))
+          .addTo(toRaw(map))
           .bindPopup(popupContent, { autoClose: false, closeOnClick: false });
       }
     }
   });
 };
 
-const handleComments = (
-  data: CountryData[],
-  mapRef: Ref<L.Map | null>
-): void => {
-  if (!Array.isArray(data)) return;
+const handleComments = (data: CountryData[], map: L.Map | null): void => {
+  if (!Array.isArray(data) || !map) return;
 
   const commentCounts = data.map((item) => item.comments || 0);
   const minComments = Math.min(...commentCounts);
@@ -412,18 +401,18 @@ const handleComments = (
         weight: 1.4,
       };
 
-      if (countryInfo.coordinates && mapRef.value) {
-        toRaw(mapRef.value).setView(countryInfo.coordinates, 3);
+      if (countryInfo.coordinates) {
+        toRaw(map).setView(countryInfo.coordinates, 3);
         L.circle(countryInfo.coordinates, circleOptions)
-          .addTo(toRaw(mapRef.value))
+          .addTo(toRaw(map))
           .bindPopup(popupContent, { autoClose: false, closeOnClick: false });
       }
     }
   });
 };
 
-const handleShares = (data: CountryData[], mapRef: Ref<L.Map | null>): void => {
-  if (!Array.isArray(data)) return;
+const handleShares = (data: CountryData[], map: L.Map | null): void => {
+  if (!Array.isArray(data) || !map) return;
 
   const shareCounts = data.map((item) => item.shares || 0);
   const minShares = Math.min(...shareCounts);
@@ -458,10 +447,10 @@ const handleShares = (data: CountryData[], mapRef: Ref<L.Map | null>): void => {
         weight: 1.4,
       };
 
-      if (countryInfo.coordinates && mapRef.value) {
-        toRaw(mapRef.value).setView(countryInfo.coordinates, 3);
+      if (countryInfo.coordinates) {
+        toRaw(map).setView(countryInfo.coordinates, 3);
         L.circle(countryInfo.coordinates, circleOptions)
-          .addTo(toRaw(mapRef.value))
+          .addTo(toRaw(map))
           .bindPopup(popupContent, { autoClose: false, closeOnClick: false });
       }
     }
@@ -492,7 +481,7 @@ const initMap = async (): Promise<void> => {
         maxZoom: 10,
         minZoom: 3,
       }
-    ).addTo(toRaw(mapRef.value)!);
+    ).addTo(toRaw(mapRef.value) as L.Map);
 
     const bounds: L.LatLngBoundsExpression = [
       [-85, -180],
@@ -502,12 +491,13 @@ const initMap = async (): Promise<void> => {
     toRaw(mapRef.value)!.setMaxBounds(bounds);
     toRaw(mapRef.value)!.fitBounds(bounds);
 
+    const rawMap = toRaw(mapRef.value);
     if (selectedDataType.value.value === "interactions" && interactionsExists) {
-      handleLikesAndDislikes(allInteractions, mapRef);
+      handleLikesAndDislikes(allInteractions, rawMap as L.Map | null);
     } else if (selectedDataType.value.value === "comments" && commentsExists) {
-      handleComments(allInteractions, mapRef);
+      handleComments(allInteractions, rawMap as L.Map);
     } else if (selectedDataType.value.value === "shares" && sharesExist) {
-      handleShares(allInteractions, mapRef);
+      handleShares(allInteractions, rawMap as L.Map);
     }
 
     window.addEventListener("resize", () => {

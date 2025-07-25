@@ -6,7 +6,7 @@
       @click="toggleDropdown"
     >
       <span v-if="label && !modelValue" class="select-label">{{ label }}</span>
-      <span class="select-value">{{ modelValue?.label || '' }}</span>
+      <span class="select-value">{{ modelValue?.label || "" }}</span>
       <svg
         class="select-arrow"
         :class="{ 'arrow-up': isOpen }"
@@ -14,15 +14,16 @@
         height="12"
         viewBox="0 0 12 12"
       >
-        <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" fill="none"/>
+        <path
+          d="M3 4.5L6 7.5L9 4.5"
+          stroke="currentColor"
+          stroke-width="1.5"
+          fill="none"
+        />
       </svg>
     </div>
 
-    <div
-      v-show="isOpen"
-      class="select-dropdown"
-      @click.stop
-    >
+    <div v-show="isOpen" class="select-dropdown" @click.stop>
       <div
         v-for="option in options"
         :key="option.value"
@@ -37,51 +38,51 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from "vue";
 
 interface SelectOption {
-  label: string
-  value: string
+  label: string;
+  value: string;
 }
 
 interface Props {
-  modelValue?: SelectOption
-  options: SelectOption[]
-  label?: string
+  modelValue?: SelectOption;
+  options: SelectOption[];
+  label?: string;
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: SelectOption): void
+  (e: "update:modelValue", value: SelectOption): void;
 }
 
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+defineProps<Props>();
+const emit = defineEmits<Emits>();
 
-const isOpen = ref(false)
+const isOpen = ref(false);
 
 const toggleDropdown = () => {
-  isOpen.value = !isOpen.value
-}
+  isOpen.value = !isOpen.value;
+};
 
 const selectOption = (option: SelectOption) => {
-  emit('update:modelValue', option)
-  isOpen.value = false
-}
+  emit("update:modelValue", option);
+  isOpen.value = false;
+};
 
 const closeDropdown = (event: Event) => {
-  const target = event.target as Element
-  if (!target.closest('.custom-select')) {
-    isOpen.value = false
+  const target = event.target as Element;
+  if (!target.closest(".custom-select")) {
+    isOpen.value = false;
   }
-}
+};
 
 onMounted(() => {
-  document.addEventListener('click', closeDropdown)
-})
+  document.addEventListener("click", closeDropdown);
+});
 
 onUnmounted(() => {
-  document.removeEventListener('click', closeDropdown)
-})
+  document.removeEventListener("click", closeDropdown);
+});
 </script>
 
 <style scoped>
@@ -161,7 +162,8 @@ onUnmounted(() => {
   background-color: white;
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   margin-top: 4px;
   max-height: 200px;
   overflow-y: auto;
