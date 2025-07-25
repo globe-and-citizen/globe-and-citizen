@@ -167,6 +167,12 @@
               </div>
             </div>
           </div>
+          <RouterLink
+            to="/stats"
+            class="mt-4 inline-block text-blue-600 hover:underline"
+          >
+            View all stats
+          </RouterLink>
         </div>
       </div>
 
@@ -274,6 +280,12 @@
                 </div>
               </div>
             </div>
+            <RouterLink
+              :to="$route.fullPath + '/stats'"
+              class="mt-4 inline-block text-blue-600 hover:underline"
+            >
+              View all stats
+            </RouterLink>
           </div>
         </div>
       </div>
@@ -311,7 +323,7 @@ const {
     },
   })
 );
-console.log(opinion.value?.sentences, "");
+
 // Handle route updates for opinion changes
 onBeforeRouteUpdate(async (to) => {
   const newOpinionId = to.params.opinionId as string;

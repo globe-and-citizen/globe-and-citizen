@@ -88,3 +88,24 @@ export async function updateUser(
     throw error;
   }
 }
+
+export async function traceUser(): Promise<{
+  country_long: string;
+  ip_addr: string;
+}> {
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/trace`);
+    if (!response || !response.ok) {
+      throw new Error(
+        `Error tracing user: ${response ? response.statusText : "No response"}`
+      );
+    }
+    const res = await response.json();
+    console.log(res.data);
+
+    return res.data;
+  } catch (error) {
+    console.error("Error tracing user:", error);
+    throw error;
+  }
+}

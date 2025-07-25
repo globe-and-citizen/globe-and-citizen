@@ -16,6 +16,7 @@ import AdminDashboard from "@/views/AdminPanel/AdminDashboard.vue";
 import UsersManagement from "@/views/AdminPanel/UsersManagement.vue";
 import NewsManagement from "@/views/AdminPanel/NewsManagement.vue";
 import PostedNews from "@/views/AdminPanel/PostedNews.vue";
+import OpinionStatsView from "@/views/OpinionStatsView.vue";
 
 const routes = [
   {
@@ -41,6 +42,12 @@ const routes = [
         path: "post/:id/:opinionId",
         name: "PostEntryView",
         component: OpinionView,
+        props: true,
+      },
+      {
+        path: "post/:id/:opinionId/stats",
+        name: "OpinionStatsView",
+        component: OpinionStatsView,
         props: true,
       },
       { path: "advertisement/:id", component: AdvertisementView },

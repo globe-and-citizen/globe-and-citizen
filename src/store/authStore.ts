@@ -1,4 +1,4 @@
-import { type UserType } from "./../models/Auth/index";
+import { type UserType } from "@/models/Auth";
 import { defineStore } from "pinia";
 
 export interface AuthStoreInterface {
@@ -6,7 +6,7 @@ export interface AuthStoreInterface {
   token: string | undefined;
   isUserAuthenticated: boolean;
   isInitialized: boolean;
-
+  userLocation: string;
   setUser: (user: UserType) => void;
   logout: () => void;
 }
@@ -15,6 +15,7 @@ export const useAuthStore = defineStore("authStore", {
   state: (): AuthStoreInterface => ({
     user: undefined,
     token: undefined,
+    userLocation: "",
     isUserAuthenticated: false,
     isInitialized: false,
     setUser: (): void => {},
@@ -29,6 +30,10 @@ export const useAuthStore = defineStore("authStore", {
       if (this.token) {
         this.isUserAuthenticated = true;
       }
+    },
+
+    setUserLocation(location: string): void {
+      this.userLocation = location;
     },
 
     setToken(token: string): void {
