@@ -6,18 +6,18 @@
     custom
   >
     <div
-      class="flex bg-white shadow-md overflow-hidden max-h-[328px] rounded-sm cursor-pointer"
+      class="flex flex-col lg:flex-row bg-white shadow-md overflow-hidden lg:max-h-[400px] rounded-sm cursor-pointer"
       @click="navigate"
     >
       <!-- Left Image Section -->
-      <div class="w-1/2 relative">
+      <div class="lg:w-1/2 relative">
         <img
           :src="
             post?.url_to_image ||
             'https://media.istockphoto.com/id/1409329028/vector/no-picture-available-placeholder-thumbnail-icon-illustration-design.jpg?s=612x612&w=0&k=20&c=_zOuJu755g2eEUioiOUdz_mHKJQJn-tDgIAhQzyeKUQ='
           "
           alt="American Flag"
-          class="object-cover h-full w-full rounded-sm"
+          class="object-cover h-full w-full rounded-sm max-h-[300px] lg:max-h-[unset]"
         />
         <div
           v-if="showWinnerTag"
@@ -29,7 +29,7 @@
       </div>
 
       <!-- Right Content Section -->
-      <div class="w-1/2 p-6 pl-8 flex flex-col justify-between">
+      <div class="lg:w-1/2 p-6 pl-8 flex flex-col justify-between">
         <div
           class="font-lato text-primary-red font-bold text-xl mb-2 border-b border-b-red-20 w-fit"
         >
