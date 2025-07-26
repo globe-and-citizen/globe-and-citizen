@@ -5,7 +5,7 @@
     <SidebarTrigger />
     <slot />
     <SidebarContent
-      class="px-[45px] m-8 border rounded-xl pt-[28px] w-full bg-white"
+      class="px-6 lg:px-[45px] m-3 lg:m-8 border rounded-xl pt-[28px] w-full bg-white"
     >
       <RouterView />
     </SidebarContent>

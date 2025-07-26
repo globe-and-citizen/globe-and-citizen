@@ -1,6 +1,6 @@
 <template>
   <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-    <Card class="mt-5">
+    <Card class="mt-2 lg:mt-5">
       <CardHeader
         class="flex flex-row items-center justify-between space-y-0 pb-2"
       >
@@ -11,7 +11,7 @@
         <div class="text-2xl font-bold">{{ usersCount?.data }}</div>
       </CardContent>
     </Card>
-    <Card class="mt-5">
+    <Card class="mt-2 lg:mt-5">
       <CardHeader
         class="flex flex-row items-center justify-between space-y-0 pb-2"
       >
@@ -23,7 +23,7 @@
         <p class="text-xs text-muted-foreground">Toatl news published</p>
       </CardContent>
     </Card>
-    <Card class="mt-5">
+    <Card class="mt-2 lg:mt-5">
       <CardHeader
         class="flex flex-row items-center justify-between space-y-0 pb-2"
       >
@@ -35,7 +35,7 @@
         <p class="text-xs text-muted-foreground">+20.1% from last month</p>
       </CardContent>
     </Card>
-    <Card class="mt-5">
+    <Card class="mt-2 lg:mt-5">
       <CardHeader
         class="flex flex-row items-center justify-between space-y-0 pb-2"
       >
