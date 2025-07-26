@@ -1,5 +1,5 @@
 <template>
-  <div class="px-4 md:px-8 lg:px-[120px] lg:pb-10">
+  <div class="mt-6 lg:mt-0 px-4 md:px-8 lg:px-[120px] lg:pb-10">
     <div class="gc-container">
       <HeroSection />
     </div>
