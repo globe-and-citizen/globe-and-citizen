@@ -130,18 +130,24 @@
                 :to="`/post/${postId}/${opinion.slug}`"
                 class="block hover:opacity-90 flex-shrink-0 w-64"
               >
-                <div class="bg-white rounded-lg shadow-sm border p-4">
+                <div class="bg-white rounded-lg shadow-sm border p-2">
                   <img
                     :src="opinion.url_to_image"
                     alt="Related opinion"
                     class="w-full h-32 object-cover rounded mb-3"
                   />
                   <div>
-                    <h4 class="font-medium text-sm line-clamp-2">
+                    <h4 class="text-lg font-bold line-clamp-2">
                       {{ opinion.title }}
                     </h4>
+                    <div class="max-w-none">
+                      <div
+                        class="ql-editor !p-0"
+                        v-html="sanitizedContent.substring(0, 70) + '...'"
+                      ></div>
+                    </div>
                     <p class="text-xs text-gray-500 mt-2">
-                      Opinion by {{ opinion.author }}
+                      Opinion by {{ opinion.user.username }}
                     </p>
                   </div>
                 </div>
@@ -293,7 +299,6 @@ const { data: post, isLoading } = useQuery<
   staleTime: 0,
   refetchOnMount: true,
 });
-
 // Likes Mutation
 const publishMutation = useMutation({
   mutationFn: postReaction,
@@ -339,6 +344,7 @@ const displayedEntries = computed(() => {
     ? post.value.entries
     : post.value.entries.slice(0, entriesLimit);
 });
+console.log(displayedEntries.value[0]);
 
 const formattedDate = computed(() => {
   if (!post.value || !post.value.created_at) return "";
