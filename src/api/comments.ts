@@ -5,15 +5,15 @@ import { fetchWithAuth } from "./auth";
 export async function createComment(
   postId: string,
   content: string,
-  type: "post" | "opinion"
+  type: "post" | "opinion",
+  parentId?: number
 ): Promise<void> {
   const authStore = useAuthStore();
   const body =
     type === "post"
-      ? JSON.stringify({ post_id: postId, content })
-      : JSON.stringify({ entry_id: postId, content });
+      ? JSON.stringify({ post_id: postId, content, parent_id: parentId })
+      : JSON.stringify({ entry_id: postId, content, parent_id: parentId });
 
-  // If user is authenticated, use fetchWithAuth which handles token refresh
   if (authStore.isUserAuthenticated && authStore.token) {
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}${COMMENTS_URL}`, {
@@ -24,22 +24,31 @@ export async function createComment(
         body,
       });
 
-      // Check if we have a valid response (not redirected)
-      if (response && !response.ok) {
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        if (
+          errorData?.error === "maximum comment nesting depth of 3 exceeded"
+        ) {
+          throw new Error(errorData.error);
+        }
+
         throw new Error(`Error creating comment: ${response.statusText}`);
       }
 
-      if (response) {
-        await response.json();
-      }
+      await response.json();
       return;
     } catch (error) {
       console.error("Error creating authenticated comment:", error);
-      // If token refresh failed, fall through to guest comment as fallback
+      if (
+        (error as Error).message ===
+        "maximum comment nesting depth of 3 exceeded"
+      ) {
+        throw error;
+      }
     }
   }
 
-  // Fall back to guest comment functionality if user is not authenticated
   const response = await fetch(`${API_BASE_URL}${COMMENTS_URL}`, {
     method: "POST",
     headers: {

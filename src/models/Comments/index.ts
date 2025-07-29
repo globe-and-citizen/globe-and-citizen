@@ -8,6 +8,7 @@ export interface Comment {
   created_at: string;
   updated_at: string;
   user: UserType;
+  children?: Comment[];
 }
 
 export type Comments = Comment[];

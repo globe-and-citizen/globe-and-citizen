@@ -29,12 +29,12 @@ import NowTrending from "../components/NowTrending/NowTrending.vue";
 import ExploreMore from "@/sections/HomePage/ExploreMore/ExploreMore.vue";
 import WhatOurReadersSay from "@/sections/HomePage/WhatOurReadersSay/WhatOurReadersSay.vue";
 import HeroSection from "@/sections/HomePage/HomeHeroSection/HeroSection.vue";
-import AdvertisementCard from "../components/AdvertisementCard/AdvertisementCard.vue";
+import AdvertisementCard from "@/components/AdvertisementCard/AdvertisementCard.vue";
 import { useWindowSize } from "@vueuse/core";
 import { useQuery } from "@tanstack/vue-query";
 import { computed } from "vue";
-import type { FetchPostsType } from "../models/Posts/index.ts";
-import { fetchAllPosts } from "../api/posts.ts";
+import type { FetchPostsType } from "@/models/Posts";
+import { fetchAllPosts } from "@/api/posts.ts";
 
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);

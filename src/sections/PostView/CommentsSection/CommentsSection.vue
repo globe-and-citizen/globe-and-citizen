@@ -6,7 +6,7 @@
         v-if="post && post.comments"
         class="text-sm font-normal text-gray-500"
       >
-        ({{ post.comments.length }})
+        ({{ getTotalCommentsCount() }})
       </span>
     </h3>
 
@@ -67,45 +67,15 @@
       v-if="post && post.comments && post.comments.length > 0"
       class="space-y-6"
     >
-      <div
-        v-for="comment in displayedComments"
-        :key="comment.id"
-        class="bg-gray-50 rounded-lg p-4 border"
-      >
-        <div class="flex items-start space-x-3">
-          <img
-            :src="
-              comment.user.profile_picture_url ||
-              '/src/assets/user-placeholder.png'
-            "
-            :alt="comment.user.username"
-            class="w-10 h-10 rounded-full object-cover"
-          />
-          <div class="flex-1">
-            <div class="flex items-center space-x-2 mb-2">
-              <h4 class="font-semibold text-gray-900">
-                {{
-                  comment.user.username.length
-                    ? comment.user.username
-                    : "Anonymous "
-                }}
-              </h4>
-              <span class="text-sm text-gray-500">{{
-                formatCommentDate(comment.created_at)
-              }}</span>
-              <button
-                v-if="isAdmin"
-                class="text-red-600 hover:underline ml-auto"
-                @click="handleDeleteComment(comment.id)"
-              >
-                Delete
-              </button>
-            </div>
-            <p class="text-gray-700 leading-relaxed">
-              {{ comment.content }}
-            </p>
-          </div>
-        </div>
+      <div v-for="comment in displayedComments" :key="comment.id">
+        <CommentItem
+          :comment="comment"
+          :depth="0"
+          :is-admin="isAdmin"
+          :post-slug="post.slug"
+          :post-type="type"
+          @delete-comment="handleDeleteComment"
+        />
       </div>
 
       <div v-if="post.comments.length > commentsLimit" class="text-center">
@@ -133,10 +103,11 @@ import { createComment, deleteComment } from "@/api/comments";
 import type { Post } from "@/models/Posts";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { computed, ref } from "vue";
-import { formatCommentDate } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import { useModal } from "vue-final-modal";
 import ConfirmDeleteModal from "@/modals/ConfirmDeleteModal.vue";
+import CommentItem from "./CommentItem.vue";
+import type { Comment } from "@/models/Comments";
 
 const authStore = useAuthStore();
 const queryClient = useQueryClient();
@@ -178,6 +149,7 @@ const props = defineProps<{
   post: Post | undefined | null;
   type: "post" | "opinion";
 }>();
+
 // Check if the current user is an admin
 const isAdmin = computed(() => {
   return (
@@ -211,13 +183,31 @@ const commentMutation = useMutation({
 // Set up the delete comment mutation
 const deleteCommentMutation = useMutation({
   mutationFn: async (commentId: number) => {
-    // TODO TO IMPLEMENT
     return deleteComment(commentId);
   },
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["post"] });
+    queryClient.invalidateQueries({
+      queryKey: props.type === "post" ? ["post"] : ["opinion"],
+    });
   },
 });
+
+// Helper function to count total comments including nested ones
+const getTotalCommentsCount = (): number => {
+  if (!props.post || !props.post.comments) return 0;
+
+  const countComments = (comments: Comment[]): number => {
+    let count = comments.length;
+    comments.forEach((comment) => {
+      if (comment.children && comment.children.length > 0) {
+        count += countComments(comment.children);
+      }
+    });
+    return count;
+  };
+
+  return countComments(props.post.comments);
+};
 
 // Computed property to control how many comments to display
 const displayedComments = computed(() => {
