@@ -23,7 +23,7 @@
         :style="generateUserIcon(comment.user.username)"
       >
         <span class="text-black text-lg font-semibold">
-          {{ comment.user.username.charAt(0).toUpperCase() || "U" }}
+          {{ comment.user.username.charAt(0).toUpperCase() || "A" }}
         </span>
       </div>
       <div class="flex-1 min-w-0">
@@ -245,6 +245,6 @@ const generateUserIcon = (username: string) => {
     "#EDE7F6", // Periwinkle Glow
   ];
   const index = username.charCodeAt(0) % colors.length;
-  return `background-color: ${colors[index]}`;
+  return `background-color: ${username ? colors[index] : "#F0F0F0"};`;
 };
 </script>
