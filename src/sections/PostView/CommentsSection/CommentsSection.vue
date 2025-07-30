@@ -152,11 +152,7 @@ const props = defineProps<{
 
 // Check if the current user is an admin
 const isAdmin = computed(() => {
-  return (
-    authStore.user?.role?.name === "admin" ||
-    (authStore.user?.role?.level !== undefined &&
-      authStore.user?.role?.level >= 3)
-  );
+  return authStore.user?.role?.name === "admin";
 });
 
 // Set up the comment mutation with TanStack Query

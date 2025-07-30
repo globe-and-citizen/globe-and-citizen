@@ -34,7 +34,7 @@
               Reply
             </button>
             <button
-              v-if="isAdmin"
+              v-if="isAdmin || userId === comment.user.id"
               class="text-red-600 hover:underline text-sm"
               @click="$emit('delete-comment', comment.id)"
             >
@@ -126,6 +126,7 @@ import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { createComment } from "@/api/comments";
 import { formatCommentDate } from "@/lib/utils";
 import type { Comment } from "@/models/Comments";
+import { useAuthStore } from "@/store/authStore.ts";
 
 // Define component props
 const props = defineProps<{
@@ -142,7 +143,9 @@ defineEmits<{
 }>();
 
 const queryClient = useQueryClient();
-
+const authStore = useAuthStore();
+const userId = authStore.user?.id;
+console.log(props.isAdmin);
 // Reply form state
 const showReplyForm = ref(false);
 const replyContent = ref("");
