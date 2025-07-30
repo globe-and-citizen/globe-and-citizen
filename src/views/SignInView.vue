@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useMutation } from "@tanstack/vue-query";
+import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import bgImg from "../assets/images/sign-in-img.png";
 import { useRouter } from "vue-router";
 import axios from "axios";
@@ -99,7 +99,7 @@ const router = useRouter();
 const username = ref("");
 const password = ref("");
 const errorMessage = ref("");
-
+const queryClient = useQueryClient();
 // Mutation for sign-in
 const { mutate: signInMutation, isPending } = useMutation({
   mutationFn: async (data: { username: string; password: string }) =>
@@ -116,6 +116,7 @@ const { mutate: signInMutation, isPending } = useMutation({
         "Authorization"
       ] = `Bearer ${response.data.token}`;
       router.push("/");
+      queryClient.invalidateQueries({ queryKey: ["user"] });
     } else {
       errorMessage.value = "Sign-in failed. Please try again.";
     }

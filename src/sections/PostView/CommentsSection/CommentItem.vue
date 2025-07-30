@@ -135,7 +135,7 @@
 import { ref } from "vue";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { createComment } from "@/api/comments";
-import { formatCommentDate } from "@/lib/utils";
+import { formatCommentDate, generateUserIcon } from "@/lib/utils";
 import type { Comment } from "@/models/Comments";
 import { useAuthStore } from "@/store/authStore.ts";
 
@@ -223,28 +223,5 @@ const submitReply = async () => {
     content: replyContent.value,
     parentId: props.comment.id,
   });
-};
-
-// Generate random background color for user icon
-const generateUserIcon = (username: string) => {
-  const colors = [
-    "#F6CACA", // Soft Rose
-    "#CDE9D9", // Mint Cream
-    "#F3EAC2", // Pale Lemon
-    "#D7D9F2", // Lavender Mist
-    "#FFDADA", // Blush
-    "#C9E4DE", // Seafoam
-    "#F0D9FF", // Pastel Purple
-    "#E7F2F8", // Powder Blue
-    "#FFE4CC", // Peach Fuzz
-    "#D0F4DE", // Spring Green
-    "#FBE4E6", // Cotton Candy
-    "#E4F9F5", // Aqua Tint
-    "#FFF3C7", // Soft Butter
-    "#F2D7D5", // Petal Pink
-    "#EDE7F6", // Periwinkle Glow
-  ];
-  const index = username.charCodeAt(0) % colors.length;
-  return `background-color: ${username ? colors[index] : "#F0F0F0"};`;
 };
 </script>

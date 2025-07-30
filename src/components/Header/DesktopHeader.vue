@@ -112,11 +112,25 @@
               </svg>
             </button>
             <img
-              src="@/assets/user-placeholder.png"
-              alt="User Avatar"
-              class="w-8 h-8 rounded-full object-cover cursor-pointer"
+              v-if="profilePictureUrl"
+              :src="
+                profilePictureUrl ||
+                generateUserIcon(authStore.user?.username || 'A')
+              "
+              :alt="authStore.user?.username"
+              class="w-10 h-10 rounded-full object-cover flex-shrink-0 cursor-pointer border border-black-20 p-0.5"
               @click="$router.push('/profile')"
             />
+            <div
+              v-else
+              class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+              :style="generateUserIcon(authStore.user?.username || 'A')"
+              @click="$router.push('/profile')"
+            >
+              <span class="text-black text-lg font-semibold">
+                {{ authStore.user?.username.charAt(0).toUpperCase() || "A" }}
+              </span>
+            </div>
           </div>
         </template>
 
@@ -267,14 +281,23 @@
                 class="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-md"
               >
                 <img
-                  src="@/assets/user-placeholder.png"
-                  alt="User Avatar"
-                  class="w-10 h-10 rounded-full object-cover cursor-pointer"
-                  @click="
-                    $router.push('/profile');
-                    closeMobileMenu();
+                  v-if="userData?.profile_picture_url"
+                  :src="
+                    userData?.profile_picture_url ||
+                    generateUserIcon(userData?.username || 'A')
                   "
+                  :alt="userData?.username"
+                  class="w-10 h-10 rounded-full object-cover flex-shrink-0"
                 />
+                <div
+                  v-else
+                  class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  :style="generateUserIcon(userData?.username || 'A')"
+                >
+                  <span class="text-black text-lg font-semibold">
+                    {{ userData?.username?.charAt(0).toUpperCase() || "A" }}
+                  </span>
+                </div>
                 <div class="flex-1">
                   <p class="text-sm font-medium text-gray-900">Your Profile</p>
                   <p class="text-xs text-gray-500">View and edit profile</p>
@@ -395,11 +418,30 @@ import CreateOpinionModal from "@/modals/CreateOpinionModal.vue";
 import { useQuery } from "@tanstack/vue-query";
 import type { Post } from "@/models/Posts";
 import { fetchPostById } from "@/api/posts.ts";
+import { generateUserIcon } from "@/lib/utils.ts";
+import { getUser } from "@/api/user.ts";
+import type { UserType } from "@/models/Auth";
 
 type HeaderState = "default" | "no-user" | "no-user-search" | "logged-in";
 const authStore = useAuthStore();
 const router = useRouter();
 const searchStore = useSearchStore();
+
+const { data: userData } = useQuery({
+  queryKey: ["user", authStore.user?.id],
+  queryFn: async () => {
+    if (!authStore.user?.id) {
+      throw new Error("User ID is not available.");
+    }
+    const response = await getUser(authStore.user.id);
+    return response as Partial<UserType>;
+  },
+  enabled: !!authStore.user?.id,
+});
+
+const profilePictureUrl = computed(() => {
+  return userData.value?.profile_picture_url;
+});
 
 // Mobile menu state
 const isMobileMenuOpen = ref(false);
