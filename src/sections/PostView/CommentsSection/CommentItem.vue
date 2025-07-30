@@ -9,12 +9,23 @@
   >
     <div class="flex items-start space-x-3">
       <img
+        v-if="comment.user.profile_picture_url"
         :src="
-          comment.user.profile_picture_url || '/src/assets/user-placeholder.png'
+          comment.user.profile_picture_url ||
+          generateUserIcon(comment.user.username)
         "
         :alt="comment.user.username"
         class="w-10 h-10 rounded-full object-cover flex-shrink-0"
       />
+      <div
+        v-else
+        class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+        :style="generateUserIcon(comment.user.username)"
+      >
+        <span class="text-black text-lg font-semibold">
+          {{ comment.user.username.charAt(0).toUpperCase() || "U" }}
+        </span>
+      </div>
       <div class="flex-1 min-w-0">
         <div class="flex items-center space-x-2 mb-2 flex-wrap">
           <h4 class="font-semibold text-gray-900">
@@ -212,5 +223,28 @@ const submitReply = async () => {
     content: replyContent.value,
     parentId: props.comment.id,
   });
+};
+
+// Generate random background color for user icon
+const generateUserIcon = (username: string) => {
+  const colors = [
+    "#F6CACA", // Soft Rose
+    "#CDE9D9", // Mint Cream
+    "#F3EAC2", // Pale Lemon
+    "#D7D9F2", // Lavender Mist
+    "#FFDADA", // Blush
+    "#C9E4DE", // Seafoam
+    "#F0D9FF", // Pastel Purple
+    "#E7F2F8", // Powder Blue
+    "#FFE4CC", // Peach Fuzz
+    "#D0F4DE", // Spring Green
+    "#FBE4E6", // Cotton Candy
+    "#E4F9F5", // Aqua Tint
+    "#FFF3C7", // Soft Butter
+    "#F2D7D5", // Petal Pink
+    "#EDE7F6", // Periwinkle Glow
+  ];
+  const index = username.charCodeAt(0) % colors.length;
+  return `background-color: ${colors[index]}`;
 };
 </script>
