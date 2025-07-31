@@ -110,8 +110,6 @@ export async function signIn(
 }
 
 type SignUpData = {
-  first_name: string;
-  email: string;
   username: string;
   password: string;
 };

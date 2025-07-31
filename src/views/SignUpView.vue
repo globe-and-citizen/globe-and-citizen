@@ -38,18 +38,6 @@
         <!-- Form -->
         <form class="space-y-4" @submit="onSubmit">
           <input
-            v-model="first_name"
-            type="text"
-            placeholder="Name"
-            class="w-full border border-gray-300 rounded px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-          />
-          <input
-            v-model="email"
-            type="email"
-            placeholder="Email"
-            class="w-full border border-gray-300 rounded px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-          />
-          <input
             v-model="username"
             type="text"
             placeholder="Username"
@@ -115,8 +103,6 @@ import { signUpApi } from "../api/auth.ts";
 
 const router = useRouter();
 // Form state
-const first_name = ref("");
-const email = ref("");
 const username = ref("");
 const password = ref("");
 
@@ -135,8 +121,6 @@ const { mutate: signUpMutation, isPending } = useMutation({
 function onSubmit(e: Event) {
   e.preventDefault();
   signUpMutation({
-    first_name: first_name.value,
-    email: email.value,
     username: username.value,
     password: password.value,
   });
