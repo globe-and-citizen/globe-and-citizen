@@ -8,15 +8,15 @@
       {
         'bg-black text-white border-2 rounded border-secondary-black hover:opacity-90':
           variant === 'primary' && !disabled,
-        'bg-white-10 text-secondary-black border-2 rounded hover:text-black-60 hover:border-black-60 hover:[&>span>svg>path]:fill-black-60 duration-100 hover:shadow-button-hover hover:transition hover:duration-300':
+        'bg-white-10 border-black-100 text-secondary-black border-2 rounded hover:text-black-100 hover:border-black-60 hover:[&>span>svg>path]:fill-black-60 duration-100 hover:shadow-button-hover hover:transition hover:duration-300':
           variant === 'secondary' && !disabled,
         'bg-transparent text-black border-b border-b-black-60':
           variant === 'tertiary' && !disabled,
       },
       size === 'large'
-        ? 'px-3 py-3 h-12'
+        ? 'px-6 py-3 h-12'
         : size === 'medium'
-        ? 'px-2 py-2.5 h-10'
+        ? 'px-6 py-3 h-10'
         : size === 'small'
         ? 'px-2 py-2 h-9'
         : '',

@@ -21,12 +21,6 @@
           class="hidden lg:flex items-center gap-6 font-semibold text-base font-lato"
         >
           <RouterLink
-            to="/trending"
-            active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
-            class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
-            >Trending</RouterLink
-          >
-          <RouterLink
             to="/about-us"
             active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
             class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
@@ -47,17 +41,12 @@
         <template
           v-if="headerState === 'no-user' || headerState === 'no-user-search'"
         >
-          <div class="hidden md:flex items-center">
-            <RouterLink
-              to="/sign-up"
-              class="text-base font-lato text-black-100 font-semibold border-b-1 border-black pb-2.5 hover:text-black self-end mr-8"
-              >Register</RouterLink
-            >
-            <RouterLink
-              to="/sign-in"
-              class="bg-black font-lato font-semibold text-white px-6 py-3 rounded-md text-base hover:opacity-90"
-            >
-              Sign in
+          <div class="hidden md:flex items-center gap-4">
+            <RouterLink to="/sign-up" class="w-fit">
+              <Button variant="secondary" title="Sign up" size="medium" />
+            </RouterLink>
+            <RouterLink to="/sign-in" class="w-fit">
+              <Button variant="primary" title="Sign in" size="medium" />
             </RouterLink>
           </div>
         </template>
@@ -230,13 +219,6 @@
             class="flex flex-col gap-4 font-semibold text-base font-lato mb-6"
           >
             <RouterLink
-              to="/trending"
-              active-class="text-red-500"
-              class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
-              @click="closeMobileMenu"
-              >Trending</RouterLink
-            >
-            <RouterLink
               to="/about-us"
               active-class="text-red-500"
               class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
@@ -261,7 +243,7 @@
                 to="/sign-up"
                 class="text-center py-3 px-4 border border-black rounded-md text-base font-lato text-black-100 font-semibold hover:bg-gray-50"
                 @click="closeMobileMenu"
-                >Register</RouterLink
+                >Sign up</RouterLink
               >
               <RouterLink
                 to="/sign-in"
@@ -421,6 +403,7 @@ import { fetchPostById } from "@/api/posts.ts";
 import { generateUserIcon } from "@/lib/utils.ts";
 import { getUser } from "@/api/user.ts";
 import type { UserType } from "@/models/Auth";
+import Button from "@/components/Button/Button.vue";
 
 type HeaderState = "default" | "no-user" | "no-user-search" | "logged-in";
 const authStore = useAuthStore();

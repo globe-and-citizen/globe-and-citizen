@@ -1,6 +1,6 @@
 <template>
   <div class="overflow-hidden">
-    <div class="flex mb-2 justify-between pr-1 py-2">
+    <div class="flex mb-2 gap-5 pr-1 py-2">
       <span class="text-xl text-black-100 font-semibold">
         {{ showAnnotations ? "Hide Readers Insight" : "See Readers Insight" }}
       </span>
