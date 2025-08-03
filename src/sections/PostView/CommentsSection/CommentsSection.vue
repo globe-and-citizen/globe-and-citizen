@@ -43,44 +43,43 @@
     </div>
 
     <!-- Add Comment Form -->
-    <div class="mt-8 bg-gray-50 rounded-lg p-6 border">
-      <h4 class="font-semibold text-gray-900 mb-4">Add a Comment</h4>
+    <div class="mt-8 flex gap-1">
+      <img
+        v-if="user?.profile_picture_url"
+        :src="user.profile_picture_url"
+        alt="User Avatar"
+        class="w-10 h-10 rounded-full mb-4"
+      />
 
-      <div class="mb-4">
-        <label
-          for="commentContent"
-          class="block text-sm font-medium text-gray-700 mb-1"
-          >Your Comment</label
-        >
+      <div class="mb-4 w-full">
         <textarea
           id="commentContent"
           v-model="commentContent"
           rows="4"
           placeholder="Comment"
-          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="w-full px-3 py-2 border resize-none border-black-20 rounded-sm focus:outline-none focus:ring focus:ring-black-20 placeholder:font-normal placeholder:text-sm placeholder:font-lato"
           :class="{ 'border-red-500': formErrors.commentContent }"
+          @keydown.enter.prevent="submitComment"
         ></textarea>
         <p v-if="formErrors.commentContent" class="mt-1 text-sm text-red-600">
           {{ formErrors.commentContent }}
         </p>
-      </div>
-
-      <div class="flex justify-end">
-        <button
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-          :disabled="commentMutation.isPending.value"
-          @click="submitComment"
+        <div class="flex justify-end w-fit ml-auto">
+          <Button
+            variant="primary"
+            :title="
+              commentMutation.isPending.value ? 'Submitting' : 'Post comment'
+            "
+            size="medium"
+            @click="submitComment"
+          />
+        </div>
+        <div
+          v-if="commentSubmitSuccess"
+          class="mt-4 p-3 bg-green-100 text-green-700 rounded-md"
         >
-          <span v-if="commentMutation.isPending.value">Submitting...</span>
-          <span v-else>Submit Comment</span>
-        </button>
-      </div>
-
-      <div
-        v-if="commentSubmitSuccess"
-        class="mt-4 p-3 bg-green-100 text-green-700 rounded-md"
-      >
-        Your comment has been submitted successfully!
+          Your comment has been submitted successfully!
+        </div>
       </div>
 
       <div
@@ -106,6 +105,7 @@ import { useModal } from "vue-final-modal";
 import ConfirmDeleteModal from "@/modals/ConfirmDeleteModal.vue";
 import CommentItem from "./CommentItem.vue";
 import type { Comment } from "@/models/Comments";
+import Button from "@/components/Button/Button.vue";
 
 const authStore = useAuthStore();
 const queryClient = useQueryClient();
@@ -114,7 +114,7 @@ const queryClient = useQueryClient();
 const commentContent = ref("");
 const formErrors = ref<Record<string, string>>({});
 const commentSubmitSuccess = ref(false);
-
+const user = computed(() => authStore.user);
 // Comments display control
 const commentsLimit = 10;
 const showAllComments = ref(false);

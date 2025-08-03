@@ -136,40 +136,55 @@
       </div>
 
       <!-- Reply Input -->
-      <div v-if="showReplyInput" class="mt-4 p-3 bg-gray-50 rounded-lg border">
-        <div class="mb-3">
-          <span class="text-sm text-gray-500"
-            >Reply to {{ comment.user.username }}</span
-          >
-        </div>
-        <textarea
-          v-model="replyContent"
-          placeholder="Write your reply..."
-          class="w-full min-h-[80px] resize-none px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          :class="{ 'border-red-500': replyFormErrors.replyContent }"
-        ></textarea>
-        <p
-          v-if="replyFormErrors.replyContent"
-          class="mt-1 text-sm text-red-600"
+    </div>
+    <div v-if="showReplyInput" class="mt-4 flex gap-1">
+      <div class="mb-3 flex-none">
+        <img
+          v-if="authStore.user?.profile_picture_url"
+          :src="authStore.user.profile_picture_url"
+          alt="User Avatar"
+          class="w-10 h-10 rounded-full mb-2"
+        />
+      </div>
+      <textarea
+        v-model="replyContent"
+        :placeholder="'Reply to @' + comment.user.username"
+        class="relative w-full min-h-[80px] resize-none px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-black-20 placeholder:font-normal placeholder:text-sm placeholder:font-lato"
+        :class="{ 'border-red-500': replyFormErrors.replyContent }"
+        @keydown.enter.prevent="handleReply"
+      ></textarea>
+      <p v-if="replyFormErrors.replyContent" class="mt-1 text-sm text-red-600">
+        {{ replyFormErrors.replyContent }}
+      </p>
+      <div
+        class="absolute right-4 bottom-3 hover:[&>svg>g>path]:fill-blue-600 cursor-pointer"
+        @click="handleReply"
+      >
+        <svg
+          width="25"
+          height="25"
+          viewBox="0 0 25 25"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          {{ replyFormErrors.replyContent }}
-        </p>
-        <div class="flex gap-2 mt-3">
-          <button
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            :disabled="replyMutation.isPending.value || !replyContent.trim()"
-            @click="handleReply"
-          >
-            <span v-if="replyMutation.isPending.value">Submitting...</span>
-            <span v-else>Reply</span>
-          </button>
-          <button
-            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
-            @click="cancelReply"
-          >
-            Cancel
-          </button>
-        </div>
+          <g clip-path="url(#clip0_1437_50685)">
+            <path
+              d="M3.25236 10.195L11.4196 9.93948L4.18151 12.2113L3.25236 10.195ZM13.7349 14.9284L8.28936 21.0206L7.35115 19.0086L13.7349 14.9284ZM0.15921 8.29416L3.10847 14.6425L17.5483 10.1159L4.79895 18.2678L7.76634 24.6077L22.9862 7.58017L0.15921 8.29416Z"
+              fill="currentColor"
+              fill-opacity="0.6"
+            />
+          </g>
+          <defs>
+            <clipPath id="clip0_1437_50685">
+              <rect
+                width="24"
+                height="24"
+                fill="white"
+                transform="translate(0.969971 0.0176697)"
+              />
+            </clipPath>
+          </defs>
+        </svg>
       </div>
     </div>
 
