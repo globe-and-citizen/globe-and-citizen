@@ -40,14 +40,19 @@
             <div
               v-else
               class="w-full h-full bg-gray-200 text-gray-600 text-sm font-medium flex items-center justify-center"
+              :style="generateUserIcon(comment.user.username)"
             >
-              {{ getInitials(comment.user.username) }}
+              <span class="text-black text-lg font-semibold">
+                {{ comment.user.username.charAt(0).toUpperCase() || "A" }}
+              </span>
             </div>
           </div>
           <div>
             <div class="flex items-center gap-2">
               <span class="font-medium text-gray-900">{{
-                comment.user.username
+                comment.user.username.length
+                  ? comment.user.username
+                  : "Anonymous"
               }}</span>
               <span class="text-gray-500 text-sm">{{
                 formatCommentDate(comment.created_at)
@@ -206,7 +211,7 @@
 import { ref, computed } from "vue";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { createComment } from "@/api/comments";
-import { formatCommentDate } from "@/lib/utils";
+import { formatCommentDate, generateUserIcon } from "@/lib/utils";
 import type { Comment } from "../../../models/Comments";
 
 const props = defineProps<{
@@ -232,6 +237,7 @@ const hasReplies = computed(() => !!props.comment.children?.length);
 const maxDepth = 3;
 
 const getInitials = (name: string) => {
+  console.log(name);
   return name
     .split(" ")
     .map((word) => word[0]?.toUpperCase())
