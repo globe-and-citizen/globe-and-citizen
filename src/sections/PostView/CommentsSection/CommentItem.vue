@@ -236,15 +236,6 @@ const showReplies = ref(false);
 const hasReplies = computed(() => !!props.comment.children?.length);
 const maxDepth = 3;
 
-const getInitials = (name: string) => {
-  console.log(name);
-  return name
-    .split(" ")
-    .map((word) => word[0]?.toUpperCase())
-    .slice(0, 2)
-    .join("");
-};
-
 // Reply mutation
 const replyMutation = useMutation({
   mutationFn: async (data: {
