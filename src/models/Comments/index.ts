@@ -9,6 +9,10 @@ export interface Comment {
   updated_at: string;
   user: UserType;
   children?: Comment[];
+  isLiked?: boolean;
+  isDisliked?: boolean;
+  likes?: number;
+  dislikes?: number;
 }
 
 export type Comments = Comment[];

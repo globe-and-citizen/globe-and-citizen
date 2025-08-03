@@ -24,7 +24,7 @@
           id="commentContent"
           v-model="commentContent"
           rows="4"
-          placeholder="Write your comment here..."
+          placeholder="Comment"
           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           :class="{ 'border-red-500': formErrors.commentContent }"
         ></textarea>

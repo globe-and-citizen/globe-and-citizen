@@ -1,167 +1,243 @@
 <template>
   <div
-    class="bg-gray-50 rounded-lg p-4 border"
-    :style="{ marginLeft: `${depth * 20}px` }"
-    :class="{
-      'bg-gray-100': depth > 0,
-      'border-l-4 border-l-blue-300': depth > 0,
-    }"
+    :class="[
+      'relative',
+      depth > 0 ? 'ml-8 mt-0' : 'mt-4',
+      depth === 0 ? ' pb-4' : '',
+    ]"
   >
-    <div class="flex items-start space-x-3">
-      <img
-        v-if="comment.user.profile_picture_url"
-        :src="
-          comment.user.profile_picture_url ||
-          generateUserIcon(comment.user.username)
-        "
-        :alt="comment.user.username"
-        class="w-10 h-10 rounded-full object-cover flex-shrink-0"
-      />
+    <template v-if="depth > 0">
       <div
-        v-else
-        class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-        :style="generateUserIcon(comment.user.username)"
-      >
-        <span class="text-black text-lg font-semibold">
-          {{ comment.user.username.charAt(0).toUpperCase() || "A" }}
-        </span>
-      </div>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center space-x-2 mb-2 flex-wrap">
-          <h4 class="font-semibold text-gray-900">
-            {{
-              comment.user.username.length ? comment.user.username : "Anonymous"
-            }}
-          </h4>
-          <span class="text-sm text-gray-500">{{
-            formatCommentDate(comment.created_at)
-          }}</span>
-          <div class="flex space-x-2 ml-auto">
-            <button
-              v-if="depth < 4"
-              class="text-blue-600 hover:underline text-sm"
-              @click="toggleReplyForm"
+        :class="[
+          'absolute -left-8 w-px bg-gray-300',
+          depth === 1 && !isLastChild ? '-top-3' : '-top-3',
+          isLastChild ? 'h-9 ' : 'h-[calc(100%+36px)]',
+        ]"
+      ></div>
+      <div
+        :class="[
+          'absolute -left-8 top-6 w-6 h-px bg-gray-300',
+          comment.children && comment.children?.length > 0 ? '-top-6' : 'top-0',
+        ]"
+      ></div>
+
+      <div class="absolute -left-8 top-6 w-px h-px bg-gray-300"></div>
+    </template>
+
+    <div
+      class="bg-white hover:bg-gray-50 transition-colors duration-200 rounded-lg p-4"
+    >
+      <!-- Comment Header -->
+      <div class="flex items-start justify-between mb-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full overflow-hidden">
+            <img
+              v-if="comment.user.profile_picture_url"
+              :src="comment.user.profile_picture_url"
+              :alt="comment.user.profile_picture_url"
+              class="w-full h-full object-cover"
+            />
+            <div
+              v-else
+              class="w-full h-full bg-gray-200 text-gray-600 text-sm font-medium flex items-center justify-center"
             >
-              Reply
-            </button>
-            <button
-              v-if="isAdmin || userId === comment.user.id"
-              class="text-red-600 hover:underline text-sm"
-              @click="$emit('delete-comment', comment.id)"
-            >
-              Delete
-            </button>
+              {{ getInitials(comment.user.username) }}
+            </div>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-gray-900">{{
+                comment.user.username
+              }}</span>
+              <span class="text-gray-500 text-sm">{{
+                formatCommentDate(comment.created_at)
+              }}</span>
+            </div>
           </div>
         </div>
-        <p class="text-gray-700 leading-relaxed mb-3">
-          {{ comment.content }}
-        </p>
-
-        <!-- Reply Form -->
-        <div
-          v-if="showReplyForm"
-          class="mt-4 p-4 bg-white rounded-lg border border-gray-200"
+        <button
+          v-if="isAdmin"
+          class="h-8 w-8 p-0 flex items-center justify-center text-gray-400 hover:text-gray-600"
+          @click="$emit('delete-comment', comment.id)"
         >
-          <h5 class="font-medium text-gray-900 mb-3">
-            Reply to {{ comment.user.username || "Anonymous" }}
-          </h5>
-          <textarea
-            v-model="replyContent"
-            rows="3"
-            placeholder="Write your reply here..."
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
-            :class="{ 'border-red-500': replyError }"
-          ></textarea>
-          <p v-if="replyError" class="text-sm text-red-600 mb-3">
-            {{ replyError }}
-          </p>
-          <div class="flex justify-end space-x-2">
-            <button
-              class="px-3 py-1 text-gray-600 hover:text-gray-800 text-sm"
-              @click="cancelReply"
-            >
-              Cancel
-            </button>
-            <button
-              class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm"
-              :disabled="replyMutation.isPending.value"
-              @click="submitReply"
-            >
-              <span v-if="replyMutation.isPending.value">Submitting...</span>
-              <span v-else>Submit Reply</span>
-            </button>
-          </div>
-
-          <div
-            v-if="replySuccess"
-            class="mt-3 p-2 bg-green-100 text-green-700 rounded-md text-sm"
+          <svg
+            class="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            Your reply has been submitted successfully!
-          </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+      </div>
 
-          <div
-            v-if="replyMutation.isError.value"
-            class="mt-3 p-2 bg-red-100 text-red-700 rounded-md text-sm"
+      <!-- Comment Content -->
+      <div class="mb-4">
+        <p class="text-gray-900 leading-relaxed">{{ comment.content }}</p>
+      </div>
+
+      <!-- Comment Actions -->
+      <div class="flex items-center gap-1">
+        <button
+          class="h-8 px-2 text-sm flex items-center"
+          :class="
+            comment.isLiked
+              ? 'text-blue-600'
+              : 'text-gray-400 hover:text-blue-600'
+          "
+          @click="handleLike(comment.id)"
+        >
+          👍 {{ comment.likes || 0 }}
+        </button>
+
+        <button
+          class="h-8 px-2 text-sm flex items-center"
+          :class="
+            comment.isDisliked
+              ? 'text-red-600'
+              : 'text-gray-400 hover:text-red-600'
+          "
+          @click="handleDislike(comment.id)"
+        >
+          👎 0
+        </button>
+
+        <button
+          v-if="depth < maxDepth"
+          class="h-8 px-2 text-sm flex items-center text-gray-400 hover:text-blue-600"
+          @click="showReplyInput = !showReplyInput"
+        >
+          <svg
+            class="h-4 w-4 mr-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
           >
-            {{
-              replyMutation.error.value?.message ||
-              "Error submitting reply. Please try again."
-            }}
-          </div>
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+            />
+          </svg>
+          Reply
+        </button>
+      </div>
+
+      <!-- Reply Input -->
+      <div v-if="showReplyInput" class="mt-4 p-3 bg-gray-50 rounded-lg border">
+        <div class="mb-3">
+          <span class="text-sm text-gray-500"
+            >Reply to {{ comment.user.username }}</span
+          >
+        </div>
+        <textarea
+          v-model="replyContent"
+          placeholder="Write your reply..."
+          class="w-full min-h-[80px] resize-none px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          :class="{ 'border-red-500': replyFormErrors.replyContent }"
+        ></textarea>
+        <p
+          v-if="replyFormErrors.replyContent"
+          class="mt-1 text-sm text-red-600"
+        >
+          {{ replyFormErrors.replyContent }}
+        </p>
+        <div class="flex gap-2 mt-3">
+          <button
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            :disabled="replyMutation.isPending.value || !replyContent.trim()"
+            @click="handleReply"
+          >
+            <span v-if="replyMutation.isPending.value">Submitting...</span>
+            <span v-else>Reply</span>
+          </button>
+          <button
+            class="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100"
+            @click="cancelReply"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- Nested Replies -->
-    <div
-      v-if="comment.children && comment.children.length > 0"
-      class="mt-4 space-y-4"
-    >
-      <CommentItem
-        v-for="child in comment.children"
-        :key="child.id"
-        :comment="child"
-        :depth="depth + 1"
-        :is-admin="isAdmin"
-        :post-slug="postSlug"
-        :post-type="postType"
-        @delete-comment="$emit('delete-comment', $event)"
-      />
+    <!-- Replies Section -->
+    <div v-if="hasReplies" class="mt-3">
+      <div v-if="!showReplies">
+        <button
+          class="text-blue-600 hover:text-blue-800 h-8 px-0 font-medium"
+          @click="showReplies = true"
+        >
+          View {{ comment.children?.length }}
+          {{ comment.children?.length === 1 ? "reply" : "replies" }}
+        </button>
+      </div>
+      <div v-else>
+        <CommentItem
+          v-for="(reply, index) in comment.children"
+          :key="reply.id"
+          :comment="reply"
+          :depth="depth + 1"
+          :post-slug="postSlug"
+          :post-type="postType"
+          :is-admin="isAdmin"
+          :is-last-child="index === (comment.children?.length || 0) - 1"
+          @delete-comment="$emit('delete-comment', $event)"
+        />
+        <button
+          v-if="comment.children && comment.children?.length > 1"
+          class="text-gray-500 hover:text-gray-700 h-8 px-0 mt-2 ml-8"
+          @click="showReplies = false"
+        >
+          Hide replies
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { createComment } from "@/api/comments";
-import { formatCommentDate, generateUserIcon } from "@/lib/utils";
-import type { Comment } from "@/models/Comments";
-import { useAuthStore } from "@/store/authStore.ts";
+import { formatCommentDate } from "@/lib/utils";
+import type { Comment } from "../../../models/Comments";
 
-// Define component props
 const props = defineProps<{
   comment: Comment;
   depth: number;
-  isAdmin: boolean;
   postSlug: string;
   postType: "post" | "opinion";
+  isAdmin: boolean;
+  isLastChild?: boolean;
 }>();
 
-// Define emits
 defineEmits<{
-  "delete-comment": [commentId: number];
+  (e: "delete-comment", commentId: number): void;
 }>();
 
 const queryClient = useQueryClient();
-const authStore = useAuthStore();
-const userId = authStore.user?.id;
-console.log(props.isAdmin);
-// Reply form state
-const showReplyForm = ref(false);
 const replyContent = ref("");
-const replyError = ref("");
-const replySuccess = ref(false);
+const replyFormErrors = ref<Record<string, string>>({});
+const showReplyInput = ref(false);
+const showReplies = ref(false);
+
+const hasReplies = computed(() => !!props.comment.children?.length);
+const maxDepth = 3;
+
+const getInitials = (name: string) => {
+  return name
+    .split(" ")
+    .map((word) => word[0]?.toUpperCase())
+    .slice(0, 2)
+    .join("");
+};
 
 // Reply mutation
 const replyMutation = useMutation({
@@ -179,42 +255,26 @@ const replyMutation = useMutation({
   },
   onSuccess: () => {
     replyContent.value = "";
-    replySuccess.value = true;
-    showReplyForm.value = false;
-
+    showReplyInput.value = false;
     queryClient.invalidateQueries({
       queryKey: props.postType === "post" ? ["post"] : ["opinion"],
     });
-
-    setTimeout(() => {
-      replySuccess.value = false;
-    }, 3000);
   },
-  onError: () => {},
 });
 
-// Toggle reply form
-const toggleReplyForm = () => {
-  showReplyForm.value = !showReplyForm.value;
-  if (!showReplyForm.value) {
-    replyContent.value = "";
-    replyError.value = "";
-  }
+const handleLike = async (commentId: number) => {
+  console.log("Like comment", commentId);
 };
 
-// Cancel reply
-const cancelReply = () => {
-  showReplyForm.value = false;
-  replyContent.value = "";
-  replyError.value = "";
+const handleDislike = async (commentId: number) => {
+  console.log("Dislike comment", commentId);
 };
 
-// Submit reply
-const submitReply = async () => {
-  replyError.value = "";
+const handleReply = async () => {
+  replyFormErrors.value = {};
 
   if (!replyContent.value.trim()) {
-    replyError.value = "Reply is required";
+    replyFormErrors.value.replyContent = "Reply cannot be empty";
     return;
   }
 
@@ -223,5 +283,11 @@ const submitReply = async () => {
     content: replyContent.value,
     parentId: props.comment.id,
   });
+};
+
+const cancelReply = () => {
+  showReplyInput.value = false;
+  replyContent.value = "";
+  replyFormErrors.value = {};
 };
 </script>
