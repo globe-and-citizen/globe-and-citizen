@@ -9,9 +9,41 @@
         ({{ getTotalCommentsCount() }})
       </span>
     </h3>
+    <!-- Comments List -->
+    <div
+      v-if="post && post.comments && post.comments.length > 0"
+      class="space-y-2"
+    >
+      <div v-for="comment in displayedComments" :key="comment.id">
+        <CommentItem
+          :comment="comment"
+          :depth="0"
+          :is-admin="isAdmin"
+          :post-slug="post.slug"
+          :post-type="type"
+          @delete-comment="handleDeleteComment"
+        />
+      </div>
+
+      <div v-if="post.comments.length > commentsLimit" class="text-center">
+        <button
+          class="text-blue-600 hover:underline font-medium"
+          @click="showAllComments = !showAllComments"
+        >
+          {{
+            showAllComments
+              ? "Show fewer comments"
+              : `Show all ${post.comments.length} comments`
+          }}
+        </button>
+      </div>
+    </div>
+    <div v-else class="text-gray-500">
+      <p>No comments yet. Be the first to comment!</p>
+    </div>
 
     <!-- Add Comment Form -->
-    <div class="mb-8 bg-gray-50 rounded-lg p-6 border">
+    <div class="mt-8 bg-gray-50 rounded-lg p-6 border">
       <h4 class="font-semibold text-gray-900 mb-4">Add a Comment</h4>
 
       <div class="mb-4">
@@ -60,40 +92,6 @@
           "Error submitting comment. Please try again."
         }}
       </div>
-    </div>
-
-    <!-- Comments List -->
-    <div
-      v-if="post && post.comments && post.comments.length > 0"
-      class="space-y-6"
-    >
-      <div v-for="comment in displayedComments" :key="comment.id">
-        <CommentItem
-          :comment="comment"
-          :depth="0"
-          :is-admin="isAdmin"
-          :post-slug="post.slug"
-          :post-type="type"
-          @delete-comment="handleDeleteComment"
-        />
-      </div>
-
-      <div v-if="post.comments.length > commentsLimit" class="text-center">
-        <button
-          class="text-blue-600 hover:underline font-medium"
-          @click="showAllComments = !showAllComments"
-        >
-          {{
-            showAllComments
-              ? "Show fewer comments"
-              : `Show all ${post.comments.length} comments`
-          }}
-        </button>
-      </div>
-    </div>
-
-    <div v-else class="text-gray-500">
-      <p>No comments yet. Be the first to comment!</p>
     </div>
   </div>
 </template>

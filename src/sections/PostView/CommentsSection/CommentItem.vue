@@ -2,8 +2,8 @@
   <div
     :class="[
       'relative',
-      depth > 0 ? 'ml-8 mt-0' : 'mt-4',
-      depth === 0 ? ' pb-4' : '',
+      depth > 0 ? 'ml-8 mt-2' : 'mt-2',
+      depth === 0 ? ' pb-0' : '',
     ]"
   >
     <template v-if="depth > 0">
@@ -61,7 +61,7 @@
           </div>
         </div>
         <button
-          v-if="isAdmin"
+          v-if="isAdmin || userId === comment.user.id"
           class="h-8 w-8 p-0 flex items-center justify-center text-gray-400 hover:text-gray-600"
           @click="$emit('delete-comment', comment.id)"
         >
@@ -114,7 +114,8 @@
 
         <button
           v-if="depth < maxDepth"
-          class="h-8 px-2 text-sm flex items-center text-gray-400 hover:text-blue-600"
+          class="h-8 px-2 text-sm flex items-center text-gray-400 hover:text-blue-600 disabled:opacity-50"
+          :disabled="!isLoggedIn"
           @click="showReplyInput = !showReplyInput"
         >
           <svg
@@ -130,7 +131,7 @@
               d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
             />
           </svg>
-          Reply
+          <span>{{ isLoggedIn ? "Reply" : "Sign-in to reply" }}</span>
         </button>
       </div>
 
@@ -213,6 +214,7 @@ import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import { createComment } from "@/api/comments";
 import { formatCommentDate, generateUserIcon } from "@/lib/utils";
 import type { Comment } from "../../../models/Comments";
+import { useAuthStore } from "@/store/authStore.ts";
 
 const props = defineProps<{
   comment: Comment;
@@ -232,7 +234,9 @@ const replyContent = ref("");
 const replyFormErrors = ref<Record<string, string>>({});
 const showReplyInput = ref(false);
 const showReplies = ref(false);
-
+const authStore = useAuthStore();
+const isLoggedIn = computed(() => authStore.isUserAuthenticated);
+const userId = authStore.user?.id;
 const hasReplies = computed(() => !!props.comment.children?.length);
 const maxDepth = 3;
 
