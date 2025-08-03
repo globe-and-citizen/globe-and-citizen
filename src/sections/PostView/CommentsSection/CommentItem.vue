@@ -197,7 +197,7 @@
           @delete-comment="$emit('delete-comment', $event)"
         />
         <button
-          v-if="comment.children && comment.children?.length > 1"
+          v-if="comment.children && comment.children?.length > 0"
           class="text-gray-500 hover:text-gray-700 h-8 px-0 mt-2 ml-8"
           @click="showReplies = false"
         >
