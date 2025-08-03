@@ -300,10 +300,4 @@ const handleReply = async () => {
     parentId: props.comment.id,
   });
 };
-
-const cancelReply = () => {
-  showReplyInput.value = false;
-  replyContent.value = "";
-  replyFormErrors.value = {};
-};
 </script>
