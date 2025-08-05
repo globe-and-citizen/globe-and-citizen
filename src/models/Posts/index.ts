@@ -32,6 +32,7 @@ export type Post = {
   entries?: Post[];
   comments_count?: number;
   userId?: number;
+  total_comments: number;
 };
 
 export type Sentence = {

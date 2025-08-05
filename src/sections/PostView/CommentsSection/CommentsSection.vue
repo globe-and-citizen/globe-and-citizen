@@ -1,14 +1,22 @@
 <template>
-  <div class="mb-8">
-    <h3 class="text-xl font-bold mb-6 border-b pb-2">
-      Comments
-      <span
-        v-if="post && post.comments"
-        class="text-sm font-normal text-gray-500"
-      >
-        ({{ getTotalCommentsCount() }})
-      </span>
+  <div class="border border-b-black-20 p-4 rounded-xl flex flex-col gap-2">
+    <h3 class="font-lato text-base font-semibold">
+      What our readers are saying
     </h3>
+    <div v-if="props.post && props.post.total_comments >= 5 && !isLoading">
+      <p class="text-base font-normal font-lato">
+        {{ commentSummary?.data.summary }}
+      </p>
+      <p class="text-xs text-black-40 font-medium font-lato">
+        This summary is AI-generated. AI can make mistakes and this summary is
+        not a replacement for reading the comments.
+      </p>
+    </div>
+    <div v-else-if="isLoading" class="text-gray-500">
+      <p>Loading comments summary...</p>
+    </div>
+  </div>
+  <div class="mb-8">
     <!-- Comments List -->
     <div
       v-if="post && post.comments && post.comments.length > 0"
@@ -38,7 +46,7 @@
         </button>
       </div>
     </div>
-    <div v-else class="text-gray-500">
+    <div v-else class="text-gray-500 mt-4">
       <p>No comments yet. Be the first to comment!</p>
     </div>
 
@@ -96,16 +104,16 @@
 </template>
 
 <script setup lang="ts">
-import { createComment, deleteComment } from "@/api/comments";
+import { analyzeComments, createComment, deleteComment } from "@/api/comments";
 import type { Post } from "@/models/Posts";
-import { useMutation, useQueryClient } from "@tanstack/vue-query";
-import { computed, ref } from "vue";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import { computed, ref, watchEffect } from "vue";
 import { useAuthStore } from "@/store/authStore";
 import { useModal } from "vue-final-modal";
 import ConfirmDeleteModal from "@/modals/ConfirmDeleteModal.vue";
 import CommentItem from "./CommentItem.vue";
-import type { Comment } from "@/models/Comments";
 import Button from "@/components/Button/Button.vue";
+import type { Comments } from "@/models/Comments";
 
 const authStore = useAuthStore();
 const queryClient = useQueryClient();
@@ -186,29 +194,40 @@ const deleteCommentMutation = useMutation({
   },
 });
 
-// Helper function to count total comments including nested ones
-const getTotalCommentsCount = (): number => {
-  if (!props.post || !props.post.comments) return 0;
-
-  const countComments = (comments: Comment[]): number => {
-    let count = comments.length;
-    comments.forEach((comment) => {
-      if (comment.children && comment.children.length > 0) {
-        count += countComments(comment.children);
-      }
-    });
-    return count;
-  };
-
-  return countComments(props.post.comments);
-};
-
 // Computed property to control how many comments to display
 const displayedComments = computed(() => {
   if (!props.post || !props.post.comments) return [];
   return showAllComments.value
     ? props.post.comments
     : props.post.comments.slice(0, commentsLimit);
+});
+const comments: string[] = [];
+
+watchEffect(() => {
+  comments.length = 0;
+
+  function collectComments(commentList: Comments) {
+    for (const comment of commentList) {
+      comments.push(comment.content);
+      if (comment.children && comment.children.length > 0) {
+        collectComments(comment.children);
+      }
+    }
+  }
+
+  if (props.post?.comments?.length) {
+    collectComments(props.post.comments);
+  }
+});
+
+// TODO: PROPER CACHING TO STORE RESPONSE IN LOCAL STORAGE
+const { data: commentSummary, isLoading } = useQuery<{
+  data: { summary: string };
+}>({
+  queryKey: ["commentsSummary"],
+  queryFn: () => analyzeComments(props.post?.slug, comments),
+  enabled: !!props.post && props.post.total_comments >= 5,
+  gcTime: 1000 * 60 * 60 * 24, // 24 hours
 });
 
 // Submit a new comment

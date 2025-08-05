@@ -1,4 +1,4 @@
-import { API_BASE_URL, COMMENTS_URL } from "./constants";
+import { API_BASE_URL, COMMENTS_URL, POSTS_URL } from "./constants";
 import { useAuthStore } from "../store/authStore";
 import { fetchWithAuth } from "./auth";
 
@@ -92,6 +92,33 @@ export async function deleteComment(commentId: number): Promise<void> {
     return;
   } catch (error) {
     console.error("Error deleting comment:", error);
+    throw error;
+  }
+}
+
+export async function analyzeComments(
+  postId?: string,
+  comments?: string[]
+): Promise<{ data: { summary: string } }> {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}${POSTS_URL}/${postId}/analyze-comments`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ comments }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Error analyzing comments: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error analyzing comments:", error);
     throw error;
   }
 }
