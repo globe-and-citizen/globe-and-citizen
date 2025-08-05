@@ -67,4 +67,5 @@ export type NewPostType = Omit<
   | "version"
   | "comments"
   | "sentences"
+  | "total_comments"
 >;
