@@ -42,7 +42,7 @@ import { formSchema } from "./types";
 import { generateSummary, postNewsArticle } from "@/api/posts.ts";
 import { generateSlug } from "@/lib/utils.ts";
 import { uploadToCloudinary } from "@/api/images.ts";
-import { toast, type ToastOptions } from "vue3-toastify";
+import { toast } from "vue3-toastify";
 
 // Type for QuillEditor instance
 export interface QuillEditorInstance {
