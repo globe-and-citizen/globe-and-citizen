@@ -34,7 +34,7 @@ import {
   CardDescription,
   CardContent,
 } from "../../../components/ui/card";
-import { toast } from "vue-sonner";
+
 import { fetchNewsApi } from "@/api/news.ts";
 import type { NewsApiResponse, NewsApiArticle } from "@/models/News";
 import { useForm } from "vee-validate";
@@ -42,6 +42,7 @@ import { formSchema } from "./types";
 import { generateSummary, postNewsArticle } from "@/api/posts.ts";
 import { generateSlug } from "@/lib/utils.ts";
 import { uploadToCloudinary } from "@/api/images.ts";
+import { toast, type ToastOptions } from "vue3-toastify";
 
 // Type for QuillEditor instance
 export interface QuillEditorInstance {
@@ -150,15 +151,11 @@ const articles = computed(() => newsData.value?.data.articles ?? []);
 const publishMutation = useMutation({
   mutationFn: postNewsArticle,
   onSuccess: () => {
-    toast.success("Article published successfully!");
     // Reset form and redirect back to step 1
     stepIndex.value = 1;
     selectedArticle.value = null;
     generatedSummary.value = "";
     form.resetForm();
-  },
-  onError: () => {
-    toast.error("Failed to publish article");
   },
 });
 

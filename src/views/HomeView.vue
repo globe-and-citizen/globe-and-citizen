@@ -20,7 +20,7 @@
       image="https://media.istockphoto.com/id/1409329028/vector/no-picture-available-placeholder-thumbnail-icon-illustration-design.jpg?s=612x612&w=0&k=20&c=_zOuJu755g2eEUioiOUdz_mHKJQJn-tDgIAhQzyeKUQ="
     />
     <div class="gc-container py-10">
-      <WhatOurReadersSay :all-posts="allPosts" />
+      <WhatOurReadersSay :all-posts="postsQuery.data" />
     </div>
   </div>
 </template>
@@ -32,20 +32,51 @@ import HeroSection from "@/sections/HomePage/HomeHeroSection/HeroSection.vue";
 import AdvertisementCard from "@/components/AdvertisementCard/AdvertisementCard.vue";
 import { useWindowSize } from "@vueuse/core";
 import { useQuery } from "@tanstack/vue-query";
-import { computed } from "vue";
+import { computed, ref, watch } from "vue";
 import type { FetchPostsType } from "@/models/Posts";
 import { fetchAllPosts } from "@/api/posts.ts";
+import { type Id, toast, type ToastOptions } from "vue3-toastify";
 
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
+const loadingToastId = ref<Id>(0);
 
-const { data: allPosts } = useQuery<FetchPostsType>({
+const postsQuery = useQuery<FetchPostsType>({
   queryKey: ["allPosts"],
   queryFn: () => fetchAllPosts(10, 1),
   refetchOnWindowFocus: true,
 });
 
+watch(
+  () => postsQuery.error.value,
+  (newError) => {
+    if (newError?.message) {
+      toast(newError?.message, {
+        autoClose: 1000,
+        type: "error",
+      } as ToastOptions);
+    }
+  }
+);
+// EXAMPLE OF USING WATCH TO SHOW LOADING TOAST
+watch(
+  () => postsQuery.isPending.value,
+  (loading) => {
+    if (loading) {
+      loadingToastId.value = toast("Loading posts...", {
+        type: "loading",
+        position: toast.POSITION.BOTTOM_RIGHT,
+        autoClose: false,
+      });
+    } else if (loadingToastId.value) {
+      toast.remove(loadingToastId.value);
+      loadingToastId.value = 0;
+    }
+  },
+  { immediate: true }
+);
+
 const filteredPosts = computed(() => {
-  return allPosts.value?.data.filter((post) => post.author !== "");
+  return postsQuery.data.value?.data.filter((post) => post.author !== "");
 });
 </script>

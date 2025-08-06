@@ -3846,6 +3846,7 @@ __metadata:
     vue-router: "npm:4"
     vue-sonner: "npm:^2.0.0"
     vue-tsc: "npm:^2.2.8"
+    vue3-toastify: "npm:^0.2.8"
     zod: "npm:^3.25.56"
   languageName: unknown
   linkType: soft
@@ -5204,6 +5205,18 @@ __metadata:
   bin:
     vue-tsc: ./bin/vue-tsc.js
   checksum: 10c0/bb1476f1ff0e8d6ee4291abc79fb5854b4c558846f72686e953f63431fb1f0c7e5708e1563e06bc7c58e90b326496cf48f4551af3a946a053b072c8276d8047e
+  languageName: node
+  linkType: hard
+
+"vue3-toastify@npm:^0.2.8":
+  version: 0.2.8
+  resolution: "vue3-toastify@npm:0.2.8"
+  peerDependencies:
+    vue: ">=3.2.0"
+  peerDependenciesMeta:
+    vue:
+      optional: true
+  checksum: 10c0/14d7aadd4663cc83dff25da730e6522d1c6735f6427e7d073b1e574a699a9c54d8be9965842a934ab271a127fb3cf850891092e67760773e119caf94c35f67f5
   languageName: node
   linkType: hard
 

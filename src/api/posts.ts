@@ -3,6 +3,7 @@ import type { FetchPostsType, NewPostType } from "../models/Posts";
 import { useAuthStore } from "../store/authStore";
 
 import { API_BASE_URL, ENTRIES_URL, POSTS_URL, USER_FEED } from "./constants";
+import { toast } from "vue3-toastify";
 
 export async function fetchAllPosts(
   size: number,
@@ -89,10 +90,22 @@ export async function postNewsArticle(
       body: JSON.stringify(article),
     });
 
-    if (!response) {
-      throw new Error(`Error posting news article: ${response}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      toast(errorData.message || response.statusText, {
+        autoClose: 3000,
+        type: "error",
+      });
+      throw new Error(
+        `Error posting news article: ${
+          errorData.message || response.statusText
+        }`
+      );
     }
-
+    toast("News article published", {
+      autoClose: 3000,
+      type: "success",
+    });
     const data = await response.json();
     return { success: true, message: data.message };
   } catch (error) {
@@ -159,9 +172,22 @@ export async function deleteNewsArticle(
       }
     );
 
-    if (!response) {
-      throw new Error(`Error deleting news article: ${response}`);
+    if (!response.ok) {
+      const errorData = await response.json();
+      toast(errorData.message || response.statusText, {
+        autoClose: 3000,
+        type: "error",
+      });
+      throw new Error(
+        `Error deleting news article: ${
+          errorData.message || response.statusText
+        }`
+      );
     }
+    toast("News article deleted", {
+      autoClose: 3000,
+      type: "success",
+    });
 
     return { success: true, message: "Article deleted successfully" };
   } catch (error) {
@@ -262,9 +288,7 @@ export async function fetchPostWithEntries(slug: string) {
     );
 
     if (!response.ok) {
-      throw new Error(
-        `Error fetching post with entries: ${response.statusText}`
-      );
+      new Error(`Error fetching post with entries: ${response.statusText}`);
     }
 
     const data = await response.json();

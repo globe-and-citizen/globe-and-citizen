@@ -1,5 +1,6 @@
 import type { SignInResponse } from "@/models/Auth";
 import { useAuthStore } from "../store/authStore";
+import { toast, type ToastOptions } from "vue3-toastify";
 
 import {
   API_BASE_URL,
@@ -80,6 +81,12 @@ export async function signIn(
     const responseData: SignInResponse | { data: string } =
       await response.json();
     if (!response.ok) {
+      toast(responseData.data ?? "Sign-in failed", {
+        autoClose: 4000,
+        type: "error",
+        position: toast.POSITION.BOTTOM_RIGHT,
+      } as ToastOptions);
+
       throw new Error(
         typeof responseData.data === "string"
           ? responseData.data
