@@ -122,3 +122,26 @@ export async function analyzeComments(
     throw error;
   }
 }
+
+export async function getCommentChildren(parentId: number) {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/comments/children?parent_id=${parentId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    if (!response.ok) {
+      throw new Error(
+        `Error fetching comment children: ${response.statusText}`
+      );
+    }
+    const { data } = await response.json();
+    return data;
+  } catch (e) {
+    console.error(e);
+  }
+}

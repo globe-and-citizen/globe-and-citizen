@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { analyzeComments, createComment, deleteComment } from "@/api/comments";
+import { createComment, deleteComment } from "@/api/comments";
 import type { Post } from "@/models/Posts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed, ref, watchEffect } from "vue";
@@ -118,27 +118,30 @@ import type { Comments } from "@/models/Comments";
 const authStore = useAuthStore();
 const queryClient = useQueryClient();
 
-// Comment form data
 const commentContent = ref("");
 const formErrors = ref<Record<string, string>>({});
 const commentSubmitSuccess = ref(false);
 const user = computed(() => authStore.user);
-// Comments display control
 const commentsLimit = 10;
 const showAllComments = ref(false);
 
-// Modal control
 const { open, close } = useModal({
   component: ConfirmDeleteModal,
   attrs: {
     title: "Confirm Comment Deletion",
     onConfirm: () => {
-      if (commentToDelete.value) {
-        deleteCommentMutation.mutate(commentToDelete.value);
+      if (commentToDelete.value.commentId) {
+        deleteCommentMutation.mutate({
+          commentId: commentToDelete.value.commentId,
+        });
       }
       close();
     },
     onCancel: () => {
+      console.log({
+        commentId: commentToDelete.value.commentId,
+        parentId: commentToDelete.value.parentCommentId,
+      });
       close();
     },
   },
@@ -148,53 +151,53 @@ const { open, close } = useModal({
   },
 });
 
-// Store ID of comment to delete
-const commentToDelete = ref<number | null>(null);
+const commentToDelete = ref<{
+  commentId: number | undefined;
+  parentCommentId: number | undefined;
+}>({ commentId: 0, parentCommentId: undefined });
 
 const props = defineProps<{
   post: Post | undefined | null;
   type: "post" | "opinion";
 }>();
 
-// Check if the current user is an admin
 const isAdmin = computed(() => {
   return authStore.user?.role?.name === "admin";
 });
 
-// Set up the comment mutation with TanStack Query
 const commentMutation = useMutation({
   mutationFn: async (data: { postId: string; content: string }) => {
     return createComment(data.postId, data.content, props.type);
   },
   onSuccess: () => {
-    // Reset the form
     commentContent.value = "";
     commentSubmitSuccess.value = true;
-    // Invalidate and refetch the post data to update comments
     queryClient.invalidateQueries({
       queryKey: props.type === "post" ? ["post"] : ["opinion"],
     });
 
-    // Hide success message after 3 seconds
     setTimeout(() => {
       commentSubmitSuccess.value = false;
     }, 3000);
   },
 });
 
-// Set up the delete comment mutation
 const deleteCommentMutation = useMutation({
-  mutationFn: async (commentId: number) => {
+  mutationFn: async ({ commentId }: { commentId: number }) => {
     return deleteComment(commentId);
   },
+
   onSuccess: () => {
     queryClient.invalidateQueries({
       queryKey: props.type === "post" ? ["post"] : ["opinion"],
     });
+
+    queryClient.invalidateQueries({
+      queryKey: ["child-comments"],
+    });
   },
 });
 
-// Computed property to control how many comments to display
 const displayedComments = computed(() => {
   if (!props.post || !props.post.comments) return [];
   return showAllComments.value
@@ -225,7 +228,7 @@ const { data: commentSummary, isLoading } = useQuery<{
   data: { summary: string };
 }>({
   queryKey: ["commentsSummary"],
-  queryFn: () => analyzeComments(props.post?.slug, comments),
+  // queryFn: () => analyzeComments(props.post?.slug, comments),
   enabled: !!props.post && props.post.total_comments >= 5,
   gcTime: 1000 * 60 * 60 * 24, // 24 hours
 });
@@ -251,8 +254,11 @@ const submitComment = async () => {
 };
 
 // Delete a comment
-const handleDeleteComment = async (commentId: number) => {
-  commentToDelete.value = commentId;
+const handleDeleteComment = async (
+  commentId: number,
+  parentCommentId: number
+) => {
+  commentToDelete.value = { commentId, parentCommentId };
   open();
 };
 </script>

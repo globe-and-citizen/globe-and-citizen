@@ -202,7 +202,6 @@ export async function fetchPostById(id: string) {
   if (authStore.isUserAuthenticated && authStore.token) {
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}${POSTS_URL}/${id}`);
-      console.log("Fetching post with auth token", response);
 
       // Check if we have a valid response (not redirected)
       if (response && !response.ok) {
@@ -214,11 +213,10 @@ export async function fetchPostById(id: string) {
         const postData = data.data || data;
 
         if (postData.entries && Array.isArray(postData.entries)) {
-          console.log(
+          console.warn(
             `Found ${postData.entries.length} entries for post ${id}`
           );
         }
-        console.log(postData);
         return postData;
       }
       return;
@@ -239,7 +237,7 @@ export async function fetchPostById(id: string) {
   const postData = data.data || data;
 
   if (postData.entries && Array.isArray(postData.entries)) {
-    console.log(`Found ${postData.entries.length} entries for post ${id}`);
+    console.warn(`Found ${postData.entries.length} entries for post ${id}`);
   }
 
   return postData;

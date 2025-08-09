@@ -39,7 +39,6 @@ watch(
     refetch();
   }
 );
-console.log(data);
 </script>
 <style scoped>
 .post-cards {

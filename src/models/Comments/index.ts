@@ -13,6 +13,8 @@ export interface Comment {
   isDisliked?: boolean;
   likes?: number;
   dislikes?: number;
+  has_children?: boolean;
+  parent_id?: number;
 }
 
 export type Comments = Comment[];

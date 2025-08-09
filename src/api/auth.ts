@@ -101,7 +101,6 @@ export async function signIn(
     ) {
       authStore.setToken(responseData.data.token);
       authStore.setUser(responseData.data.user);
-      console.log(responseData.data.user);
       return responseData as SignInResponse;
     } else {
       throw new Error(

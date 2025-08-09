@@ -32,7 +32,6 @@ export async function patchOpinion(
 export async function addOpinion(
   payload: OpinionPayload
 ): Promise<{ success: boolean; message: string }> {
-  console.log(payload);
   try {
     const response = await fetchWithAuth(`${API_BASE_URL}${ENTRIES_URL}`, {
       method: "POST",

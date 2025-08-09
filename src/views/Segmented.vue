@@ -150,7 +150,6 @@ const { mutate: postSentenceAnnotation } = useMutation({
     queryClient.invalidateQueries({
       queryKey: ["opinion"],
     });
-    console.log("success");
   },
   onError: (error) => {
     console.error("Error updating user:", error);
@@ -233,10 +232,6 @@ function react(type: "like" | "dislike") {
 
 function submitComment() {
   if (!activeSentenceId.value || !commentText.value) return;
-  console.log("Comment:", {
-    sentenceId: activeSentenceId.value,
-    content: commentText.value,
-  });
   postSentenceAnnotation({
     sentence_id: activeSentenceId.value,
     type: "comment",
@@ -316,7 +311,6 @@ function wrapSentencesInHTML(
     } catch (e) {
       console.warn("Failed to surround contents:", e);
     }
-    console.log(span.className);
   }
 
   return doc.body.innerHTML;

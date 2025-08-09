@@ -403,8 +403,6 @@ function openOriginalArticle() {
   }
 }
 
-console.log(opinionsByPostId, "");
-
 // Function to handle preview action
 function handlePreview(post: Post) {
   selectedPost.value = post;

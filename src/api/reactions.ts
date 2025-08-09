@@ -30,7 +30,6 @@ export async function postReaction(
     if (!response) {
       throw new Error(`Post reactions api error`);
     }
-    console.log("Opinion reaction response:", response);
 
     return response;
   } catch (error) {
@@ -85,7 +84,6 @@ export async function postSentenceReaction(
   payload: SentenceReactionRequestPayload
 ): Promise<unknown> {
   const { postType, ...payloadNoPostType } = payload;
-  console.log("payload:", payload);
   try {
     const response = await fetchWithAuth(
       `${API_BASE_URL}${POST_SENTENCE_REACTION_URL}`,
@@ -100,7 +98,6 @@ export async function postSentenceReaction(
     if (!response) {
       throw new Error(`Post reactions api error`);
     }
-    console.log("Sentence reaction response:", response);
     return response;
   } catch (error) {
     console.error("Error adding/removing sentence reaction:", error);

@@ -314,7 +314,6 @@ const displayedEntries = computed(() => {
     ? post.value.entries
     : post.value.entries.slice(0, entriesLimit);
 });
-console.log(displayedEntries.value[0]);
 
 // const formattedDate = computed(() => {
 //   if (!post.value || !post.value.created_at) return "";

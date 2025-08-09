@@ -77,7 +77,6 @@ const { data } = useQuery<{ data: NewsApiResponse }>({
   refetchOnWindowFocus: false,
   refetchOnMount: false,
 });
-console.log("News API data:", data.value);
 const tableData = computed(() => data.value?.data.articles ?? []);
 
 function formatDate(dateString: string): string {

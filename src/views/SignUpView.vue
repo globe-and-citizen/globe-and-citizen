@@ -109,7 +109,6 @@ const password = ref("");
 const { mutate: signUpMutation, isPending } = useMutation({
   mutationFn: signUpApi,
   onSuccess: () => {
-    console.log("Sign-up successful");
     router.push("/sign-in");
   },
   onError: (error: unknown) => {

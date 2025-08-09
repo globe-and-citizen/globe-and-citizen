@@ -347,7 +347,6 @@ function handleDeactivate(user: UserType) {
 }
 
 function handleConfirmDeactivate() {
-  console.log("Deactivating user:", selectedUser.value?.id);
   deactivateDialogOpen.value = false;
 }
 

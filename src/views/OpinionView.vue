@@ -298,7 +298,6 @@ import Segmented from "@/views/Segmented.vue";
 
 const route = useRoute();
 const opinionId = route.params.opinionId as string;
-console.log(route.params);
 // Fetch the opinion
 const {
   value: { data: opinion },
@@ -355,6 +354,4 @@ const readingTime = computed(() => {
   const words = opinion.value.content.split(" ").length;
   return Math.ceil(words / wordsPerMinute);
 });
-
-console.log(opinion?.value);
 </script>

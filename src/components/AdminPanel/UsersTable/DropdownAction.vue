@@ -50,7 +50,6 @@ function handleView() {
   // Navigate to user profile page
   window.open(`/profile/${props.user.id}`, "_blank");
 }
-console.log("DropdownAction component loaded");
 function handleEdit() {
   props.onEdit(props.user);
 }

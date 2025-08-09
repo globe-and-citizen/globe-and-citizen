@@ -101,8 +101,6 @@ export async function traceUser(): Promise<{
       );
     }
     const res = await response.json();
-    console.log(res.data);
-
     return res.data;
   } catch (error) {
     console.error("Error tracing user:", error);
