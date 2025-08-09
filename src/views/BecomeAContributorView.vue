@@ -1,3 +1,3 @@
 <template>
-  <div>become a contributor</div>
+  <div></div>
 </template>

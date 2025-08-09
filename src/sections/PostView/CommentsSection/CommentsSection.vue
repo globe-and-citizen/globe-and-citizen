@@ -104,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { createComment, deleteComment } from "@/api/comments";
+import { analyzeComments, createComment, deleteComment } from "@/api/comments";
 import type { Post } from "@/models/Posts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { computed, ref, watchEffect } from "vue";
@@ -228,7 +228,7 @@ const { data: commentSummary, isLoading } = useQuery<{
   data: { summary: string };
 }>({
   queryKey: ["commentsSummary"],
-  // queryFn: () => analyzeComments(props.post?.slug, comments),
+  queryFn: () => analyzeComments(props.post?.slug, comments),
   enabled: !!props.post && props.post.total_comments >= 5,
   gcTime: 1000 * 60 * 60 * 24, // 24 hours
 });

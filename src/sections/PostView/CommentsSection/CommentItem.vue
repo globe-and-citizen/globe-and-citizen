@@ -1,6 +1,10 @@
 <template>
   <div
-    :class="['', depth > 0 ? 'ml-8 mt-2' : 'mt-2', depth === 0 ? ' pb-0' : '']"
+    :class="[
+      '',
+      depth > 0 ? 'ml-8 mt-2 relative' : 'mt-2',
+      depth === 0 ? ' pb-0' : '',
+    ]"
   >
     <template v-if="depth > 0">
       <div
@@ -260,6 +264,7 @@ const isLoggedIn = computed(() => authStore.isUserAuthenticated);
 const userId = authStore.user?.id;
 
 const getRepliesArray = computed(() => {
+  console.log(childCommentsQuery);
   if (
     childCommentsQuery.data.value?.children &&
     childCommentsQuery.data.value.children.length > 0
