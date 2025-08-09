@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'flex flex-col overflow-hidden rounded-sm cursor-pointer hover:shadow-card-soft transition',
+      'flex flex-col overflow-hidden rounded-sm cursor-pointer hover:shadow-card-soft shadow-card-soft md:shadow-none transition',
       {
         'max-w-[276px]': scrollCard,
         'max-w-[378px]': !scrollCard,
@@ -34,28 +34,23 @@
           alt="user image"
           class="w-8 h-8 rounded-full"
         />
-        <p class="font-semibold font-lato text-black">
+        <p class="font-medium font-lato w-full text-black-80 text-xs">
           {{
             post?.author
               ? post?.author?.substring(0, 13) + "..."
               : post.user.username.substring(0, 20) || "Unknown Author"
           }}
         </p>
-        <p class="font-medium text-black-60 font-lato text-xs">
+        <p class="font-medium text-black-60 font-lato text-xs ml-auto">
           {{
             post.created_at
-              ? new Date(post.created_at).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })
+              ? dayjs(post.created_at).format("M/D/YY")
               : "Unknown date"
           }}
         </p>
       </div>
 
-      <h5 class="font-lato text-small font-semibold mb-2">
+      <h5 class="font-libre text-small font-semibold mb-2">
         {{ post?.title }}
       </h5>
       <div
@@ -88,11 +83,11 @@
       >
         <div class="flex items-center gap-1">
           <component :is="timeIcon" />
-          Reading time: 5 minutes
+          5 min
         </div>
         <div class="flex items-center gap-1">
           <component :is="commentsIcon" />
-          Discussions: 3
+          3
         </div>
       </div>
     </div>
@@ -103,6 +98,7 @@ import editorsChoice from "../../../assets/editors-choice.svg";
 import timeIcon from "../../../assets/clock-icon.svg";
 import commentsIcon from "../../../assets/comment-icon.svg";
 import type { Post } from "@/models/Posts";
+import dayjs from "dayjs";
 
 withDefaults(
   defineProps<{

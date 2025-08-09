@@ -6,11 +6,16 @@
     custom
   >
     <div
-      class="flex flex-col lg:flex-row bg-white shadow-md overflow-hidden lg:max-h-[400px] rounded-sm cursor-pointer"
+      class="block md:hidden font-lato text-primary-red font-bold text-xl mb-6 border-b border-b-red-20 w-fit"
+    >
+      Now Trending
+    </div>
+    <div
+      class="flex flex-col lg:flex-row bg-white shadow-md overflow-hidden rounded-sm cursor-pointer"
       @click="navigate"
     >
       <!-- Left Image Section -->
-      <div class="lg:w-1/2 relative">
+      <div class="lg:max-w-[480px] relative">
         <img
           :src="
             post?.url_to_image ||
@@ -29,9 +34,9 @@
       </div>
 
       <!-- Right Content Section -->
-      <div class="lg:w-1/2 p-6 pl-8 flex flex-col justify-between">
+      <div class="flex-1 p-6 pl-8 flex flex-col justify-between">
         <div
-          class="font-lato text-primary-red font-bold text-xl mb-2 border-b border-b-red-20 w-fit"
+          class="hidden md:block font-lato text-primary-red font-bold text-xl mb-2 border-b border-b-red-20 w-fit"
         >
           Now Trending
         </div>
@@ -58,11 +63,11 @@
           </p>
         </div>
 
-        <h4 class="font-libre text-2xl font-semibold mb-2">
+        <h4 class="font-libre text-xl md:text-2xl font-semibold mb-2">
           {{ post?.title }}
         </h4>
-        <p class="text-black-80 mb-3 font-lato font-normal">
-          {{ post?.description?.substring(0, 60) + "..." }}
+        <p class="text-black-80 mb-3 font-lato font-normal text-base">
+          {{ post?.description?.substring(0, 90) + "..." }}
         </p>
         <div class="flex gap-3 mb-4 font-lato font-bold text-xs capitalize">
           <span

@@ -45,6 +45,7 @@
 
   /*Shadow*/
   --shadow-card-soft: 2px 4px 7px 0 rgba(0, 0, 0, 0.03);
+  --shadow-card-hard: 2px 4px 11px 0 rgba(0, 0, 0, 0.08);
   --shadow-button-hover: 0px 3px 16px 0 rgba(14, 12, 12, 0.14);
 }
 

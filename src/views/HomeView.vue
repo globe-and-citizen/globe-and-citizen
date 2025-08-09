@@ -1,5 +1,5 @@
 <template>
-  <div class="mt-6 lg:mt-0 px-4 md:px-8 lg:px-[120px] lg:pb-10">
+  <div class="mt-20 md:mt-0 px-4 md:px-8 xl:px-[120px] lg:pb-10">
     <div class="gc-container">
       <HeroSection />
     </div>
@@ -14,10 +14,10 @@
       class="mx-auto"
       :layout="isMobile ? 'vertical' : 'horizontal'"
       title="CNC-portal a new way to business"
-      description="Why Are You Doing This? In the excellent book “Founders Dilemmas,” Naom Wasserman describes a series of decisio..."
+      description="CNC Portal enables the creation and management of Crypto Native Corporations - a revolutionary way to build and scale companies using blockchain technology."
       button-title="Learn more"
-      url="/advertisement/1"
-      image="https://media.istockphoto.com/id/1409329028/vector/no-picture-available-placeholder-thumbnail-icon-illustration-design.jpg?s=612x612&w=0&k=20&c=_zOuJu755g2eEUioiOUdz_mHKJQJn-tDgIAhQzyeKUQ="
+      url="https://cncportal.io/"
+      image="https://cncportal.io/_ipx/_/Logo.png"
     />
     <div class="gc-container py-10">
       <WhatOurReadersSay :all-posts="postsQuery.data" />
