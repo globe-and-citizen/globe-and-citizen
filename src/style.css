@@ -130,6 +130,7 @@ body {
 
 main {
   margin: 0 auto;
+  min-height: calc(100vh - 496px);
 }
 
 @theme inline {
