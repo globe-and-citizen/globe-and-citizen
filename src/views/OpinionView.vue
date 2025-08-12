@@ -34,7 +34,7 @@
                 <div class="ql-editor">
                   <Segmented
                     :content="sanitizedContent"
-                    :sentences="opinion.sentences"
+                    :sentences="opinion.sentences as any"
                     :post-type="'opinion'"
                   />
                 </div>
@@ -177,7 +177,7 @@
                 <div class="ql-editor">
                   <Segmented
                     :content="sanitizedContent"
-                    :sentences="opinion.sentences"
+                    :sentences="opinion.sentences as any"
                     :post-type="'opinion'"
                   />
                 </div>

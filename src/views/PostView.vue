@@ -82,7 +82,7 @@
                 <div class="ql-editor">
                   <Segmented
                     :content="sanitizedContent"
-                    :sentences="post?.sentences"
+                    :sentences="post?.sentences as any"
                     :post-type="'post'"
                   />
                 </div>
