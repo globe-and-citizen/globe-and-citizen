@@ -33,6 +33,7 @@ export type Post = {
   comments_count?: number;
   userId?: number;
   total_comments: number;
+  entries_count?: number;
 };
 
 export type Sentence = {

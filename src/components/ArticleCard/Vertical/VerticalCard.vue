@@ -1,11 +1,14 @@
 <template>
   <div
     :class="[
-      'flex flex-col overflow-hidden rounded-sm cursor-pointer hover:shadow-card-soft shadow-card-soft md:shadow-none transition',
+      'flex flex-col overflow-hidden rounded-sm cursor-pointer ',
       {
         'max-w-[276px]': scrollCard,
-        'max-w-[378px]': !scrollCard,
+        'md:max-w-[378px]': !scrollCard,
       },
+      noShadow
+        ? ''
+        : 'hover:shadow-card-soft shadow-card-soft md:shadow-none transition',
     ]"
   >
     <!-- Left Image Section -->
@@ -27,7 +30,7 @@
       </div>
     </div>
 
-    <div class="flex-1 py-4 px-2 flex flex-col justify-between">
+    <div class="flex-1 py-4 px-2 flex flex-col">
       <div class="flex items-center gap-2 mb-4">
         <img
           src="https://randomuser.me/api/portraits/men/32.jpg"
@@ -54,7 +57,7 @@
         {{ post?.title }}
       </h5>
       <div
-        class="text-black-80 mb-3 font-lato font-normal text-base"
+        class="text-black-80 mb-3 font-lato font-normal text-base flex-1"
         v-html="
           post?.content.substring(0, 110) + '...' ||
           post?.description ||
@@ -108,6 +111,7 @@ withDefaults(
     showTags?: boolean;
     showReadingTimeAndComments?: boolean;
     scrollCard?: boolean;
+    noShadow?: boolean;
   }>(),
   {
     post: undefined,
@@ -116,6 +120,7 @@ withDefaults(
     showTags: true,
     showReadingTimeAndComments: true,
     scrollCard: false,
+    noShadow: false,
   }
 );
 </script>

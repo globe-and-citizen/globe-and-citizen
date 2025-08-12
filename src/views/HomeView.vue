@@ -19,8 +19,8 @@
       url="https://cncportal.io/"
       image="https://cncportal.io/_ipx/_/Logo.png"
     />
-    <div class="gc-container py-10">
-      <WhatOurReadersSay :all-posts="postsQuery.data" />
+    <div v-if="showForWhatOurReadersSay" class="gc-container py-10">
+      <WhatOurReadersSay :all-posts="postsForWhatOurReadersSay" />
     </div>
   </div>
 </template>
@@ -78,5 +78,15 @@ watch(
 
 const filteredPosts = computed(() => {
   return postsQuery.data.value?.data.filter((post) => post.author !== "");
+});
+
+const postsForWhatOurReadersSay = computed(() => {
+  return filteredPosts.value?.slice(0, 2) || [];
+});
+
+const showForWhatOurReadersSay = computed(() => {
+  return postsForWhatOurReadersSay.value.every(
+    (post) => post.entries_count && post.entries_count > 0
+  );
 });
 </script>

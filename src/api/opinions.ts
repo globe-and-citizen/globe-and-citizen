@@ -41,7 +41,10 @@ export async function addOpinion(
       body: JSON.stringify(payload),
     });
 
-    if (!response) {
+    if (!response || !response.ok) {
+      if (response.status === 409) {
+        throw new Error("Opinion with this title already exists");
+      }
       throw new Error(`Error adding news opinion: ${response}`);
     }
 

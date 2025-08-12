@@ -108,6 +108,11 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --toastify-toast-background: black;
+  & .Toastify__toast {
+    background-color: black;
+    color: white;
+  }
 }
 
 /*a {*/
@@ -132,6 +137,8 @@ main {
   margin: 0 auto;
   min-height: calc(100vh - 496px);
 }
+
+
 
 @theme inline {
   --color-background: var(--background);

@@ -198,7 +198,7 @@ export async function deleteNewsArticle(
 
 export async function fetchPostById(id: string) {
   const authStore = useAuthStore();
-
+  console.log("Fetching post by ID:", id);
   if (authStore.isUserAuthenticated && authStore.token) {
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}${POSTS_URL}/${id}`);

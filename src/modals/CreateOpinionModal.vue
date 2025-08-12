@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { generateSlug } from "@/lib/utils.ts";
 import { uploadToCloudinary } from "@/api/images.ts";
 import type { QuillEditorInstance } from "@/components/AdminPanel/NewsStepper/index.vue";
+import { toast } from "vue3-toastify";
 
 const props = defineProps<{
   // eslint-disable-next-line vue/prop-name-casing
@@ -36,9 +37,12 @@ const { mutate: postOpinion } = useMutation({
     closeAll();
     queryClient.invalidateQueries({ queryKey: ["post", props.post_slug] });
   },
-  onError: () => {
-    console.error("Failed to publish opinion");
-    closeAll();
+
+  onError: (e) => {
+    toast(e, {
+      autoClose: 3000,
+      type: "error",
+    });
   },
 });
 
@@ -134,7 +138,7 @@ function handleSaveEdit(data: OpinionPayload) {
                 },
               },
             }"
-            @update:content="(content) => (formData.content = content)"
+            @update:content="(content: any) => (formData.content = content)"
           />
         </div>
       </div>

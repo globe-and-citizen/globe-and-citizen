@@ -20,6 +20,7 @@
     <!-- Comments List -->
     <div
       v-if="post && post.comments && post.comments.length > 0"
+      id="comments-section"
       class="space-y-2"
     >
       <div v-for="comment in displayedComments" :key="comment.id">
