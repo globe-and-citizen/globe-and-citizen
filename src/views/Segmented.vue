@@ -85,7 +85,7 @@
           :key="comment.user"
           class="comment-item"
         >
-          <span class="comment-user">User {{ comment.user }}:</span>
+          <span class="comment-user">{{ comment.user_name }}:</span>
           <span class="comment-text">{{ comment.text }}</span>
         </div>
       </div>
@@ -122,6 +122,7 @@ interface SentenceOpinions {
   comments: Array<{
     user: number;
     text: string;
+    user_name: string;
   }>;
 }
 
@@ -560,7 +561,7 @@ onUnmounted(() => {
 }
 
 .comment-user {
-  font-weight: 500;
+  font-weight: 600;
   color: #6b7280;
   margin-right: 4px;
 }
