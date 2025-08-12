@@ -79,7 +79,13 @@
                 </div>
               </div>
               <div class="prose prose-sm md:prose-lg max-w-none">
-                <div class="ql-editor" v-html="sanitizedContent"></div>
+                <div class="ql-editor">
+                  <Segmented
+                    :content="sanitizedContent"
+                    :sentences="post?.sentences"
+                    :post-type="'post'"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -237,13 +243,14 @@
 
 <script setup lang="ts">
 import { useRoute, onBeforeRouteUpdate } from "vue-router";
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, watchEffect } from "vue";
 import type { Post } from "@/models/Posts";
 import HeadingSection from "@/sections/PostView/HeadingSection/HeadingSection.vue";
 import VerticalCard from "@/components/ArticleCard/Vertical/VerticalCard.vue";
 import DOMPurify from "dompurify";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import "@/quill.css";
+import Segmented from "@/views/Segmented.vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { fetchPostById } from "@/api/posts";
 import CommentsSection from "@/sections/PostView/CommentsSection/CommentsSection.vue";
@@ -253,22 +260,37 @@ const route = useRoute();
 const postId = route.params.id as string;
 const queryClient = useQueryClient();
 
+const {
+  value: { data: post, isLoading },
+} = computed(() =>
+  useQuery<Post | null, unknown, Post | null, string[]>({
+    queryKey: ["post", postId],
+    queryFn: async () => {
+      const response = await fetchPostById(postId);
+      return response as Post | null;
+    },
+    enabled: !!postId,
+    staleTime: 0,
+    refetchOnMount: true,
+  })
+);
+console.log("Post data:", post.value);
 // Fetch the main post
-const { data: post, isLoading } = useQuery<
-  Post | null,
-  unknown,
-  Post | null,
-  string[]
->({
-  queryKey: ["post", postId],
-  queryFn: async () => {
-    const response = await fetchPostById(postId);
-    return response as Post | null;
-  },
-  enabled: !!postId,
-  staleTime: 0,
-  refetchOnMount: true,
-});
+// const { data: post, isLoading } = useQuery<
+//   Post | null,
+//   unknown,
+//   Post | null,
+//   string[]
+// >({
+//   queryKey: ["post", postId],
+//   queryFn: async () => {
+//     const response = await fetchPostById(postId);
+//     return response as Post | null;
+//   },
+//   enabled: !!postId,
+//   staleTime: 0,
+//   refetchOnMount: true,
+// });
 // Likes Mutation
 const publishMutation = useMutation({
   mutationFn: postReaction,
@@ -315,17 +337,11 @@ const displayedEntries = computed(() => {
     : post.value.entries.slice(0, entriesLimit);
 });
 
-// const formattedDate = computed(() => {
-//   if (!post.value || !post.value.created_at) return "";
-//
-//   const date = new Date(post.value.created_at);
-//   const options = {
-//     year: "numeric" as const,
-//     month: "long" as const,
-//     day: "numeric" as const,
-//   };
-//   return date.toLocaleDateString("en-US", options);
-// });
+watchEffect(() => {
+  if (post.value) {
+    console.log("Post entries:", post.value);
+  }
+});
 </script>
 
 <style scoped>

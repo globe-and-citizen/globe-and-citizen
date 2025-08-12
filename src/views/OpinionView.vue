@@ -177,6 +177,7 @@
                   <Segmented
                     :content="sanitizedContent"
                     :sentences="opinion.sentences"
+                    :post-type="'opinion'"
                   />
                 </div>
               </div>

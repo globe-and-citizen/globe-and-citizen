@@ -9,7 +9,7 @@ export type OpinionReactionRequestPayload = {
 };
 
 export type SentenceReactionRequestPayload = {
-  postType: "post" | "entry";
+  postType: "post" | "opinion";
   sentence_id: string;
   type: "like" | "dislike" | "comment";
   content?: string;

@@ -9,8 +9,9 @@ import {
   GET_USER_VOTES_URL,
   OPINION_REACTIONS_URL,
   POST_REACTIONS_URL,
-  POST_SENTENCE_REACTION_URL,
+  ENTRY_SENTENCE_REACTION_URL,
   POSTS_URL,
+  POST_SENTENCE_REACTION_URL,
 } from "./constants";
 
 export async function postReaction(
@@ -86,7 +87,11 @@ export async function postSentenceReaction(
   const { postType, ...payloadNoPostType } = payload;
   try {
     const response = await fetchWithAuth(
-      `${API_BASE_URL}${POST_SENTENCE_REACTION_URL}`,
+      `${API_BASE_URL}${
+        postType === "opinion"
+          ? ENTRY_SENTENCE_REACTION_URL
+          : POST_SENTENCE_REACTION_URL
+      }`,
       {
         method: "POST",
         headers: {

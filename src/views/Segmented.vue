@@ -1,6 +1,6 @@
 <template>
   <div class="overflow-hidden">
-    <div class="flex mb-2 gap-5 pr-1 py-2">
+    <div class="flex mb-2 gap-5 pr-1 py-2 items-center">
       <span class="text-xl text-black-100 font-semibold">
         {{ showAnnotations ? "Hide Readers Insight" : "See Readers Insight" }}
       </span>
@@ -31,13 +31,19 @@
     >
       <button style="cursor: pointer" @click="react('like')">👍</button>
       <button class="cursor-pointer" @click="react('dislike')">👎</button>
-      <button class="cursor-pointer" @click="openCommentBox = true">💬</button>
+      <button class="cursor-pointer" @click="openCommentBox = !openCommentBox">
+        💬
+      </button>
       <button class="cursor-pointer ml-2" @click="dismissToolbar">✖</button>
     </div>
 
     <!-- Reaction Tooltip -->
     <div
-      v-if="activeSentenceId && toolbarPosition && activeSentenceReactions"
+      v-if="
+        activeSentenceId &&
+        toolbarPosition &&
+        activeSentenceReactions.comments.length > 0
+      "
       class="reaction-tooltip"
       :style="{
         top: toolbarPosition.top + 40 + 'px',
@@ -85,7 +91,14 @@
     </div>
 
     <!-- Optional Comment Box -->
-    <div v-if="openCommentBox" class="comment-box">
+    <div
+      v-if="openCommentBox"
+      class="comment-box absolute"
+      :style="{
+        top: toolbarPosition.top + 120 + 'px',
+        left: toolbarPosition.left + 50 + 'px',
+      }"
+    >
       <textarea
         v-model="commentText"
         placeholder="Write a comment..."
@@ -96,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed, watch, onUnmounted } from "vue";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import type { SentenceReactionRequestPayload } from "@/models/Reactions/reactions.ts";
 import { postSentenceReaction } from "@/api/reactions.ts";
@@ -121,11 +134,13 @@ interface Sentence {
 const props = defineProps<{
   content: string;
   sentences: Sentence[];
+  postType: "opinion" | "post";
 }>();
 
 const annotatedHTML = ref<string>("");
 const showAnnotations = ref<boolean>(false);
 const isFlipping = ref<boolean>(false);
+let handleClickOutside: (e: MouseEvent) => void;
 
 // Interactivity state
 const activeSentenceId = ref<string>("");
@@ -148,7 +163,7 @@ const { mutate: postSentenceAnnotation } = useMutation({
     postSentenceReaction(payload),
   onSuccess: () => {
     queryClient.invalidateQueries({
-      queryKey: ["opinion"],
+      queryKey: [props.postType === "opinion" ? "opinion" : "post"],
     });
   },
   onError: (error) => {
@@ -158,7 +173,7 @@ const { mutate: postSentenceAnnotation } = useMutation({
 
 // Function to determine highlight color based on reactions
 function getReactionHighlightClass(opinions: SentenceOpinions): string {
-  const { likes, dislikes } = opinions;
+  const { likes, dislikes, comments } = opinions;
 
   // If more likes than dislikes, show positive highlight
   if (likes > dislikes) {
@@ -179,6 +194,9 @@ function getReactionHighlightClass(opinions: SentenceOpinions): string {
     return "highlight-neutral";
   }
 
+  if (comments.length > 0) {
+    return "highlight-has-comment";
+  }
   return "";
 }
 
@@ -225,7 +243,7 @@ function react(type: "like" | "dislike") {
   postSentenceAnnotation({
     sentence_id: activeSentenceId.value,
     type,
-    postType: "entry",
+    postType: props.postType,
   });
   dismissToolbar();
 }
@@ -235,7 +253,7 @@ function submitComment() {
   postSentenceAnnotation({
     sentence_id: activeSentenceId.value,
     type: "comment",
-    postType: "entry",
+    postType: props.postType,
     content: commentText.value,
   });
   commentText.value = "";
@@ -336,6 +354,26 @@ watch(
 
 onMounted(() => {
   updateAnnotatedHTML();
+  handleClickOutside = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const postContent = document.querySelectorAll(".post-content");
+    const toolbar = document.querySelector(".sentence-toolbar");
+    const commentBox = document.querySelector(".comment-box");
+
+    if (
+      !Array.from(postContent).some((el) => el.contains(target)) &&
+      !toolbar?.contains(target) &&
+      !commentBox?.contains(target)
+    ) {
+      dismissToolbar();
+    }
+  };
+
+  document.addEventListener("click", handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutside);
 });
 </script>
 
@@ -446,6 +484,10 @@ onMounted(() => {
   background: rgba(156, 163, 175, 0.2) !important;
 }
 
+.highlight-has-comment {
+  background: rgba(59, 130, 246, 0.15) !important; /* light blue tint */
+  text-decoration: underline;
+}
 .sentence-toolbar {
   position: absolute;
   background: white;
