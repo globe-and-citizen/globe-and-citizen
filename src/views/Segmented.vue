@@ -96,8 +96,8 @@
       v-if="openCommentBox"
       class="comment-box absolute"
       :style="{
-        top: toolbarPosition?.top ?? +120 + 'px',
-        left: toolbarPosition?.left ?? +50 + 'px',
+        top: toolbarPosition?.top ? toolbarPosition?.top + 40 + 'px' : 0,
+        left: toolbarPosition?.left + 'px',
       }"
     >
       <textarea
@@ -110,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, onUnmounted } from "vue";
+import { ref, onMounted, computed, watch, onUnmounted, watchEffect } from "vue";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import type { SentenceReactionRequestPayload } from "@/models/Reactions/reactions.ts";
 import { postSentenceReaction } from "@/api/reactions.ts";
@@ -149,7 +149,6 @@ const toolbarPosition = ref<{ top: number; left: number } | null>(null);
 const openCommentBox = ref(false);
 const commentText = ref("");
 const queryClient = useQueryClient();
-
 // Computed property to get reactions for active sentence
 const activeSentenceReactions = computed(() => {
   if (!activeSentenceId.value) return null;
@@ -343,7 +342,9 @@ function updateAnnotatedHTML() {
     showAnnotations.value
   );
 }
-
+watchEffect(() => {
+  console.log(toolbarPosition, "");
+});
 // Watch for changes in sentences and re-render when needed
 watch(
   () => props.sentences,
@@ -569,10 +570,6 @@ onUnmounted(() => {
 }
 
 .comment-box {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   background: white;
   border: 1px solid #ccc;
   border-radius: 8px;
