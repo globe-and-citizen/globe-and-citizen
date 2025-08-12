@@ -42,6 +42,7 @@
       v-if="
         activeSentenceId &&
         toolbarPosition &&
+        activeSentenceReactions &&
         activeSentenceReactions.comments.length > 0
       "
       class="reaction-tooltip"
@@ -69,7 +70,7 @@
         >
           <span class="reaction-icon">💬</span>
           <span class="reaction-count">{{
-            activeSentenceReactions.comments.length
+            activeSentenceReactions?.comments.length
           }}</span>
         </div>
       </div>
@@ -95,8 +96,8 @@
       v-if="openCommentBox"
       class="comment-box absolute"
       :style="{
-        top: toolbarPosition.top + 120 + 'px',
-        left: toolbarPosition.left + 50 + 'px',
+        top: toolbarPosition?.top ?? +120 + 'px',
+        left: toolbarPosition?.left ?? +50 + 'px',
       }"
     >
       <textarea
