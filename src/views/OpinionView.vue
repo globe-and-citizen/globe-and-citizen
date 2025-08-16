@@ -158,7 +158,7 @@
           </div>
         </div>
         <ReadersInsightsAndStats
-          :sentences="post?.sentences"
+          :sentences="opinion?.sentences"
           :model-value="showAnnotations"
           @update:model-value="showAnnotations = $event"
         />

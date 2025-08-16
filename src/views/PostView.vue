@@ -53,9 +53,9 @@
               <div class="flex flex-col items-center mb-6 md:mb-8">
                 <!-- Like/Dislike Buttons -->
                 <LikeDislikeButtons
-                  :likes="post?.likes"
-                  :dislikes="post?.dislikes"
-                  :user-vote="post?.user_vote"
+                  :likes="post.likes"
+                  :dislikes="post.dislikes"
+                  :user-vote="post.user_vote"
                   @react="handleReaction"
                 />
               </div>

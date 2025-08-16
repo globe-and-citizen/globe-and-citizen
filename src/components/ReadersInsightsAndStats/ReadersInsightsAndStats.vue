@@ -11,7 +11,12 @@
         <input
           type="checkbox"
           :checked="modelValue"
-          @change="$emit('update:modelValue', $event.target.checked)"
+          @change="
+            $emit(
+              'update:modelValue',
+              ($event.target as HTMLInputElement).checked
+            )
+          "
         />
         <span class="toggle-slider"></span>
       </label>
@@ -24,7 +29,7 @@
             An overview of the reader's response
           </p>
           <p class="text-xs font-medium text-black-40 pt-1 pb-4">
-            Based on {{ totalReactions ?? 0 }} reactions
+            Based on {{ totals.total ?? 0 }} reactions
           </p>
         </div>
         <div class="text-xs text-black-60">
@@ -114,7 +119,7 @@ const totals = computed(() =>
     { likes: 0, dislikes: 0, comments: 0, total: 0 }
   )
 );
-console.log(totals.value.likes);
+
 defineEmits<{
   (e: "update:modelValue", value: boolean): void;
 }>();

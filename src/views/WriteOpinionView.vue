@@ -63,7 +63,7 @@
               <p
                 class="text-right text-xs text-black-60"
                 :style="
-                  formData?.title?.length > 60
+                  formData?.title && formData?.title?.length > 60
                     ? 'color: rgba(205, 66, 59, 1)'
                     : ''
                 "
@@ -159,7 +159,6 @@ import { toast } from "vue3-toastify";
 import { onBeforeRouteUpdate, useRoute } from "vue-router";
 import { fetchPostById } from "@/api/posts";
 import { useRouter } from "vue-router";
-import CategoryTag from "@/components/CategoryTag/CategoryTag.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -170,7 +169,7 @@ const quillRef = ref<QuillEditorInstance | null>(null);
 const postId = route.params.id as string;
 
 const {
-  value: { data: post, isLoading },
+  value: { data: post },
 } = computed(() =>
   useQuery<Post | null, unknown, Post | null, string[]>({
     queryKey: ["post", postId],
@@ -182,7 +181,7 @@ const {
   })
 );
 
-const { mutate: postOpinion, isPending } = useMutation({
+const { mutate: postOpinion } = useMutation({
   mutationFn: async (payload: OpinionPayload) => {
     await addOpinion(payload);
   },

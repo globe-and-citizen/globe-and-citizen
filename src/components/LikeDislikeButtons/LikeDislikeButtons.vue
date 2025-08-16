@@ -48,9 +48,9 @@
 
 <script setup lang="ts">
 defineProps<{
-  likes: number;
-  dislikes: number;
-  userVote: number | null;
+  likes: number | undefined;
+  dislikes: number | undefined;
+  userVote: number | null | undefined;
 }>();
 
 defineEmits<{
