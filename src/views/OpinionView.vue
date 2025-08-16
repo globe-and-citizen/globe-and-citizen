@@ -1,25 +1,13 @@
 <template>
+  <OpinionHeading v-if="opinion" :post="opinion" />
+  <img
+    v-if="opinion"
+    :src="opinion?.url_to_image"
+    alt="Opinion hero image"
+    class="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[557px] xl:h-[557px] w-full object-cover mb-4 md:mb-6 lg:mb-8"
+  />
   <div class="mt-6 lg:mt-0 px-4 md:px-8 lg:px-[120px] lg:pb-10">
     <div class="gc-container">
-      <!-- If viewing a post, show a back button to the opinions list -->
-      <div v-if="opinionId" class="mt-6 cursor-pointer w-fit">
-        <a
-          class="flex items-center text-blue-600 hover:underline text-sm md:text-base"
-          @click="$router.back()"
-        >
-          <span class="mr-1">←</span> Back
-        </a>
-      </div>
-
-      <HeadingSection v-if="opinion" :post="opinion" />
-
-      <img
-        v-if="opinion"
-        :src="opinion?.url_to_image"
-        alt="Opinion hero image"
-        class="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[400px] xl:h-[440px] w-full object-cover rounded-lg mb-4 md:mb-6 lg:mb-8"
-      />
-
       <div v-if="!opinion" class="flex justify-center items-center h-64">
         <p class="text-sm md:text-base">Loading opinion article...</p>
       </div>
@@ -33,6 +21,7 @@
               <div class="prose prose-sm md:prose-lg max-w-none">
                 <div class="ql-editor">
                   <Segmented
+                    v-model:show-annotations="showAnnotations"
                     :content="sanitizedContent"
                     :sentences="opinion.sentences as any"
                     :post-type="'opinion'"
@@ -168,7 +157,11 @@
             </RouterLink>
           </div>
         </div>
-
+        <ReadersInsightsAndStats
+          :sentences="post?.sentences"
+          :model-value="showAnnotations"
+          @update:model-value="showAnnotations = $event"
+        />
         <!-- Desktop Layout (>= lg) -->
         <div class="hidden lg:flex gap-10">
           <div class="w-8/12 border-r border-gray-200 pr-10">
@@ -176,6 +169,7 @@
               <div class="prose prose-lg max-w-none">
                 <div class="ql-editor">
                   <Segmented
+                    v-model:show-annotations="showAnnotations"
                     :content="sanitizedContent"
                     :sentences="opinion.sentences as any"
                     :post-type="'opinion'"
@@ -287,9 +281,9 @@
 
 <script setup lang="ts">
 import { useRoute, onBeforeRouteUpdate } from "vue-router";
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import type { Post } from "@/models/Posts";
-import HeadingSection from "@/sections/PostView/HeadingSection/HeadingSection.vue";
+import OpinionHeading from "@/sections/OpinionHeading/OpinionHeading.vue";
 import DOMPurify from "dompurify";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import "@/quill.css";
@@ -297,9 +291,11 @@ import { useQuery } from "@tanstack/vue-query";
 import { fetchOpinionById } from "@/api/posts";
 import CommentsSection from "@/sections/PostView/CommentsSection/CommentsSection.vue";
 import Segmented from "@/views/Segmented.vue";
-
+import ReadersInsightsAndStats from "@/components/ReadersInsightsAndStats/ReadersInsightsAndStats.vue";
 const route = useRoute();
 const opinionId = route.params.opinionId as string;
+const showAnnotations = ref(false);
+
 // Fetch the opinion
 const {
   value: { data: opinion },

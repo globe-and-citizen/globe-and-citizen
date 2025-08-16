@@ -1,9 +1,12 @@
 <template>
-  <div class="border border-b-black-20 p-4 rounded-xl flex flex-col gap-2">
+  <div
+    v-if="props.post && props.post.total_comments >= 5 && !isLoading"
+    class="border border-b-black-20 p-4 rounded-xl flex flex-col gap-2"
+  >
     <h3 class="font-lato text-base font-semibold">
       What our readers are saying
     </h3>
-    <div v-if="props.post && props.post.total_comments >= 5 && !isLoading">
+    <div>
       <p class="text-base font-normal font-lato">
         {{ commentSummary?.data.summary }}
       </p>
@@ -12,9 +15,9 @@
         not a replacement for reading the comments.
       </p>
     </div>
-    <div v-else-if="isLoading" class="text-gray-500">
-      <p>Loading comments summary...</p>
-    </div>
+  </div>
+  <div v-else-if="isLoading" class="text-gray-500">
+    <p>Loading comments summary...</p>
   </div>
   <div class="mb-8">
     <!-- Comments List -->

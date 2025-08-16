@@ -17,7 +17,7 @@ import UsersManagement from "@/views/AdminPanel/UsersManagement.vue";
 import NewsManagement from "@/views/AdminPanel/NewsManagement.vue";
 import PostedNews from "@/views/AdminPanel/PostedNews.vue";
 import OpinionStatsView from "@/views/OpinionStatsView.vue";
-
+import WriteOpinionView from "@/views/WriteOpinionView.vue";
 const routes = [
   {
     path: "/",
@@ -37,6 +37,13 @@ const routes = [
         name: "PostView",
         component: PostView,
         props: true,
+      },
+      {
+        path: "post/:id/write",
+        name: "WriteOpinionView",
+        component: WriteOpinionView,
+        props: true,
+        meta: { requiresAuth: true },
       },
       {
         path: "post/:id/:opinionId",
@@ -93,6 +100,13 @@ router.beforeEach((to, _, next) => {
       next({ path: "/" });
     } else {
       next();
+    }
+  } else if (to.matched.some((record) => record.meta.requiresAuth)) {
+    if (isLoggedIn) {
+      next();
+    } else {
+      // Redirect to sign-in if the user is not authenticated
+      next({ path: "/sign-in" });
     }
   } else if (!isLoggedIn && to.path === "/profile") {
     next({ path: "/sign-in" });

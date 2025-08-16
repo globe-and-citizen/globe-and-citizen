@@ -33,6 +33,7 @@
   --color-black-20: rgba(14, 12, 12, 0.2);
 
   --color-white-10: rgba(253, 252, 252, 0.1);
+  --color-white-60: rgba(253, 252, 252, 0.6);
   --color-white-80: rgba(253, 252, 252, 0.8);
   --color-white-100: rgba(253, 252, 252, 1);
 
@@ -137,8 +138,6 @@ main {
   margin: 0 auto;
   min-height: calc(100vh - 496px);
 }
-
-
 
 @theme inline {
   --color-background: var(--background);

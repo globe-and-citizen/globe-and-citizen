@@ -1,5 +1,11 @@
 <template>
-  <div v-if="isLoading" class="animate-pulse space-y-4 py-10">
+  <div
+    v-if="isLoading"
+    class="animate-pulse space-y-4 py-10"
+    @touchstart="handleTouchStart"
+    @touchmove="handleTouchMove"
+    @touchend="handleTouchEnd"
+  >
     <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
     <div class="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
     <div class="h-[300px] bg-gray-100 rounded-lg w-full"></div>
@@ -13,6 +19,9 @@
       v-if="!isLoading && post"
       :key="postId"
       class="mt-6 lg:mt-0 px-4 md:px-8 lg:px-[120px] lg:pb-10"
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd"
     >
       <div class="gc-container">
         <HeadingSection :post="post" />
@@ -21,75 +30,38 @@
           v-if="post && post.url_to_image"
           :src="post?.url_to_image"
           alt="Post hero image"
-          class="h-[300px] md:h-[400px] lg:h-[440px] w-full object-cover rounded-lg mb-6 md:mb-8"
+          class="h-[200px] md:h-[320px] lg:h-[522px] w-full object-cover rounded-lg mb-6 md:mb-6"
         />
-
-        <div
-          v-if="post"
-          class="lg:pb-10 flex flex-col lg:flex-row gap-6 lg:gap-10 font-lato"
-        >
-          <div class="w-full lg:w-8/12 lg:border-r lg:border-gray-200 lg:pr-10">
+        <ReadersInsightsAndStats
+          :sentences="post?.sentences"
+          :model-value="showAnnotations"
+          @update:model-value="showAnnotations = $event"
+        />
+        <div v-if="post" class="lg:pb-10 flex flex-col lg:flex-row font-lato">
+          <div class="w-full lg:w-7/12">
             <div class="gc-container">
-              <div class="flex flex-col items-center mb-6 md:mb-8">
-                <!-- Like/Dislike Buttons -->
-                <div class="flex items-center gap-3 md:gap-4 mb-4">
-                  <button
-                    :class="[
-                      'flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg border transition-colors text-sm md:text-base',
-                      post.user_vote === 1
-                        ? 'bg-green-50 border-green-300 text-green-700'
-                        : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100',
-                    ]"
-                    @click="handleReaction(1)"
-                  >
-                    <svg
-                      class="w-4 h-4 md:w-5 md:h-5"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"
-                      />
-                    </svg>
-                    <span class="text-sm font-medium">{{ post?.likes }}</span>
-                  </button>
-
-                  <button
-                    :class="[
-                      'flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg border transition-colors text-sm md:text-base',
-                      post.user_vote === -1
-                        ? 'bg-red-50 border-red-300 text-red-700'
-                        : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100',
-                    ]"
-                    @click="handleReaction(-1)"
-                  >
-                    <svg
-                      class="w-4 h-4 md:w-5 md:h-5 rotate-180"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        d="M7.493 18.75c-.425 0-.82-.236-.975-.632A7.48 7.48 0 016 15.375c0-1.75.599-3.358 1.602-4.634.151-.192.373-.309.6-.397.473-.183.89-.514 1.212-.924a9.042 9.042 0 012.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 00.322-1.672V3a.75.75 0 01.75-.75 2.25 2.25 0 012.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558-.107 1.282.725 1.282h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 01-2.649 7.521c-.388.482-.987.729-1.605.729H14.23c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 00-1.423-.23h-.777zM2.331 10.977a11.969 11.969 0 00-.831 4.398 12 12 0 00.52 3.507c.26.85 1.084 1.368 1.973 1.368H4.9c.445 0 .72-.498.523-.898a8.963 8.963 0 01-.924-3.977c0-1.708.476-3.305 1.302-4.666.245-.403-.028-.959-.5-.959H4.25c-.832 0-1.612.453-1.918 1.227z"
-                      />
-                    </svg>
-                    <span class="text-sm font-medium">{{
-                      post?.dislikes
-                    }}</span>
-                  </button>
-                </div>
-              </div>
               <div class="prose prose-sm md:prose-lg max-w-none">
-                <div class="ql-editor">
+                <div class="ql-editor !pl-0">
                   <Segmented
+                    v-model:show-annotations="showAnnotations"
                     :content="sanitizedContent"
                     :sentences="post?.sentences as any"
                     :post-type="'post'"
                   />
                 </div>
               </div>
+              <div class="flex flex-col items-center mb-6 md:mb-8">
+                <!-- Like/Dislike Buttons -->
+                <LikeDislikeButtons
+                  :likes="post?.likes"
+                  :dislikes="post?.dislikes"
+                  :user-vote="post?.user_vote"
+                  @react="handleReaction"
+                />
+              </div>
             </div>
           </div>
-          <div class="w-full lg:w-4/12 lg:mt-0 mt-8">
+          <div class="w-full lg:w-5/12 lg:mt-0 mt-8 flex flex-col">
             <!-- Mobile/Tablet: Show related opinions in a horizontal scroll -->
             <div v-if="displayedEntries.length > 0" class="mb-8 lg:hidden">
               <h3 class="text-lg md:text-xl font-bold mb-4">
@@ -140,7 +112,11 @@
               v-if="displayedEntries.length > 0"
               class="mb-8 hidden lg:block"
             >
-              <h3 class="text-xl font-bold mb-4">Related Opinions</h3>
+              <WhatDoYouThinkCTA />
+
+              <h3 class="text-xl font-bold mb-4 mt-auto">
+                What our readers are saying about it
+              </h3>
               <div class="space-y-4">
                 <router-link
                   v-for="opinion in displayedEntries"
@@ -173,15 +149,17 @@
               </div>
             </div>
 
-            <div v-else class="hidden lg:block">
-              <h3 class="text-xl font-bold mb-6">Related Opinions</h3>
-              <p class="text-gray-500">No related opinions to display</p>
+            <div v-else class="hidden lg:block m-auto">
+              <!-- <h3 class="text-xl font-bold mb-6">Related Opinions</h3> -->
+              <WhatDoYouThinkCTA />
+
+              <!-- <p class="text-gray-500">No related opinions to display</p> -->
             </div>
-            <div class="mt-5">
+            <!-- <div class="mt-5">
               <h3 class="text-xl font-bold mb-6">Stats Summary</h3>
 
               <AppBarChart v-if="post" :post="post" />
-            </div>
+            </div> -->
           </div>
         </div>
 
@@ -254,11 +232,71 @@ import Segmented from "@/views/Segmented.vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { fetchPostById } from "@/api/posts";
 import CommentsSection from "@/sections/PostView/CommentsSection/CommentsSection.vue";
-import AppBarChart from "@/components/Charts/AppBarChart.vue";
+import LikeDislikeButtons from "@/components/LikeDislikeButtons/LikeDislikeButtons.vue";
 import { postReaction } from "@/api/reactions";
+import WhatDoYouThinkCTA from "@/components/WhatDoYouThinkCTA/WhatDoYouThinkCTA.vue";
+import ReadersInsightsAndStats from "@/components/ReadersInsightsAndStats/ReadersInsightsAndStats.vue";
+
 const route = useRoute();
-const postId = route.params.id as string;
+const postId = decodeURIComponent(route.params.id as string);
 const queryClient = useQueryClient();
+const showAnnotations = ref(false);
+
+const touchStartX = ref(0);
+const touchStartY = ref(0);
+const touchEndX = ref(0);
+const touchEndY = ref(0);
+const minSwipeDistance = 50;
+const maxVerticalDistance = 100;
+
+const handleTouchStart = (event: TouchEvent) => {
+  if (window.innerWidth >= 1024) return;
+  const touch = event.touches[0];
+  touchStartX.value = touch.clientX;
+  touchStartY.value = touch.clientY;
+};
+
+const handleTouchMove = (event: TouchEvent) => {
+  if (window.innerWidth >= 1024) return;
+  const touch = event.touches[0];
+  touchEndX.value = touch.clientX;
+  touchEndY.value = touch.clientY;
+};
+
+const handleTouchEnd = () => {
+  if (window.innerWidth >= 1024) return;
+
+  const deltaX = touchEndX.value - touchStartX.value;
+  const deltaY = Math.abs(touchEndY.value - touchStartY.value);
+  const screenWidth = window.innerWidth;
+  const edgeThreshold = screenWidth;
+
+  const isFromLeftEdge = touchStartX.value <= edgeThreshold;
+  const isFromRightEdge = touchStartX.value >= screenWidth - edgeThreshold;
+  const isHorizontalSwipe = Math.abs(deltaX) >= minSwipeDistance;
+  const isNotTooVertical = deltaY <= maxVerticalDistance;
+
+  if (
+    (isFromLeftEdge || isFromRightEdge) &&
+    isHorizontalSwipe &&
+    isNotTooVertical
+  ) {
+    if (
+      (isFromRightEdge && deltaX < -minSwipeDistance) ||
+      (isFromLeftEdge && deltaX > minSwipeDistance)
+    ) {
+      showAnnotations.value = !showAnnotations.value;
+
+      if ("vibrate" in navigator) {
+        navigator.vibrate(50);
+      }
+    }
+  }
+  touchStartX.value = 0;
+  touchStartY.value = 0;
+  touchEndX.value = 0;
+  touchEndY.value = 0;
+};
 
 const {
   value: { data: post, isLoading },
@@ -274,23 +312,7 @@ const {
     refetchOnMount: true,
   })
 );
-console.log("Post data:", post.value);
-// Fetch the main post
-// const { data: post, isLoading } = useQuery<
-//   Post | null,
-//   unknown,
-//   Post | null,
-//   string[]
-// >({
-//   queryKey: ["post", postId],
-//   queryFn: async () => {
-//     const response = await fetchPostById(postId);
-//     return response as Post | null;
-//   },
-//   enabled: !!postId,
-//   staleTime: 0,
-//   refetchOnMount: true,
-// });
+
 // Likes Mutation
 const publishMutation = useMutation({
   mutationFn: postReaction,
@@ -330,17 +352,15 @@ const handleReaction = (score: 1 | -1) => {
   });
 };
 
+watchEffect(() => {
+  console.log("Post data:", post.value);
+});
+
 const displayedEntries = computed(() => {
   if (!post.value || !post.value.entries) return [];
   return showAllEntries.value
     ? post.value.entries
     : post.value.entries.slice(0, entriesLimit);
-});
-
-watchEffect(() => {
-  if (post.value) {
-    console.log("Post entries:", post.value);
-  }
 });
 </script>
 

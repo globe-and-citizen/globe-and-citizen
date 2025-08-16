@@ -59,7 +59,7 @@
               v-if="postView"
               class="flex cursor-pointer items-center text-gray-700 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
               :disabled="isLoading || !post"
-              @click="openModal()"
+              @click="navigateToCreateOpinion()"
             >
               Write
               <svg
@@ -389,7 +389,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, type ComputedRef, ref, watch, watchEffect } from "vue";
+import {
+  computed,
+  type ComputedRef,
+  onMounted,
+  ref,
+  watch,
+  watchEffect,
+} from "vue";
 import { useAuthStore } from "@/store/authStore.ts";
 import logo from "../../assets/logo.svg";
 import { useRoute, useRouter } from "vue-router";
@@ -404,6 +411,7 @@ import { generateUserIcon } from "@/lib/utils.ts";
 import { getUser } from "@/api/user.ts";
 import type { UserType } from "@/models/Auth";
 import Button from "@/components/Button/Button.vue";
+import { useNewOpinionStore } from "@/store/newOpinionStore";
 
 type HeaderState = "default" | "no-user" | "no-user-search" | "logged-in";
 const authStore = useAuthStore();
@@ -483,10 +491,16 @@ const createModal = () => {
 watch(postId, () => {
   modalInstance.value = null;
 });
+const newOpinionStore = useNewOpinionStore();
 
 watchEffect(() => {
   if (post.value && postView.value) {
     modalInstance.value = createModal();
+    newOpinionStore.setPost({
+      id: post.value.id,
+      title: post.value.title,
+      slug: post.value.slug,
+    });
   }
 });
 
@@ -523,4 +537,18 @@ const onSearchInput = (e: Event) => {
   const target = e.target as HTMLInputElement;
   debounceSearch(target.value);
 };
+
+const navigateToCreateOpinion = () => {
+  if (!post.value) {
+    console.warn("Post data not loaded yet");
+    return;
+  }
+
+  router.push({
+    name: "WriteOpinionView",
+  });
+};
+onMounted(() => {
+  newOpinionStore.resetPost();
+});
 </script>

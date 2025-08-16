@@ -1,18 +1,5 @@
 <template>
   <div class="overflow-hidden">
-    <div class="flex mb-2 gap-5 pr-1 py-2 items-center">
-      <span class="text-xl text-black-100 font-semibold">
-        {{ showAnnotations ? "Hide Readers Insight" : "See Readers Insight" }}
-      </span>
-      <label class="toggle-switch">
-        <input
-          v-model="showAnnotations"
-          type="checkbox"
-          @change="toggleAnnotations"
-        />
-        <span class="toggle-slider"></span>
-      </label>
-    </div>
     <div
       class="post-content flip-container"
       :class="{ flipping: isFlipping }"
@@ -137,10 +124,11 @@ const props = defineProps<{
   content: string;
   sentences: Sentence[];
   postType: "opinion" | "post";
+  showAnnotations: boolean;
 }>();
 
 const annotatedHTML = ref<string>("");
-const showAnnotations = ref<boolean>(false);
+const showAnnotations = computed(() => props.showAnnotations);
 const isFlipping = ref<boolean>(false);
 let handleClickOutside: (e: MouseEvent) => void;
 
@@ -199,21 +187,6 @@ function getReactionHighlightClass(opinions: SentenceOpinions): string {
     return "highlight-has-comment";
   }
   return "";
-}
-
-// Toggle annotations visibility with flip effect
-function toggleAnnotations() {
-  isFlipping.value = true;
-
-  // Change content at the midpoint when it's not visible
-  setTimeout(() => {
-    updateAnnotatedHTML();
-  }, 200); // Midpoint of the animation
-
-  // End the flip animation
-  setTimeout(() => {
-    isFlipping.value = false;
-  }, 400); // Full animation duration
 }
 
 function onSentenceClick(e: MouseEvent) {
@@ -355,6 +328,19 @@ watch(
   { deep: true }
 );
 
+watch(
+  () => props.showAnnotations,
+  () => {
+    isFlipping.value = true;
+    setTimeout(() => {
+      updateAnnotatedHTML();
+    }, 200);
+    setTimeout(() => {
+      isFlipping.value = false;
+    }, 400);
+  }
+);
+
 onMounted(() => {
   updateAnnotatedHTML();
   handleClickOutside = (e: MouseEvent) => {
@@ -381,56 +367,6 @@ onUnmounted(() => {
 </script>
 
 <style>
-/* Toggle switch styles */
-.toggle-switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(14, 12, 12, 0.4);
-  border-radius: 24px;
-  transition: background-color 0.3s ease;
-}
-
-.toggle-slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  border-radius: 50%;
-  transition: transform 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.toggle-switch input:checked + .toggle-slider {
-  background-color: rgba(14, 12, 12, 1);
-}
-
-.toggle-switch input:checked + .toggle-slider:before {
-  transform: translateX(26px);
-}
-
-.toggle-switch input:focus + .toggle-slider {
-}
-
 /* Page flip animation styles */
 .flip-container {
   transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -545,18 +481,19 @@ onUnmounted(() => {
 .comments-section {
   border-top: 1px solid #e5e7eb;
   padding-top: 8px;
+  min-width: 150px;
 }
 
 .comments-header {
   font-weight: 600;
   color: #374151;
   margin-bottom: 6px;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .comment-item {
   margin-bottom: 4px;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.4;
 }
 
