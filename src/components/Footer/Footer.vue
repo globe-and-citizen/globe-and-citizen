@@ -1,6 +1,6 @@
 <template>
   <footer
-    class="w-full mt-4 bg-black-100 text-white-80 shadow-sm md:px-8 xl:px-[120px] font-lato"
+    class="w-full bg-black-100 text-white-80 shadow-sm md:px-8 xl:px-[120px] font-lato"
   >
     <div
       class="gc-container flex flex-col md:flex-row items-center md:items-baseline gap-10 lg:gap-20 py-10 min-h-[81px] px-4 md:px-0 pb-32"

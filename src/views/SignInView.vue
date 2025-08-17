@@ -1,10 +1,10 @@
 <template>
-  <div class="flex flex-col md:flex-row h-[calc(100vh-141px)]">
+  <div class="flex flex-col md:flex-row min-h-[90vh]">
     <!-- Left side with gradient background and heading -->
     <div
-      class="h-[150px] md:h-full md:flex-1/2 bg-cover bg-center"
+      class="md:flex-1/2 bg-cover bg-center min-h-[150px] md:min-h-[846px]"
       :style="{
-        backgroundImage: `linear-gradient(to bottom, rgba(14, 12, 12, 0.8), rgba(14, 12, 12, 0.6)), url(${bgImg})`,
+        backgroundImage: `linear-gradient(to bottom, rgba(14, 12, 12, 1), rgba(14, 12, 12, 0)), url(${bgImg})`,
       }"
     >
       <div
@@ -56,11 +56,12 @@
 
           <button
             type="submit"
-            class="w-full bg-black text-white py-3 rounded font-bold mt-4 text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
+            class="w-full bg-black flex items-center justify-center gap-2 text-white py-3 rounded font-bold mt-4 text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
             :disabled="isPending"
           >
+            <component :is="Layer8Icon" />
             <span v-if="isPending">Joining...</span>
-            <span v-else>Join the conversation</span>
+            <span v-else> Sign in</span>
           </button>
 
           <div class="flex items-center my-4">
@@ -89,7 +90,7 @@ import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import bgImg from "../assets/images/sign-in-img.png";
 import { useRouter } from "vue-router";
 import axios from "axios";
-
+import Layer8Icon from "../assets/icons/layer8.svg";
 import type { SignInResponse } from "../models/Auth";
 
 import { signIn } from "../api/auth";

@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col md:flex-row md:h-[calc(100vh-139px)]">
+  <div class="flex flex-col md:flex-row min-h-[90vh]">
     <!-- Left side with gradient background and heading -->
     <div
-      class="h-[150px] md:h-full md:flex-1/2 bg-cover bg-center"
+      class="md:flex-1/2 bg-cover bg-center min-h-[150px] md:min-h-[846px]"
       :style="{
         backgroundImage: `linear-gradient(to bottom, rgba(14, 12, 12, 1), rgba(14, 12, 12, 0)), url(${bgImg})`,
       }"
@@ -18,7 +18,7 @@
 
     <!-- Right side form -->
     <div
-      class="flex md:flex-1/2 justify-center items-center p-4 md:p-0 py-8 md:py-0"
+      class="flex md:flex-1/2 justify-center items-center p-4 md:p-0 py-8 md:py-8"
     >
       <div class="max-w-[482px] w-full px-4">
         <div class="mb-6">
@@ -49,6 +49,25 @@
             placeholder="Password"
             class="w-full border border-gray-300 rounded px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
           />
+          <div class="relative">
+            <input
+              v-model="confirmPassword"
+              type="password"
+              placeholder="Confirm Password"
+              :class="[
+                'w-full border rounded px-4 py-3 text-base focus:outline-none focus:ring-2 focus:border-transparent',
+                passwordsMatch
+                  ? 'border-gray-300 focus:ring-black'
+                  : 'border-red-500 focus:ring-red-500',
+              ]"
+            />
+            <p
+              v-if="!passwordsMatch && confirmPassword"
+              class="text-red-500 text-sm mt-1"
+            >
+              Passwords do not match
+            </p>
+          </div>
 
           <p class="text-xs sm:text-sm text-gray-600 mt-2 leading-relaxed">
             By signing up, you confirm that you have read and agree to our
@@ -58,7 +77,13 @@
 
           <button
             type="submit"
-            :disabled="isPending"
+            :disabled="
+              isPending ||
+              !passwordsMatch ||
+              !username ||
+              !password ||
+              !confirmPassword
+            "
             class="w-full bg-black text-white py-3 rounded font-bold mt-4 text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
           >
             <span v-if="isPending">Creating account...</span>
@@ -73,10 +98,10 @@
 
           <button
             type="button"
-            class="w-full border border-black text-black py-3 rounded font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+            class="w-full border border-black py-3 rounded font-bold flex items-center justify-center gap-2 hover:bg-black-80 transition-colors bg-black text-white"
           >
-            <img src="" alt="Layer8" class="h-5" />
-            Sign up with <strong>Layer 8</strong>
+            <component :is="Layer8Icon" />
+            Sign up
           </button>
 
           <p class="text-sm text-center mt-4 text-gray-600">
@@ -95,16 +120,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useMutation } from "@tanstack/vue-query";
 import bgImg from "../assets/images/sign-in-img.png";
 import { useRouter } from "vue-router";
 import { signUpApi } from "../api/auth.ts";
-
+import Layer8Icon from "../assets/icons/layer8.svg";
 const router = useRouter();
 // Form state
 const username = ref("");
 const password = ref("");
+const confirmPassword = ref("");
+
+const passwordsMatch = computed(() => {
+  if (!confirmPassword.value) return true;
+  return password.value === confirmPassword.value;
+});
 
 const { mutate: signUpMutation, isPending } = useMutation({
   mutationFn: signUpApi,
@@ -116,9 +147,13 @@ const { mutate: signUpMutation, isPending } = useMutation({
   },
 });
 
-// Handle form submit
 function onSubmit(e: Event) {
   e.preventDefault();
+
+  if (!passwordsMatch.value) {
+    return;
+  }
+
   signUpMutation({
     username: username.value,
     password: password.value,
