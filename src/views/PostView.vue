@@ -227,7 +227,6 @@ import { useRoute, onBeforeRouteUpdate } from "vue-router";
 import { computed, ref, onMounted, watchEffect } from "vue";
 import type { Post } from "@/models/Posts";
 import HeadingSection from "@/sections/PostView/HeadingSection/HeadingSection.vue";
-import VerticalCard from "@/components/ArticleCard/Vertical/VerticalCard.vue";
 import DOMPurify from "dompurify";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import "@/quill.css";
