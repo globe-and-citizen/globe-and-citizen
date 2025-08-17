@@ -134,9 +134,24 @@
                           Viewpoint
                         </p>
                         <img
+                          v-if="opinion.user.profile_picture_url"
                           :src="opinion.user.profile_picture_url"
                           class="w-6 h-6 object-cover rounded-full ml-2 mr-1"
                         />
+                        <div
+                          v-else
+                          class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2 mr-1"
+                          :style="
+                            generateUserIcon(opinion.user?.username || 'A')
+                          "
+                        >
+                          <span class="text-black text-sm font-normal">
+                            {{
+                              opinion.user?.username.charAt(0).toUpperCase() ||
+                              "A"
+                            }}
+                          </span>
+                        </div>
                         <p>@{{ opinion.user.username }}</p>
                         <p
                           class="ml-auto text-xs font-medium font-lato text-black-40"
@@ -166,57 +181,6 @@
             </div>
           </div>
         </div>
-
-        <!-- <div class="mb-8 md:mb-12">
-          <div
-            v-if="post && post.entries && post.entries.length > 0"
-            class="mb-8"
-          >
-            <h3 class="text-lg md:text-xl font-bold mb-4 md:mb-6 border-b pb-2">
-              Related Opinions
-            </h3>
-            <div
-              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-            >
-              <router-link
-                v-for="opinion in displayedEntries"
-                :key="opinion.id"
-                :to="`/post/${postId}/${opinion.slug}`"
-                class="block"
-              >
-                <VerticalCard
-                  :post="opinion"
-                  :show-avatar="true"
-                  :show-tags="false"
-                  :show-reading-time-and-comments="false"
-                />
-              </router-link>
-            </div>
-            <div
-              v-if="post.entries.length > entriesLimit"
-              class="mt-6 text-center"
-            >
-              <button
-                class="text-blue-600 hover:underline font-medium text-sm md:text-base"
-                @click="showAllEntries = !showAllEntries"
-              >
-                {{
-                  showAllEntries
-                    ? "Show fewer contributions"
-                    : `Show all ${post.entries.length} contributions`
-                }}
-              </button>
-            </div>
-          </div>
-          <div v-else class="mb-8">
-            <h3 class="text-lg md:text-xl font-bold mb-4 md:mb-6 border-b pb-2">
-              Related Opinions
-            </h3>
-            <p class="text-gray-500 text-sm md:text-base">
-              No related opinions to display
-            </p>
-          </div>
-        </div> -->
       </div>
     </div>
   </transition>
@@ -224,7 +188,7 @@
 
 <script setup lang="ts">
 import { useRoute, onBeforeRouteUpdate } from "vue-router";
-import { computed, ref, onMounted, watchEffect } from "vue";
+import { computed, ref, onMounted } from "vue";
 import type { Post } from "@/models/Posts";
 import HeadingSection from "@/sections/PostView/HeadingSection/HeadingSection.vue";
 import DOMPurify from "dompurify";
@@ -239,6 +203,7 @@ import { postReaction } from "@/api/reactions";
 import WhatDoYouThinkCTA from "@/components/WhatDoYouThinkCTA/WhatDoYouThinkCTA.vue";
 import ReadersInsightsAndStats from "@/components/ReadersInsightsAndStats/ReadersInsightsAndStats.vue";
 import dayjs from "dayjs";
+import { generateUserIcon } from "@/lib/utils.ts";
 
 const route = useRoute();
 const postId = decodeURIComponent(route.params.id as string);
@@ -251,7 +216,6 @@ const touchEndX = ref(0);
 const touchEndY = ref(0);
 const minSwipeDistance = 50;
 const maxVerticalDistance = 100;
-
 const handleTouchStart = (event: TouchEvent) => {
   if (window.innerWidth >= 1024) return;
   const touch = event.touches[0];
@@ -354,10 +318,6 @@ const handleReaction = (score: 1 | -1) => {
     score,
   });
 };
-
-watchEffect(() => {
-  console.log("Post data:", post.value);
-});
 
 const displayedEntries = computed(() => {
   if (!post.value || !post.value.entries) return [];

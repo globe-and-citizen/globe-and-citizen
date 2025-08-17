@@ -70,6 +70,8 @@ export const generateUserIcon = (username: string) => {
     "#F2D7D5", // Petal Pink
     "#EDE7F6", // Periwinkle Glow
   ];
+
   const index = username.charCodeAt(0) % colors.length;
+  console.log(`background-color: ${username ? colors[index] : "#F0F0F0"}`);
   return `background-color: ${username ? colors[index] : "#F0F0F0"};`;
 };
