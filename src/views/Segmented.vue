@@ -30,7 +30,9 @@
         activeSentenceId &&
         toolbarPosition &&
         activeSentenceReactions &&
-        activeSentenceReactions.comments.length > 0
+        (activeSentenceReactions.likes > 0 ||
+          activeSentenceReactions.dislikes > 0 ||
+          activeSentenceReactions.comments.length > 0)
       "
       class="reaction-tooltip"
       :style="{

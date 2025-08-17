@@ -59,6 +59,7 @@
                   @react="handleReaction"
                 />
               </div>
+              <CommentsSection :post="post" type="post" />
             </div>
           </div>
           <div class="w-full lg:w-5/12 lg:mt-0 mt-8 flex flex-col">
@@ -110,60 +111,63 @@
             <!-- Desktop: Show related opinions in sidebar -->
             <div
               v-if="displayedEntries.length > 0"
-              class="mb-8 hidden lg:block"
+              class="mb-8 hidden lg:block mx-auto"
             >
               <WhatDoYouThinkCTA />
 
-              <h3 class="text-xl font-bold mb-4 mt-auto">
+              <h3 class="text-xl font-bold mb-4 max-w-3/4 mt-8">
                 What our readers are saying about it
               </h3>
-              <div class="space-y-4">
+              <div class="space-y-4 max-w-[379px]">
                 <router-link
                   v-for="opinion in displayedEntries"
                   :key="opinion.id"
                   :to="`/post/${postId}/${opinion.slug}`"
-                  class="block hover:opacity-90"
+                  class="block hover:opacity-90 hover:shadow-card-soft"
                 >
                   <div class="flex gap-3">
-                    <img
-                      :src="opinion.url_to_image"
-                      alt="Related opinion"
-                      class="w-16 h-16 object-cover rounded"
-                    />
                     <div>
-                      <h4 class="font-medium text-sm">{{ opinion.title }}</h4>
-                      <p class="text-xs text-gray-500 mt-1">
-                        Opinion by {{ opinion.author }}
-                      </p>
+                      <div class="flex">
+                        <p
+                          class="underline underline-offset-4 decoration-primary-red font-lato text-base font-medium"
+                        >
+                          Viewpoint
+                        </p>
+                        <img
+                          :src="opinion.user.profile_picture_url"
+                          class="w-6 h-6 object-cover rounded-full ml-2 mr-1"
+                        />
+                        <p>@{{ opinion.user.username }}</p>
+                        <p
+                          class="ml-auto text-xs font-medium font-lato text-black-40"
+                        >
+                          {{ dayjs(opinion.created_at).format("MMM D, YYYY") }}
+                        </p>
+                      </div>
+                      <h4 class="font-libre font-medium text-base">
+                        {{ opinion.title }}
+                      </h4>
+                      <div
+                        class="text-black-80 mb-3 font-lato font-normal text-xs flex-none"
+                        v-html="
+                          post?.content.substring(0, 110) + '...' ||
+                          post?.description ||
+                          'No content available'
+                        "
+                      />
                     </div>
                   </div>
-                </router-link>
-              </div>
-              <div class="mt-4">
-                <router-link
-                  to="/opinions"
-                  class="text-blue-600 hover:underline text-sm"
-                >
-                  View all opinions
                 </router-link>
               </div>
             </div>
 
             <div v-else class="hidden lg:block m-auto">
-              <!-- <h3 class="text-xl font-bold mb-6">Related Opinions</h3> -->
               <WhatDoYouThinkCTA />
-
-              <!-- <p class="text-gray-500">No related opinions to display</p> -->
             </div>
-            <!-- <div class="mt-5">
-              <h3 class="text-xl font-bold mb-6">Stats Summary</h3>
-
-              <AppBarChart v-if="post" :post="post" />
-            </div> -->
           </div>
         </div>
 
-        <div class="mb-8 md:mb-12">
+        <!-- <div class="mb-8 md:mb-12">
           <div
             v-if="post && post.entries && post.entries.length > 0"
             class="mb-8"
@@ -212,8 +216,7 @@
               No related opinions to display
             </p>
           </div>
-        </div>
-        <CommentsSection :post="post" type="post" />
+        </div> -->
       </div>
     </div>
   </transition>
@@ -236,6 +239,7 @@ import LikeDislikeButtons from "@/components/LikeDislikeButtons/LikeDislikeButto
 import { postReaction } from "@/api/reactions";
 import WhatDoYouThinkCTA from "@/components/WhatDoYouThinkCTA/WhatDoYouThinkCTA.vue";
 import ReadersInsightsAndStats from "@/components/ReadersInsightsAndStats/ReadersInsightsAndStats.vue";
+import dayjs from "dayjs";
 
 const route = useRoute();
 const postId = decodeURIComponent(route.params.id as string);
