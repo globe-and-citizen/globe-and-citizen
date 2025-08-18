@@ -102,20 +102,76 @@
             </div>
           </div>
 
-          <!-- Cover Image URL -->
+          <!-- Cover Image Upload -->
           <div class="grid gap-2">
             <Label
-              for="imageUrl"
+              for="coverImage"
               class="text-base font-semibold text-black-100 dark:text-gray-300"
             >
-              Cover Image URL
+              Cover Image
             </Label>
-            <Input
-              id="imageUrl"
-              v-model="formData.url_to_image"
-              placeholder="https://example.com/image.jpg"
-              class="w-full"
-            />
+            <div class="flex flex-col gap-3">
+              <!-- Upload Button -->
+              <Button
+                type="button"
+                variant="outline"
+                :disabled="isUploadingCoverImage"
+                class="w-fit"
+                @click="handleCoverImageUpload"
+              >
+                <svg
+                  v-if="!isUploadingCoverImage"
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                  />
+                </svg>
+                <div
+                  v-else
+                  class="w-4 h-4 mr-2 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"
+                ></div>
+                {{
+                  isUploadingCoverImage ? "Uploading..." : "Upload Cover Image"
+                }}
+              </Button>
+
+              <!-- Image Preview -->
+              <div v-if="formData.url_to_image" class="relative">
+                <img
+                  :src="formData.url_to_image"
+                  alt="Cover image preview"
+                  class="w-full max-w-md h-48 object-cover rounded-md border"
+                />
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  class="absolute top-2 right-2"
+                  @click="removeCoverImage"
+                >
+                  <svg
+                    class="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </Button>
+              </div>
+            </div>
           </div>
 
           <!-- Action Buttons -->
@@ -165,6 +221,7 @@ const router = useRouter();
 const queryClient = useQueryClient();
 const formData = ref<Partial<Post>>({});
 const quillRef = ref<QuillEditorInstance | null>(null);
+const isUploadingCoverImage = ref(false);
 
 const postId = route.params.id as string;
 
@@ -278,6 +335,40 @@ function handleSaveEdit(data: OpinionPayload) {
 
 function handleCancel() {
   router.go(-1);
+}
+
+function handleCoverImageUpload() {
+  const input = document.createElement("input");
+  input.setAttribute("type", "file");
+  input.setAttribute("accept", "image/*");
+  input.click();
+
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (file) {
+      isUploadingCoverImage.value = true;
+      try {
+        const cloudinaryUrl = await uploadToCloudinary(file);
+        formData.value.url_to_image = cloudinaryUrl;
+        toast("Cover image uploaded successfully!", {
+          autoClose: 3000,
+          type: "success",
+        });
+      } catch (error) {
+        console.error("Cover image upload failed:", error);
+        toast("Cover image upload failed", {
+          autoClose: 3000,
+          type: "error",
+        });
+      } finally {
+        isUploadingCoverImage.value = false;
+      }
+    }
+  };
+}
+
+function removeCoverImage() {
+  formData.value.url_to_image = "";
 }
 
 onBeforeRouteUpdate(async (to) => {

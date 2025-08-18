@@ -111,68 +111,73 @@
             <!-- Desktop: Show related opinions in sidebar -->
             <div
               v-if="displayedEntries.length > 0"
-              class="mb-8 hidden lg:block mx-auto"
+              class="mb-8 hidden mx-auto h-full lg:flex flex-col justify-around"
             >
               <WhatDoYouThinkCTA />
 
-              <h3 class="text-xl font-bold mb-4 max-w-3/4 mt-8">
-                What our readers are saying about it
-              </h3>
-              <div class="space-y-4 max-w-[379px]">
-                <router-link
-                  v-for="opinion in displayedEntries"
-                  :key="opinion.id"
-                  :to="`/post/${postId}/${opinion.slug}`"
-                  class="block hover:opacity-90 hover:shadow-card-soft"
-                >
-                  <div class="flex gap-3">
-                    <div>
-                      <div class="flex">
-                        <p
-                          class="underline underline-offset-4 decoration-primary-red font-lato text-base font-medium"
-                        >
-                          Viewpoint
-                        </p>
-                        <img
-                          v-if="opinion.user.profile_picture_url"
-                          :src="opinion.user.profile_picture_url"
-                          class="w-6 h-6 object-cover rounded-full ml-2 mr-1"
-                        />
-                        <div
-                          v-else
-                          class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2 mr-1"
-                          :style="
-                            generateUserIcon(opinion.user?.username || 'A')
-                          "
-                        >
-                          <span class="text-black text-sm font-normal">
+              <div class="mb-40">
+                <h3 class="text-xl font-bold mb-4 max-w-3/4 mt-8">
+                  What our readers are saying about it
+                </h3>
+                <div class="space-y-4 max-w-[379px]">
+                  <router-link
+                    v-for="opinion in displayedEntries"
+                    :key="opinion.id"
+                    :to="`/post/${postId}/${opinion.slug}`"
+                    class="block hover:opacity-90 hover:shadow-card-soft"
+                  >
+                    <div class="flex gap-3">
+                      <div>
+                        <div class="flex">
+                          <p
+                            class="underline underline-offset-4 decoration-primary-red font-lato text-base font-medium"
+                          >
+                            Viewpoint
+                          </p>
+                          <img
+                            v-if="opinion.user.profile_picture_url"
+                            :src="opinion.user.profile_picture_url"
+                            class="w-6 h-6 object-cover rounded-full ml-2 mr-1"
+                          />
+                          <div
+                            v-else
+                            class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2 mr-1"
+                            :style="
+                              generateUserIcon(opinion.user?.username || 'A')
+                            "
+                          >
+                            <span class="text-black text-sm font-normal">
+                              {{
+                                opinion.user?.username
+                                  .charAt(0)
+                                  .toUpperCase() || "A"
+                              }}
+                            </span>
+                          </div>
+                          <p>@{{ opinion.user.username }}</p>
+                          <p
+                            class="ml-auto text-xs font-medium font-lato text-black-40"
+                          >
                             {{
-                              opinion.user?.username.charAt(0).toUpperCase() ||
-                              "A"
+                              dayjs(opinion.created_at).format("MMM D, YYYY")
                             }}
-                          </span>
+                          </p>
                         </div>
-                        <p>@{{ opinion.user.username }}</p>
-                        <p
-                          class="ml-auto text-xs font-medium font-lato text-black-40"
-                        >
-                          {{ dayjs(opinion.created_at).format("MMM D, YYYY") }}
-                        </p>
+                        <h4 class="font-libre font-medium text-base">
+                          {{ opinion.title }}
+                        </h4>
+                        <div
+                          class="text-black-80 mb-3 font-lato font-normal text-xs flex-none"
+                          v-html="
+                            post?.content.substring(0, 110) + '...' ||
+                            post?.description ||
+                            'No content available'
+                          "
+                        />
                       </div>
-                      <h4 class="font-libre font-medium text-base">
-                        {{ opinion.title }}
-                      </h4>
-                      <div
-                        class="text-black-80 mb-3 font-lato font-normal text-xs flex-none"
-                        v-html="
-                          post?.content.substring(0, 110) + '...' ||
-                          post?.description ||
-                          'No content available'
-                        "
-                      />
                     </div>
-                  </div>
-                </router-link>
+                  </router-link>
+                </div>
               </div>
             </div>
 
