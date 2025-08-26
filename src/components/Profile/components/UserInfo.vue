@@ -12,7 +12,7 @@
       :style="generateUserIcon(user?.username || 'A')"
     >
       <span class="text-black text-2xl font-semibold">
-        {{ user?.username.charAt(0).toUpperCase() || "A" }}
+        {{ user?.username?.charAt(0).toUpperCase() || "A" }}
       </span>
     </div>
     <div class="font-lato w-full">
