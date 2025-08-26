@@ -18,6 +18,8 @@ import NewsManagement from "@/views/AdminPanel/NewsManagement.vue";
 import PostedNews from "@/views/AdminPanel/PostedNews.vue";
 import OpinionStatsView from "@/views/OpinionStatsView.vue";
 import WriteOpinionView from "@/views/WriteOpinionView.vue";
+import PublicView from "@/components/Profile/PublicView.vue";
+import ProfileSettings from "@/components/Profile/ProfileSettings.vue";
 const routes = [
   {
     path: "/",
@@ -58,7 +60,24 @@ const routes = [
         props: true,
       },
       { path: "advertisement/:id", component: AdvertisementView },
-      { path: "profile", component: ProfilePageView },
+      {
+        path: "profile",
+        component: ProfilePageView,
+        children: [
+          {
+            path: "",
+            redirect: "/profile/public-view",
+          },
+          { path: "public-view", component: PublicView },
+          { path: "profile-settings", component: ProfileSettings },
+          { path: "change-password", component: PublicView },
+          { path: "saved-articles", component: PublicView },
+          { path: "subscriptions", component: PublicView },
+          { path: "notifications", component: PublicView },
+          { path: "my-articles", component: PublicView },
+          { path: "my-comments", component: PublicView },
+        ],
+      },
     ],
   },
   {

@@ -18,6 +18,7 @@ export type UserType = {
   date_of_birth: string;
   role_id: number;
   role: Role;
+  description: string;
 };
 
 export type Role = {

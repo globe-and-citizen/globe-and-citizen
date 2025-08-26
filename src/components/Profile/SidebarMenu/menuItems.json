@@ -1,0 +1,50 @@
+[
+  {
+    "section": "Profile",
+    "icon": "user",
+    "title": "Public view",
+    "url": "/public-view"
+  },
+  {
+    "section": "Profile",
+    "icon": "settings",
+    "title": "Profile settings",
+    "url": "/profile-settings"
+  },
+  {
+    "section": "Profile",
+    "icon": "lock",
+    "title": "Password",
+    "url": "/change-password"
+  },
+  {
+    "section": "My Activity",
+    "icon": "saved",
+    "title": "Saved Articles",
+    "url": "/saved-articles"
+  },
+  {
+    "section": "My Activity",
+    "icon": "saved",
+    "title": "Subscriptions",
+    "url": "/subscriptions"
+  },
+  {
+    "section": "My Activity",
+    "icon": "saved",
+    "title": "Notifications",
+    "url": "/notifications"
+  },
+  {
+    "section": "My Activity",
+    "icon": "saved",
+    "title": "My Articles",
+    "url": "/my-articles"
+  },
+  {
+    "section": "My Activity",
+    "icon": "saved",
+    "title": "My Comments",
+    "url": "/my-comments"
+  }
+]
