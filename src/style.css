@@ -111,8 +111,12 @@
   --sidebar-ring: oklch(0.708 0 0);
   --toastify-toast-background: black;
   & .Toastify__toast {
-    background-color: black;
+    background-color: var(--color-black-100);
     color: white;
+  }
+  & .Toastify__toast--error {
+    border-left: 1px solid var(--color-primary-red);
+    border-left-width: 3px;
   }
 }
 

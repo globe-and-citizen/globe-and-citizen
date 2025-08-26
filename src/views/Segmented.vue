@@ -99,7 +99,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, onUnmounted, watchEffect } from "vue";
+import { ref, onMounted, computed, watch, onUnmounted } from "vue";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import type { SentenceReactionRequestPayload } from "@/models/Reactions/reactions.ts";
 import { postSentenceReaction } from "@/api/reactions.ts";
@@ -318,9 +318,6 @@ function updateAnnotatedHTML() {
     showAnnotations.value
   );
 }
-watchEffect(() => {
-  console.log(toolbarPosition, "");
-});
 // Watch for changes in sentences and re-render when needed
 watch(
   () => props.sentences,
@@ -388,10 +385,6 @@ onUnmounted(() => {
 
 .sentence-span:hover {
   background-color: #eef6ff;
-}
-
-/* Default highlight for sentences without reactions */
-.sentence-span {
 }
 
 /* Positive reaction highlights (likes > dislikes) */

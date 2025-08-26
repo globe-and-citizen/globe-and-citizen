@@ -126,6 +126,7 @@ import bgImg from "../assets/images/sign-in-img.png";
 import { useRouter } from "vue-router";
 import { signUpApi } from "../api/auth.ts";
 import Layer8Icon from "../assets/icons/layer8.svg";
+import { toast } from "vue3-toastify";
 const router = useRouter();
 // Form state
 const username = ref("");
@@ -144,6 +145,10 @@ const { mutate: signUpMutation, isPending } = useMutation({
   },
   onError: (error: unknown) => {
     console.error("Sign-up error:", error);
+    toast(error, {
+      autoClose: 3000,
+      type: "error",
+    });
   },
 });
 

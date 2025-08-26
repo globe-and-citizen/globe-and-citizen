@@ -131,7 +131,7 @@ export const signUpApi = async (data: SignUpData) => {
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(errorData.message || "Sign-up failed");
+    throw new Error(errorData.data || errorData.error || "Sign-up failed");
   }
 
   return response.json();

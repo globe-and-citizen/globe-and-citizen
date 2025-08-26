@@ -124,10 +124,10 @@
                     v-for="opinion in displayedEntries"
                     :key="opinion.id"
                     :to="`/post/${postId}/${opinion.slug}`"
-                    class="block hover:opacity-90 hover:shadow-card-soft"
+                    class="block hover:opacity-90 hover:shadow-card-soft px-3 py-1"
                   >
                     <div class="flex gap-3">
-                      <div>
+                      <div class="w-full">
                         <div class="flex">
                           <p
                             class="underline underline-offset-4 decoration-primary-red font-lato text-base font-medium"
@@ -156,7 +156,7 @@
                           </div>
                           <p>@{{ opinion.user.username }}</p>
                           <p
-                            class="ml-auto text-xs font-medium font-lato text-black-40"
+                            class="ml-auto text-xs font-medium font-lato text-black-40 content-center"
                           >
                             {{
                               dayjs(opinion.created_at).format("MMM D, YYYY")
