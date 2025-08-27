@@ -118,6 +118,10 @@
     border-left: 1px solid var(--color-primary-red);
     border-left-width: 3px;
   }
+  & .Toastify__toast--success {
+    border-left: 1px solid rgb(0, 179, 60);
+    border-left-width: 3px;
+  }
 }
 
 /*a {*/

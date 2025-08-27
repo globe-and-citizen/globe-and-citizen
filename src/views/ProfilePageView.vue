@@ -1,7 +1,7 @@
 <template>
-  <div class="px-4 md:px-8 xl:px-[120px] my-10">
+  <div class="px-4 md:px-8 xl:px-[120px] my-4 md:my-10">
     <div class="flex gap-9 gc-container">
-      <div class="w-fit">
+      <div class="w-fit hidden md:block">
         <SidebarMenu />
       </div>
       <div class="w-full">

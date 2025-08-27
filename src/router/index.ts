@@ -20,6 +20,7 @@ import OpinionStatsView from "@/views/OpinionStatsView.vue";
 import WriteOpinionView from "@/views/WriteOpinionView.vue";
 import PublicView from "@/components/Profile/PublicView.vue";
 import ProfileSettings from "@/components/Profile/ProfileSettings.vue";
+import ProfileMenu from "@/components/Profile/ProfileMenu.vue";
 const routes = [
   {
     path: "/",
@@ -69,6 +70,7 @@ const routes = [
             redirect: "/profile/public-view",
           },
           { path: "public-view", component: PublicView },
+          { path: "profile-menu", component: ProfileMenu },
           { path: "profile-settings", component: ProfileSettings },
           { path: "change-password", component: PublicView },
           { path: "saved-articles", component: PublicView },
@@ -127,7 +129,10 @@ router.beforeEach((to, _, next) => {
       // Redirect to sign-in if the user is not authenticated
       next({ path: "/sign-in" });
     }
-  } else if (!isLoggedIn && to.path === "/profile") {
+  } else if (
+    (!isLoggedIn && to.path === "/profile") ||
+    (!isLoggedIn && to.path && to.path.startsWith("/profile/"))
+  ) {
     next({ path: "/sign-in" });
   } else {
     next();

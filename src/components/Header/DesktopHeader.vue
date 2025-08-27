@@ -259,7 +259,8 @@
           <template v-if="headerState === 'logged-in'">
             <div class="border-t pt-4">
               <!-- User Profile Section -->
-              <div
+              <RouterLink
+                to="/profile"
                 class="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-md"
               >
                 <img
@@ -284,7 +285,7 @@
                   <p class="text-sm font-medium text-gray-900">Your Profile</p>
                   <p class="text-xs text-gray-500">View and edit profile</p>
                 </div>
-              </div>
+              </RouterLink>
 
               <!-- Mobile Actions -->
               <div class="flex flex-col gap-3">
