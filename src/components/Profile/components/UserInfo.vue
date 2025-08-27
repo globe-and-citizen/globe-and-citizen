@@ -1,19 +1,21 @@
 <template>
-  <div class="flex flex-col md:flex-row gap-7 items-center md:items-start">
-    <img
-      v-if="user?.profile_picture_url"
-      :src="user?.profile_picture_url"
-      alt="User Avatar"
-      class="w-[120px] h-[120px] rounded-full"
-    />
-    <div
-      v-else
-      class="w-[120px] h-[120px] rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-      :style="generateUserIcon(user?.username || 'A')"
-    >
-      <span class="text-black text-2xl font-semibold">
-        {{ user?.username?.charAt(0).toUpperCase() || "A" }}
-      </span>
+  <div class="flex flex-col md:flex-row gap-4 items-center md:items-start">
+    <div class="min-w-[134px] flex justify-center">
+      <img
+        v-if="user?.profile_picture_url"
+        :src="user?.profile_picture_url"
+        alt="User Avatar"
+        class="w-[120px] h-[120px] rounded-full"
+      />
+      <div
+        v-else
+        class="w-[120px] h-[120px] rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
+        :style="generateUserIcon(user?.username || 'A')"
+      >
+        <span class="text-black text-2xl font-semibold">
+          {{ user?.username?.charAt(0).toUpperCase() || "A" }}
+        </span>
+      </div>
     </div>
     <div class="font-lato w-full px-6 md:px-0 text-center md:text-left">
       <div class="flex justify-center md:justify-between">
