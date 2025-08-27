@@ -10,10 +10,14 @@
         class="font-lato font-normal text-base not-first-of-type:pt-2"
       >
         <!-- Use absolute path to prevent duplicated 'profile' segments when navigating between nested profile routes -->
-        <router-link :to="`/profile${item.url}`">
-          <i :class="`icon-${item.icon}`"></i>
+        <RouterLink
+          :to="`/profile${item.url}`"
+          class="flex gap-2"
+          active-class="border-l-3 pl-2 !border-l-black font-semibold"
+        >
+          <component :is="item.icon" class="w-6 h-6" />
           {{ item.title }}
-        </router-link>
+        </RouterLink>
       </div>
     </div>
     <router-link
@@ -25,9 +29,10 @@
       Admin Panel
     </router-link>
     <div
-      class="font-lato font-normal text-base mt-4 cursor-pointer"
+      class="font-lato font-normal text-base mt-4 cursor-pointer flex gap-2"
       @click="logOut"
     >
+      <component :is="logout" />
       Logout
     </div>
   </div>
@@ -35,12 +40,13 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import menuItems from "./menuItems.json";
+import { menuItems } from "./menuItems";
 import { useQuery } from "@tanstack/vue-query";
 import { useAuthStore } from "@/store/authStore";
 import { getUser } from "@/api/user";
 import type { UserType } from "@/models/Auth";
-import { useRouter } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
+import logout from "@/assets/icons/logout.svg";
 
 const authStore = useAuthStore();
 const router = useRouter();
