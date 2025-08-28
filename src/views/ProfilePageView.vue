@@ -1,10 +1,10 @@
 <template>
   <div class="px-4 md:px-8 xl:px-[120px] my-4 md:my-10">
-    <div class="flex gap-9 gc-container">
+    <div class="flex gap-6 gc-container">
       <div class="w-fit hidden md:block">
         <SidebarMenu />
       </div>
-      <div class="w-full">
+      <div class="w-full border-l-0 md:border-l pl-0 md:pl-8">
         <RouterView />
       </div>
     </div>

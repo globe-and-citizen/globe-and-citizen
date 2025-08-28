@@ -87,10 +87,5 @@ const logOut = () => {
 .sidebar-menu {
   width: 100%;
   min-width: 174px;
-  padding-right: 1rem;
-  border-right: 1px solid rgba(14, 12, 12, 0.2);
-  @media screen and (max-width: 768px) {
-    border-right: 0;
-  }
 }
 </style>
