@@ -21,6 +21,7 @@ import WriteOpinionView from "@/views/WriteOpinionView.vue";
 import PublicView from "@/components/Profile/PublicView.vue";
 import ProfileSettings from "@/components/Profile/ProfileSettings.vue";
 import ProfileMenu from "@/components/Profile/ProfileMenu.vue";
+import MyArticles from "@/components/Profile/MyArticles.vue";
 const routes = [
   {
     path: "/",
@@ -76,7 +77,7 @@ const routes = [
           { path: "saved-articles", component: PublicView },
           { path: "subscriptions", component: PublicView },
           { path: "notifications", component: PublicView },
-          { path: "my-articles", component: PublicView },
+          { path: "my-articles", component: MyArticles },
           { path: "my-comments", component: PublicView },
         ],
       },

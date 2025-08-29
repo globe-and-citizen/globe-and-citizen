@@ -1,3 +1,4 @@
+import type { FetchPostsType } from "@/models/Posts";
 import { fetchWithAuth } from "./auth";
 import { API_BASE_URL, ENTRIES_URL } from "./constants";
 import type { OpinionPatchPayload, OpinionPayload } from "@/models/Opinions";
@@ -76,6 +77,27 @@ export async function deleteOpinion(
     return { success: true, message: "Article deleted successfully" };
   } catch (error) {
     console.error("Error deleting news article:", error);
+    throw error;
+  }
+}
+
+export async function getUsersArticles(
+  size: number,
+  page: number
+): Promise<FetchPostsType> {
+  try {
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/profile/my-articles?size=${size}&page=${page}`
+    );
+
+    if (!response) {
+      throw new Error(`Error fetching user's articles: ${response}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching user's articles:", error);
     throw error;
   }
 }

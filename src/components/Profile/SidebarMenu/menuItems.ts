@@ -47,7 +47,7 @@ export const menuItems = [
   {
     section: "My Activity",
     icon: articles,
-    title: "My Articles",
+    title: "My Viewpoints",
     url: "/my-articles",
   },
   {

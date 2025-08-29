@@ -249,6 +249,7 @@ const { mutate: postOpinion } = useMutation({
       type: "success",
     });
     queryClient.invalidateQueries({ queryKey: ["post", post.value?.slug] });
+    queryClient.invalidateQueries({ queryKey: ["users-articles"] });
     // Navigate back to the post or opinions list
     router.push(`/post/${post.value?.slug}`);
   },
