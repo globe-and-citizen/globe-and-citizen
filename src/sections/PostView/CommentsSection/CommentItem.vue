@@ -68,12 +68,7 @@
             )
           "
         >
-          <svg
-            class="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg class="h-4 w-4" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -121,12 +116,7 @@
           :disabled="!isLoggedIn"
           @click="toggleReplyInput"
         >
-          <svg
-            class="h-4 w-4 mr-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+          <svg class="h-4 w-4 mr-1" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -216,7 +206,7 @@
               :is-admin="isAdmin"
               :is-last-child="index === getRepliesArray.length - 1"
               @delete-comment="
-                (id, parentId) => $emit('delete-comment', id, parentId)
+                (id: number, parentId: number ) => $emit('delete-comment', id, parentId)
               "
             />
           </div>
@@ -234,7 +224,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, defineProps, defineEmits } from "vue";
+import { ref, computed, watch } from "vue";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/vue-query";
 import { createComment, getCommentChildren } from "@/api/comments";
 import { formatCommentDate, generateUserIcon } from "@/lib/utils";
@@ -264,7 +254,6 @@ const isLoggedIn = computed(() => authStore.isUserAuthenticated);
 const userId = authStore.user?.id;
 
 const getRepliesArray = computed(() => {
-  console.log(childCommentsQuery);
   if (
     childCommentsQuery.data.value?.children &&
     childCommentsQuery.data.value.children.length > 0

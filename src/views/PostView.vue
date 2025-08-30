@@ -136,6 +136,7 @@
                           </p>
                           <img
                             v-if="opinion.user.profile_picture_url"
+                            alt="User profile picture"
                             :src="opinion.user.profile_picture_url"
                             class="w-6 h-6 object-cover rounded-full ml-2 mr-1"
                           />

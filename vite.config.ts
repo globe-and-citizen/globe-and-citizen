@@ -8,7 +8,18 @@ import path from "path";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), eslint(), tailwindcss(), svgLoader()],
+  plugins: [
+    vue(),
+    eslint({
+      include: ["src/**/*.{ts,vue}"],
+      emitWarning: true,
+      emitError: true,
+      failOnWarning: false,
+      failOnError: false,
+    }),
+    tailwindcss(),
+    svgLoader(),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

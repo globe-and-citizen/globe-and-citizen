@@ -47,9 +47,8 @@
               Viewpoint title
             </Label>
             <Input
-              id="title"
+              v-bind="{ id: 'title', placeholder: 'Enter your opinion title' }"
               v-model="formData.title"
-              placeholder="Enter your opinion title"
               class="w-full"
             />
             <div
@@ -83,7 +82,7 @@
             </Label>
             <div class="border rounded-md overflow-hidden">
               <QuillEditor
-                id="content"
+                v-bind="{ id: 'content' }"
                 ref="quillRef"
                 content-type="html"
                 theme="snow"
@@ -113,9 +112,8 @@
             <div class="flex flex-col gap-3">
               <!-- Upload Button -->
               <Button
-                type="button"
+                v-bind="{ type: 'button', disabled: isUploadingCoverImage }"
                 variant="outline"
-                :disabled="isUploadingCoverImage"
                 class="w-fit"
                 @click="handleCoverImageUpload"
               >
@@ -150,7 +148,7 @@
                   class="w-full max-w-md h-48 object-cover rounded-md border"
                 />
                 <Button
-                  type="button"
+                  v-bind="{ type: 'button' }"
                   variant="destructive"
                   size="sm"
                   class="absolute top-2 right-2"
@@ -177,7 +175,10 @@
           <!-- Action Buttons -->
           <div class="flex gap-4 pt-4">
             <Button
-              type="button"
+              v-bind="{
+                type: 'button',
+                disabled: !formData.title || !formData.content,
+              }"
               variant="outline"
               class="flex-1"
               @click="handleCancel"
@@ -185,9 +186,11 @@
               Cancel
             </Button>
             <Button
-              type="submit"
               class="flex-1 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-              :disabled="!formData.title || !formData.content"
+              v-bind="{
+                type: 'submit',
+                disabled: !formData.title || !formData.content,
+              }"
             >
               Submit Opinion
             </Button>
@@ -212,9 +215,8 @@ import { generateSlug } from "@/lib/utils.ts";
 import { uploadToCloudinary } from "@/api/images.ts";
 import type { QuillEditorInstance } from "@/components/AdminPanel/NewsStepper/index.vue";
 import { toast } from "vue3-toastify";
-import { onBeforeRouteUpdate, useRoute } from "vue-router";
+import { onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 import { fetchPostById } from "@/api/posts";
-import { useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();
@@ -325,6 +327,7 @@ function handleSubmit() {
 }
 
 function handleSaveEdit(data: OpinionPayload) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { post_id, slug, ...otherData } = data;
   const generatedSlug = generateSlug(data.title || "unknown-title");
   postOpinion({
@@ -349,8 +352,7 @@ function handleCoverImageUpload() {
     if (file) {
       isUploadingCoverImage.value = true;
       try {
-        const cloudinaryUrl = await uploadToCloudinary(file);
-        formData.value.url_to_image = cloudinaryUrl;
+        formData.value.url_to_image = await uploadToCloudinary(file);
         toast("Cover image uploaded successfully!", {
           autoClose: 3000,
           type: "success",

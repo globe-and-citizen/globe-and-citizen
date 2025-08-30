@@ -93,6 +93,7 @@ const customHandlers = {
 };
 
 function handleSaveEdit(data: OpinionPayload) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { post_id, slug, ...otherData } = data;
   const generatedSlug = generateSlug(data.title || "unknown-title");
   postOpinion({

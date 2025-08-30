@@ -1,5 +1,8 @@
 <template>
-  <Dialog :open="isOpen" @update:open="(open) => !open && $emit('close')">
+  <Dialog
+    :open="isOpen"
+    @update:open="(open: boolean) => !open && $emit('close')"
+  >
     <DialogContent class="w-[90vw] max-w-[425px]">
       <DialogHeader>
         <DialogTitle>Delete {{ itemType }}</DialogTitle>
