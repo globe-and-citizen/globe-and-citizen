@@ -21,12 +21,12 @@
           <DropdownMenuCheckboxItem
             v-for="column in table
               .getAllColumns()
-              .filter((column) => column.getCanHide())"
+              .filter((column: Column<any>) => column.getCanHide())"
             :key="column.id"
             class="capitalize"
             :model-value="column.getIsVisible()"
             @update:model-value="
-              (value) => {
+              (value: boolean) => {
                 column.toggleVisibility(!!value);
               }
             "
@@ -202,6 +202,7 @@
 
 <script setup lang="ts">
 import type {
+  Column,
   ColumnFiltersState,
   SortingState,
   VisibilityState,

@@ -1,256 +1,13 @@
-<script setup lang="ts">
-import { toTypedSchema } from "@vee-validate/zod";
-import CircleIcon from "@/assets/icons/circle.svg";
-import LoaderIcon from "@/assets/icons/loader.svg";
-import CheckIcon from "@/assets/icons/check.svg";
-import DotIcon from "@/assets/icons/dot.svg";
-import { ref, computed, watchEffect } from "vue";
-
-import { useQuery, useMutation } from "@tanstack/vue-query";
-import { QuillEditor } from "@vueup/vue-quill";
-import "@vueup/vue-quill/dist/vue-quill.snow.css";
-import { Button } from "../../../components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../../../components/ui/form";
-import { Input } from "../../../components/ui/input";
-import { Textarea } from "../../../components/ui/textarea";
-import {
-  Stepper,
-  StepperItem,
-  StepperSeparator,
-  StepperTitle,
-  StepperTrigger,
-} from "../../../components/ui/stepper";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "../../../components/ui/card";
-
-import { fetchNewsApi } from "@/api/news.ts";
-import type { NewsApiResponse, NewsApiArticle } from "@/models/News";
-import { useForm } from "vee-validate";
-import { formSchema } from "./types";
-import { generateSummary, postNewsArticle } from "@/api/posts.ts";
-import { generateSlug } from "@/lib/utils.ts";
-import { uploadToCloudinary } from "@/api/images.ts";
-import { toast } from "vue3-toastify";
-
-// Type for QuillEditor instance
-export interface QuillEditorInstance {
-  getQuill(): {
-    getSelection(): { index: number; length: number } | null;
-    insertEmbed(index: number, type: string, value: string): void;
-    setSelection(index: number): void;
-    formatText(
-      index: number,
-      length: number,
-      format: string,
-      value: string
-    ): void;
-    format(format: string, value: boolean): void;
-  };
-}
-
-const stepIndex = ref(1);
-const selectedArticle = ref<NewsApiArticle | null>(null);
-const generatedSummary = ref<string>("");
-
-// Utility function to generate slug from title
-
-const steps = [
-  {
-    step: 1,
-    title: "Select Article",
-  },
-  {
-    step: 2,
-    title: "Generate Summary",
-  },
-  {
-    step: 3,
-    title: "Edit Details",
-  },
-  {
-    step: 4,
-    title: "Approve & Publish",
-  },
-];
-
-// Fetch news data
-const { data: newsData, isLoading: isLoadingNews } = useQuery<{
-  data: NewsApiResponse;
-}>({
-  queryKey: ["newsApiData"],
-  queryFn: fetchNewsApi,
-  refetchOnWindowFocus: false,
-  refetchOnMount: false,
-});
-
-// ];
-const quillRef = ref<QuillEditorInstance | null>(null);
-
-// Simple toolbar array to ensure buttons appear
-const toolbarConfig = [
-  ["bold", "italic", "underline", "strike"],
-  ["blockquote", "code-block"],
-  [{ header: 1 }, { header: 2 }],
-  [{ list: "ordered" }, { list: "bullet" }],
-  [{ script: "sub" }, { script: "super" }],
-  [{ indent: "-1" }, { indent: "+1" }],
-  [{ direction: "rtl" }],
-  [{ size: ["small", false, "large", "huge"] }],
-  [{ header: [1, 2, 3, 4, 5, 6, false] }],
-  [{ color: [] }, { background: [] }],
-  [{ font: [] }],
-  [{ align: [] }],
-  ["clean"],
-  ["link", "image"],
-];
-
-// Custom handlers
-const customHandlers = {
-  image: function () {
-    // File upload option
-    const input = document.createElement("input");
-    input.setAttribute("type", "file");
-    input.setAttribute("accept", "image/*");
-    input.click();
-
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (file) {
-        try {
-          const cloudinaryUrl = await uploadToCloudinary(file);
-          if (quillRef.value) {
-            const quill = quillRef.value.getQuill();
-            const range = quill.getSelection();
-            if (range) {
-              quill.insertEmbed(range.index, "image", cloudinaryUrl);
-              quill.setSelection(range.index + 1);
-            }
-          }
-        } catch (error) {
-          console.error("Upload failed:", error);
-        }
-      }
-    };
-  },
-};
-const articles = computed(() => newsData.value?.data.articles ?? []);
-
-// Publish article mutation
-const publishMutation = useMutation({
-  mutationFn: postNewsArticle,
-  onSuccess: () => {
-    // Reset form and redirect back to step 1
-    stepIndex.value = 1;
-    selectedArticle.value = null;
-    generatedSummary.value = "";
-    form.resetForm();
-  },
-});
-
-// Summary generation mutation
-const summaryMutation = useMutation({
-  mutationFn: async (articleUrl: string) => {
-    const summary = await generateSummary(articleUrl);
-    return summary;
-  },
-  onSuccess: (data) => {
-    generatedSummary.value = data;
-    form.setFieldValue("content", data);
-    toast.success("Summary generated successfully!");
-  },
-  onError: () => {
-    toast.error("Failed to generate summary");
-  },
-});
-
-function onSubmit(values: Record<string, unknown>) {
-  if (stepIndex.value === 4 && selectedArticle.value) {
-    const finalData = {
-      title:
-        (values.title as string) ||
-        selectedArticle.value.title ||
-        "Untitled Article",
-      slug:
-        (values.slug as string) ||
-        generateSlug(selectedArticle.value.title || "untitled-article"),
-      content: (values.content as string) || generatedSummary.value,
-      categories: ["news"],
-      is_external: true,
-      source_url: selectedArticle.value.url || "",
-      source_name:
-        (values.source as string) || selectedArticle.value.source?.name || "",
-      url_to_image:
-        (values.imageUrl as string) || selectedArticle.value.urlToImage || "",
-      author:
-        (values.author as string) ||
-        (selectedArticle.value.author ?? "Unknown"),
-      description:
-        (values.description as string) ||
-        (selectedArticle.value.description ?? ""),
-    };
-    publishMutation.mutate(finalData);
-  }
-}
-
-function handleArticleSelect(index: number) {
-  selectedArticle.value = articles.value[index];
-}
-
-function handleGenerateSummary() {
-  if (selectedArticle.value?.url) {
-    generatedSummary.value = "";
-    summaryMutation.mutate(selectedArticle.value.url);
-  } else {
-    toast.error("No article selected or missing URL.");
-  }
-}
-
-const { setValues } = useForm();
-
-// Initialize the form
-const form = useForm({
-  validationSchema: toTypedSchema(formSchema[0]),
-});
-
-watchEffect(() => {
-  if (stepIndex.value === 3 && selectedArticle.value) {
-    const content =
-      generatedSummary.value || selectedArticle.value.content || "";
-    const generatedSlug = generateSlug(selectedArticle.value.title || "");
-
-    setValues({
-      title: selectedArticle.value.title || "",
-      slug: generatedSlug,
-      description: selectedArticle.value.description || "",
-      content: content,
-      author: selectedArticle.value.author || "Unknown",
-      source: selectedArticle.value.source?.name || "Unknown",
-      imageUrl: selectedArticle.value.urlToImage || "",
-    });
-
-    setTimeout(() => {
-      form.setFieldValue("content", content);
-    }, 0);
-  }
-});
-</script>
-
 <template>
   <h1 class="text-2xl font-bold mb-4 uppercase">News Processing Workflow</h1>
   <div class="w-full mx-auto p-6">
-    <Form v-slot="{ meta, values, validate }" as="" :form="form" keep-values>
+    <Form
+      v-slot="{ meta, values, validate }"
+      as=""
+      :form="form"
+      keep-values
+      :validation-schema="toTypedSchema(formSchema[0])"
+    >
       <Stepper
         v-slot="{ isNextDisabled, isPrevDisabled, nextStep, prevStep }"
         v-model="stepIndex"
@@ -258,10 +15,10 @@ watchEffect(() => {
       >
         <form
           @submit="
-            (e) => {
+            (e: Event) => {
               e.preventDefault();
               validate();
-
+ 
               if (stepIndex === steps.length && meta.valid) {
                 onSubmit(values);
               }
@@ -320,120 +77,48 @@ watchEffect(() => {
 
           <!-- Step Content -->
           <div class="min-h-[400px]">
-            <!-- Step 1: Select Article -->
+            <!-- Step 3: Edit Details -->
             <template v-if="stepIndex === 1">
               <div class="space-y-4">
-                <h2 class="text-xl font-semibold">Select a News Article</h2>
+                <h2 class="text-xl font-semibold">Edit Article Details</h2>
 
-                <div v-if="isLoadingNews" class="flex justify-center py-8">
-                  <component :is="LoaderIcon" class="size-8 animate-spin" />
-                  <span class="ml-2">Loading articles...</span>
-                </div>
-
-                <FormField
-                  v-slot="{ componentField }"
-                  name="selectedArticleIndex"
-                >
-                  <FormItem>
-                    <FormControl>
-                      <div
-                        class="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-                      >
-                        <Card
-                          v-for="(article, index) in articles"
-                          :key="index"
-                          class="cursor-pointer transition-all hover:shadow-md pt-0"
-                          :class="[
-                            selectedArticle === article &&
-                              'ring-2 ring-primary',
-                          ]"
-                          @click="
-                            () => {
-                              handleArticleSelect(index);
-                              componentField.onChange(index);
-                            }
-                          "
-                        >
-                          <img
-                            v-if="article.urlToImage"
-                            :src="article.urlToImage"
-                            alt="Article image"
-                            class="w-full h-48 object-cover rounded-t-lg"
-                          />
-                          <img
-                            v-else
-                            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDVPuMlKfGrFErmCt6hCuECLbbhekJF-GCtAJvPIZpHX5upTT-hABFlp8qZY8rkgaZ0DE&usqp=CAU"
-                            alt="Placeholder image"
-                            class="w-full h-48 object-cover rounded-t-lg"
-                          />
-                          <CardHeader class="pb-2">
-                            <CardTitle class="text-sm line-clamp-2">
-                              {{ article.title }}
-                            </CardTitle>
-                            <CardDescription
-                              class="text-xs line-clamp-2 font-semibold underline"
-                            >
-                              {{ article.source.name || "Source unavailable." }}
-                            </CardDescription>
-                            <CardDescription class="text-xs line-clamp-2 bold">
-                              {{
-                                article.description ||
-                                "No description available."
-                              }}
-                            </CardDescription>
-                          </CardHeader>
-                          <a
-                            class="px-6 underline mt-auto text-sm"
-                            target="_blank"
-                            :href="article.url"
-                            >Read full article</a
-                          >
-                        </Card>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </FormField>
-              </div>
-            </template>
-
-            <!-- Step 2: Generate Summary -->
-            <template v-if="stepIndex === 2">
-              <div class="space-y-4">
-                <h2 class="text-xl font-semibold">Generate AI Summary</h2>
-
-                <div class="space-y-2">
-                  <Button
-                    type="button"
-                    :disabled="
-                      summaryMutation.isPending.value || !selectedArticle
-                    "
-                    class="w-full"
-                    @click="handleGenerateSummary"
-                  >
-                    <component
-                      :is="LoaderIcon"
-                      v-if="summaryMutation.isPending.value"
-                      class="size-4 animate-spin mr-2"
-                    />
-                    Generate Summary with AI
-                  </Button>
-
-                  <div
-                    v-if="generatedSummary.length"
-                    class="p-4 bg-muted rounded-lg"
-                  >
-                    <h3 class="font-medium mb-2">Generated Summary:</h3>
-                    <p class="text-sm">{{ generatedSummary }}</p>
+                <div class="space-y-2 p-3 border rounded-md bg-muted/30">
+                  <h3 class="text-sm font-semibold">
+                    Optional: Paste source text to summarize with AI
+                  </h3>
+                  <p class="text-xs text-muted-foreground">
+                    Paste any article/body text below and click "Summarize
+                    Text". The generated summary will populate the Content
+                    editor. You can still edit it afterwards.
+                  </p>
+                  <textarea
+                    v-model="rawTextForSummary"
+                    rows="5"
+                    class="w-full text-sm rounded-md border bg-background p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Paste raw article or notes here..."
+                  />
+                  <div class="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      size="sm"
+                      :disabled="
+                        !rawTextForSummary.length ||
+                        textSummaryMutation.isPending.value
+                      "
+                      @click="textSummaryMutation.mutate()"
+                    >
+                      <component
+                        :is="LoaderIcon"
+                        v-if="textSummaryMutation.isPending.value"
+                        class="size-4 animate-spin mr-2"
+                      />
+                      Summarize Text
+                    </Button>
+                    <span v-if="generatedSummary" class="text-xs text-green-600"
+                      >Summary ready. You can refine it below.</span
+                    >
                   </div>
                 </div>
-              </div>
-            </template>
-
-            <!-- Step 3: Edit Details -->
-            <template v-if="stepIndex === 3">
-              <div class="space-y-4">
-                <h2 class="text-xl font-semibold">Edit Article Details</h2>
 
                 <FormField v-slot="{ componentField }" name="title">
                   <FormItem>
@@ -494,7 +179,7 @@ watchEffect(() => {
 
                 <FormField v-slot="{ componentField }" name="content">
                   <FormItem>
-                    <FormLabel>Generated content</FormLabel>
+                    <FormLabel>Content</FormLabel>
                     <FormControl>
                       <QuillEditor
                         ref="quillRef"
@@ -562,25 +247,11 @@ watchEffect(() => {
                     <FormMessage />
                   </FormItem>
                 </FormField>
-
-                <!-- <FormField v-slot="{ componentField }" name="publishedAt">
-                  <FormItem>
-                    <FormLabel>Published Date</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="datetime-local"
-                        v-bind="componentField"
-                        :default-value="selectedArticle?.publishedAt || ''"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </FormField> -->
               </div>
             </template>
 
             <!-- Step 4: Approve & Publish -->
-            <template v-if="stepIndex === 4">
+            <template v-if="stepIndex === 2">
               <div class="space-y-4">
                 <h2 class="text-xl font-semibold">Review & Publish</h2>
 
@@ -641,18 +312,16 @@ watchEffect(() => {
             </Button>
             <div class="flex items-center gap-3">
               <Button
-                v-if="stepIndex !== 4"
+                v-if="stepIndex !== 2"
                 :type="meta.valid ? 'button' : 'submit'"
-                :disabled="
-                  isNextDisabled || (stepIndex === 2 && !generatedSummary)
-                "
+                :disabled="isNextDisabled"
                 size="sm"
                 @click="meta.valid && nextStep()"
               >
                 Next
               </Button>
               <Button
-                v-if="stepIndex === 4"
+                v-if="stepIndex === 2"
                 size="sm"
                 type="submit"
                 :disabled="publishMutation.isPending.value"
@@ -671,6 +340,227 @@ watchEffect(() => {
     </Form>
   </div>
 </template>
+
+<script setup lang="ts">
+import { toTypedSchema } from "@vee-validate/zod";
+import CircleIcon from "@/assets/icons/circle.svg";
+import LoaderIcon from "@/assets/icons/loader.svg";
+import CheckIcon from "@/assets/icons/check.svg";
+import DotIcon from "@/assets/icons/dot.svg";
+import { ref, watchEffect } from "vue";
+
+import { useMutation } from "@tanstack/vue-query";
+import { QuillEditor } from "@vueup/vue-quill";
+import "@vueup/vue-quill/dist/vue-quill.snow.css";
+import { Button } from "../../../components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../../../components/ui/form";
+import { Input } from "../../../components/ui/input";
+import { Textarea } from "../../../components/ui/textarea";
+import {
+  Stepper,
+  StepperItem,
+  StepperSeparator,
+  StepperTitle,
+  StepperTrigger,
+} from "../../../components/ui/stepper";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "../../../components/ui/card";
+
+import type { NewsApiArticle } from "@/models/News";
+import type { NewPostType } from "@/models/Posts";
+import { useForm } from "vee-validate";
+import { formSchema } from "./types";
+import { postNewsArticle, generateSummaryFromText } from "@/api/posts.ts";
+import { generateSlug } from "@/lib/utils.ts";
+import { uploadToCloudinary } from "@/api/images.ts";
+
+// Type for QuillEditor instance
+export interface QuillEditorInstance {
+  getQuill(): {
+    getSelection(): { index: number; length: number } | null;
+    insertEmbed(index: number, type: string, value: string): void;
+    setSelection(index: number): void;
+    formatText(
+      index: number,
+      length: number,
+      format: string,
+      value: string
+    ): void;
+    format(format: string, value: boolean): void;
+  };
+}
+
+const stepIndex = ref(1);
+const selectedArticle = ref<NewsApiArticle | null>(null);
+const generatedSummary = ref<string>("");
+const rawTextForSummary = ref<string>("");
+
+// AI summarization mutation (manual paste text)
+const textSummaryMutation = useMutation({
+  mutationFn: async () => {
+    return await generateSummaryFromText(rawTextForSummary.value);
+  },
+  onSuccess: (data) => {
+    generatedSummary.value = data;
+    form.setFieldValue("content", data);
+  },
+});
+
+const steps = [
+  {
+    step: 1,
+    title: "Create News Article",
+  },
+  {
+    step: 2,
+    title: "Approve & Publish",
+  },
+];
+
+const quillRef = ref<QuillEditorInstance | null>(null);
+
+// Simple toolbar array to ensure buttons appear
+const toolbarConfig = [
+  ["bold", "italic", "underline", "strike"],
+  ["blockquote", "code-block"],
+  [{ header: 1 }, { header: 2 }],
+  [{ list: "ordered" }, { list: "bullet" }],
+  [{ script: "sub" }, { script: "super" }],
+  [{ indent: "-1" }, { indent: "+1" }],
+  [{ direction: "rtl" }],
+  [{ size: ["small", false, "large", "huge"] }],
+  [{ header: [1, 2, 3, 4, 5, 6, false] }],
+  [{ color: [] }, { background: [] }],
+  [{ font: [] }],
+  [{ align: [] }],
+  ["clean"],
+  ["link", "image"],
+];
+
+// Custom handlers
+const customHandlers = {
+  image: function () {
+    // File upload option
+    const input = document.createElement("input");
+    input.setAttribute("type", "file");
+    input.setAttribute("accept", "image/*");
+    input.click();
+
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) {
+        try {
+          const cloudinaryUrl = await uploadToCloudinary(file);
+          if (quillRef.value) {
+            const quill = quillRef.value.getQuill();
+            const range = quill.getSelection();
+            if (range) {
+              quill.insertEmbed(range.index, "image", cloudinaryUrl);
+              quill.setSelection(range.index + 1);
+            }
+          }
+        } catch (error) {
+          console.error("Upload failed:", error);
+        }
+      }
+    };
+  },
+};
+
+// Publish article mutation
+const publishMutation = useMutation({
+  mutationFn: postNewsArticle,
+  onSuccess: () => {
+    stepIndex.value = 1;
+    selectedArticle.value = null;
+    generatedSummary.value = "";
+    rawTextForSummary.value = "";
+    form.resetForm();
+  },
+});
+
+function onSubmit(values: Record<string, unknown>) {
+  if (stepIndex.value === steps.length) {
+    const title =
+      (values.title as string)?.trim() ||
+      selectedArticle.value?.title ||
+      "Untitled Article";
+    const slug =
+      (values.slug as string)?.trim() ||
+      generateSlug(title || "untitled-article");
+    const content =
+      (values.content as string)?.trim() ||
+      generatedSummary.value ||
+      selectedArticle.value?.content ||
+      "";
+    const description =
+      (values.description as string)?.trim() ||
+      selectedArticle.value?.description ||
+      "";
+    const author =
+      (values.author as string)?.trim() ||
+      selectedArticle.value?.author ||
+      "Unknown";
+    const sourceName =
+      (values.source as string)?.trim() ||
+      selectedArticle.value?.source?.name ||
+      "";
+    const imageUrl =
+      (values.imageUrl as string)?.trim() ||
+      selectedArticle.value?.urlToImage ||
+      "";
+
+    const sourceUrl = selectedArticle.value?.url || "";
+
+    const finalData = {
+      title,
+      slug,
+      content,
+      categories: ["news"],
+      is_external: true,
+      source_url: sourceUrl,
+      source_name: sourceName,
+      url_to_image: imageUrl,
+      author,
+      description,
+    };
+    publishMutation.mutate(finalData as NewPostType);
+  }
+}
+
+const { setValues } = useForm();
+
+// Initialize the form
+const form = useForm({
+  validationSchema: toTypedSchema(formSchema[0]),
+});
+
+watchEffect(() => {
+  if (stepIndex.value === 2 && selectedArticle.value) {
+    setValues({
+      title: selectedArticle.value.title || "",
+      slug: generateSlug(selectedArticle.value.title || ""),
+      description: selectedArticle.value.description || "",
+      content: selectedArticle.value.content || "",
+      author: selectedArticle.value.author || "Unknown",
+      source: selectedArticle.value.source?.name || "Unknown",
+      imageUrl: selectedArticle.value.urlToImage || "",
+    });
+  }
+});
+</script>
 
 <style scoped>
 * {

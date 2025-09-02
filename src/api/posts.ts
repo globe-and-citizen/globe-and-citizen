@@ -78,6 +78,34 @@ export async function generateSummary(url: string): Promise<string> {
   }
 }
 
+export async function generateSummaryFromText(
+  content: string
+): Promise<string> {
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/news-summary`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ content }),
+    });
+
+    if (!response || !response.ok) {
+      throw new Error(
+        `Error generating summary from text: ${
+          response ? response.statusText : "No response"
+        }`
+      );
+    }
+
+    const data = await response.json();
+    return data.data.summary;
+  } catch (error) {
+    console.error("Error generating summary from text:", error);
+    throw error;
+  }
+}
+
 export async function postNewsArticle(
   article: NewPostType
 ): Promise<{ success: boolean; message: string }> {

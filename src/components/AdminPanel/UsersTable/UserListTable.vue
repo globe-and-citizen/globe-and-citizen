@@ -9,7 +9,7 @@
         class="w-full sm:max-w-sm"
         placeholder="Filter by email..."
         :model-value="table.getColumn('email')?.getFilterValue() as string"
-        @update:model-value="table.getColumn('email')?.setFilterValue($event)"
+        @update:model-value="handleSearch as any"
       />
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
@@ -21,12 +21,12 @@
           <DropdownMenuCheckboxItem
             v-for="column in table
               .getAllColumns()
-              .filter((column) => column.getCanHide())"
+              .filter((column: any) => column.getCanHide())"
             :key="column.id"
             class="capitalize"
             :model-value="column.getIsVisible()"
             @update:model-value="
-              (value) => {
+              (value: boolean) => {
                 column.toggleVisibility(!!value);
               }
             "
@@ -231,7 +231,7 @@ import {
   useVueTable,
 } from "@tanstack/vue-table";
 
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import ChevronDown from "@/assets/icons/chevron-down.svg";
 import { Button } from "@/components/ui/button";
 import {
@@ -274,9 +274,13 @@ import { useSearchStore } from "@/store/searchStore.ts";
 import type { Role, UserType } from "@/models/Auth";
 
 const searchStore = useSearchStore();
+const currentPage = ref(1);
+const pageSize = ref(10);
+
 const { data } = useQuery<{ data: UserType[] }>({
   queryKey: ["allUsers"],
-  queryFn: () => fetchAllUsers(0, 0, searchStore.query),
+  queryFn: () =>
+    fetchAllUsers(pageSize.value, currentPage.value, searchStore.query),
   refetchOnWindowFocus: true,
 });
 const tableData = computed(() => data.value?.data ?? []);
@@ -395,4 +399,15 @@ const table = useVueTable({
     },
   },
 });
+
+const handleSearch = (query: string) => {
+  searchStore.setQuery(query);
+};
+
+watch(
+  () => searchStore.query,
+  () => {
+    queryClient.invalidateQueries({ queryKey: ["allUsers"] });
+  }
+);
 </script>
