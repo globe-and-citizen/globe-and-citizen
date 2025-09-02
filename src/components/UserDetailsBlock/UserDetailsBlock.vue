@@ -5,7 +5,7 @@
         v-if="user?.profile_picture_url"
         :src="user?.profile_picture_url"
         alt="User Avatar"
-        class="w-20 h-20 rounded-full"
+        class="w-20 h-20 rounded-full object-cover"
       />
       <div
         v-else

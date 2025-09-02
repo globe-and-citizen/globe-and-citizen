@@ -5,20 +5,50 @@
     </RouterLink>
     <div class="grid grid-cols-1 md:grid-cols-[134px_1fr] gap-4 font-lato">
       <div class="justify-items-center">
-        <img
-          v-if="user?.profile_picture_url"
-          :src="user?.profile_picture_url"
-          alt="User Avatar"
-          class="w-[120px] h-[120px] rounded-full"
-        />
         <div
-          v-else
-          class="w-[120px] h-[120px] rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer"
-          :style="generateUserIcon(user?.username || 'A')"
+          class="relative group w-[120px] h-[120px] cursor-pointer"
+          role="button"
+          tabindex="0"
+          aria-label="Change profile picture"
+          @click="triggerProfileImageSelect"
+          @keydown.enter.prevent="triggerProfileImageSelect"
         >
-          <span class="text-black text-2xl font-semibold">
-            {{ user?.username?.charAt(0).toUpperCase() || "A" }}
-          </span>
+          <img
+            v-if="user?.profile_picture_url"
+            :src="user?.profile_picture_url"
+            alt="User Avatar"
+            class="w-[120px] h-[120px] rounded-full object-cover"
+          />
+          <div
+            v-else
+            class="w-[120px] h-[120px] rounded-full flex items-center justify-center flex-shrink-0"
+            :style="generateUserIcon(user?.username || 'A')"
+          >
+            <span class="text-black text-2xl font-semibold">
+              {{ user?.username?.charAt(0).toUpperCase() || "A" }}
+            </span>
+          </div>
+          <div
+            class="absolute inset-0 rounded-full bg-black/55 text-white flex items-center justify-center text-xs sm:text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity"
+          >
+            <div
+              v-if="!isUploadingProfileImage"
+              class="flex flex-col items-center gap-1"
+            >
+              <span class="text-base font-semibold">Edit</span>
+            </div>
+            <div
+              v-else
+              class="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"
+            ></div>
+          </div>
+          <input
+            ref="profileImageInputRef"
+            type="file"
+            accept="image/*"
+            class="hidden"
+            @change="handleProfileImageChange"
+          />
         </div>
       </div>
       <div>
@@ -93,15 +123,6 @@
               />
             </div>
           </div>
-
-          <div class="grid gap-2">
-            <Label for="profilePicture">Profile Picture URL</Label>
-            <Input
-              id="profilePicture"
-              v-model="editForm.profile_picture_url"
-              placeholder="Enter profile picture URL"
-            />
-          </div>
         </div>
         <Button
           size="small"
@@ -127,6 +148,7 @@ import Textarea from "../ui/textarea/Textarea.vue";
 import { toast } from "vue3-toastify";
 import arrowBackIcon from "../../assets/arrow-back.svg";
 import { RouterLink } from "vue-router";
+import { uploadToCloudinary } from "@/api/images";
 
 const queryClient = useQueryClient();
 const authStore = useAuthStore();
@@ -141,6 +163,9 @@ const { data: userData } = useQuery({
   },
   enabled: !!authStore.user?.id,
 });
+// State for inline avatar upload
+const isUploadingProfileImage = ref(false);
+const profileImageInputRef = ref<HTMLInputElement | null>(null);
 
 const user = ref(
   userData?.value
@@ -188,7 +213,29 @@ const { mutate: updateUserMutation } = useMutation({
     };
     return updateUser(authStore.user.id, payload);
   },
-  onSuccess: () => {
+  onSuccess: (res: unknown) => {
+    // Attempt to update auth store user instantly if API returns user
+    let updatedUser: Partial<UserType> | undefined;
+    if (
+      typeof res === "object" &&
+      res !== null &&
+      "data" in res &&
+      typeof (res as { data?: unknown }).data === "object" &&
+      (res as { data?: { user?: unknown } }).data?.user &&
+      typeof (res as { data: { user: unknown } }).data.user === "object"
+    ) {
+      updatedUser = (res as { data: { user: Partial<UserType> } }).data.user;
+    }
+    if (
+      updatedUser &&
+      typeof updatedUser.id === "number" &&
+      typeof updatedUser.username === "string" &&
+      typeof updatedUser.email === "string"
+    ) {
+      authStore.setUser(updatedUser as UserType);
+      user.value = { ...user.value, ...updatedUser } as UserType;
+      editForm.value = { ...editForm.value, ...updatedUser };
+    }
     queryClient.invalidateQueries({ queryKey: ["user", authStore.user?.id] });
     toast("Profile updated successfully!", {
       autoClose: 3000,
@@ -215,6 +262,32 @@ watch(userData, (newData) => {
 
 function handleSaveEdit() {
   updateUserMutation(editForm.value);
+}
+
+function triggerProfileImageSelect() {
+  profileImageInputRef.value?.click();
+}
+
+async function handleProfileImageChange(e: Event) {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+  isUploadingProfileImage.value = true;
+  try {
+    const url = await uploadToCloudinary(file);
+    editForm.value.profile_picture_url = url;
+    if (user.value) {
+      user.value.profile_picture_url = url as string;
+    }
+    updateUserMutation(editForm.value);
+    toast("Profile picture updated!", { autoClose: 3000, type: "success" });
+  } catch (error) {
+    console.error("Profile picture upload failed:", error);
+    toast("Profile picture upload failed", { autoClose: 3000, type: "error" });
+  } finally {
+    isUploadingProfileImage.value = false;
+    if (profileImageInputRef.value) profileImageInputRef.value.value = "";
+  }
 }
 </script>
 
