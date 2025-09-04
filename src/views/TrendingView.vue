@@ -24,7 +24,7 @@ import { fetchUsersFeed } from "../api/posts";
 import type { FetchPostsType } from "../models/Posts";
 import { useSearchStore } from "../store/searchStore";
 import { watch } from "vue";
-import VerticalCard from "../components/ArticleCard/Vertical/VerticalCard.vue";
+import VerticalCard from "../components/VerticalCard.vue";
 
 const searchStore = useSearchStore();
 const { data, refetch } = useQuery<FetchPostsType>({

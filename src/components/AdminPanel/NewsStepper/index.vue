@@ -18,7 +18,7 @@
             (e: Event) => {
               e.preventDefault();
               validate();
- 
+
               if (stepIndex === steps.length && meta.valid) {
                 onSubmit(values);
               }
@@ -383,7 +383,7 @@ import type { NewPostType } from "@/models/Posts";
 import { useForm } from "vee-validate";
 import { formSchema } from "./types";
 import { postNewsArticle, generateSummaryFromText } from "@/api/posts.ts";
-import { generateSlug } from "@/lib/utils.ts";
+import { generateSlug } from "@/composables/utils.ts";
 import { uploadToCloudinary } from "@/api/images.ts";
 
 // Type for QuillEditor instance

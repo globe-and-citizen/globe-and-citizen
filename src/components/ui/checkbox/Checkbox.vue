@@ -5,7 +5,7 @@ import { reactiveOmit } from "@vueuse/core";
 import CheckIcon from "@/assets/icons/tick.svg";
 
 import { CheckboxIndicator, CheckboxRoot, useForwardPropsEmits } from "reka-ui";
-import { cn } from "@/lib/utils";
+import { cn } from "@/composables/utils";
 
 const props = defineProps<
   CheckboxRootProps & { class?: HTMLAttributes["class"] }

@@ -70,8 +70,8 @@
 import { computed, nextTick, ref, toRaw, watch, watchEffect } from "vue";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import CustomSelect from "@/components/CustomSelect/CustomSelect.vue";
-import CustomButton from "@/components/CustomButton/CustomButton.vue";
+import CustomSelect from "@/components/CustomSelect.vue";
+import CustomButton from "@/components/CustomButton.vue";
 
 // Types
 interface DataOption {

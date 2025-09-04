@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import DesktopHeader from "../components/Header/DesktopHeader.vue";
+import DesktopHeader from "../components/DesktopHeader.vue";
 import { ModalsContainer } from "vue-final-modal";
-import Footer from "@/components/Footer/Footer.vue";
+import Footer from "@/components/Footer.vue";
 </script>

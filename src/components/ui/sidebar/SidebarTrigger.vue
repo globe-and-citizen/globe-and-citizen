@@ -2,7 +2,7 @@
 import type { HTMLAttributes } from "vue";
 import MoreIcon from "@/assets/icons/more-icon.svg";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/composables/utils";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "./utils";
 

@@ -1,12 +1,12 @@
-import HomeView from "../views/HomeView.vue";
+import HomeView from "../views/Home/HomeView.vue";
 import AboutView from "../views/AboutView.vue";
 import SignInView from "../views/SignInView.vue";
 import SignUpView from "../views/SignUpView.vue";
 import BecomeAContributorView from "../views/BecomeAContributorView.vue";
 import TrendingView from "../views/TrendingView.vue";
 import AdvertisementView from "../views/AdvertisementView.vue";
-import PostView from "../views/PostView.vue";
-import OpinionView from "../views/OpinionView.vue";
+import PostView from "../views/NewsPost/PostView.vue";
+import OpinionView from "../views/Opinion/OpinionView.vue";
 import ProfilePageView from "../views/ProfilePageView.vue";
 import { createRouter, createWebHistory } from "vue-router";
 import { useAuthStore } from "../store/authStore";
@@ -18,10 +18,10 @@ import NewsManagement from "@/views/AdminPanel/NewsManagement.vue";
 import PostedNews from "@/views/AdminPanel/PostedNews.vue";
 import OpinionStatsView from "@/views/OpinionStatsView.vue";
 import WriteOpinionView from "@/views/WriteOpinionView.vue";
-import PublicView from "@/components/Profile/PublicView.vue";
-import ProfileSettings from "@/components/Profile/ProfileSettings.vue";
-import ProfileMenu from "@/components/Profile/ProfileMenu.vue";
-import MyArticles from "@/components/Profile/MyArticles.vue";
+import PublicView from "@/views/UserProfile/PublicView.vue";
+import ProfileSettingsView from "@/views/UserProfile/ProfileSettingsView.vue";
+import MobileProfileMenuView from "@/views/UserProfile/MobileProfileMenuView.vue";
+import UserOpinionsView from "@/views/UserProfile/UserOpinionsView.vue";
 const routes = [
   {
     path: "/",
@@ -71,13 +71,13 @@ const routes = [
             redirect: "/profile/public-view",
           },
           { path: "public-view", component: PublicView },
-          { path: "profile-menu", component: ProfileMenu },
-          { path: "profile-settings", component: ProfileSettings },
+          { path: "profile-menu", component: MobileProfileMenuView },
+          { path: "profile-settings", component: ProfileSettingsView },
           { path: "change-password", component: PublicView },
           { path: "saved-articles", component: PublicView },
           { path: "subscriptions", component: PublicView },
           { path: "notifications", component: PublicView },
-          { path: "my-articles", component: MyArticles },
+          { path: "my-articles", component: UserOpinionsView },
           { path: "my-comments", component: PublicView },
         ],
       },

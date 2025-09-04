@@ -211,7 +211,7 @@ import { addOpinion } from "@/api/opinions.ts";
 import { computed, onMounted, ref } from "vue";
 import type { Post } from "@/models/Posts";
 import type { OpinionPayload } from "@/models/Opinions";
-import { generateSlug } from "@/lib/utils.ts";
+import { generateSlug } from "@/composables/utils.ts";
 import { uploadToCloudinary } from "@/api/images.ts";
 import type { QuillEditorInstance } from "@/components/AdminPanel/NewsStepper/index.vue";
 import { toast } from "vue3-toastify";

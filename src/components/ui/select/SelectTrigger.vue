@@ -8,7 +8,7 @@ import {
   type SelectTriggerProps,
   useForwardProps,
 } from "reka-ui";
-import { cn } from "@/lib/utils";
+import { cn } from "@/composables/utils";
 
 const props = withDefaults(
   defineProps<
