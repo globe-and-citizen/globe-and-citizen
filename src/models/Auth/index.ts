@@ -1,6 +1,7 @@
 export type SignInResponse = {
   data: {
     token: string;
+    refresh_token: string;
     user: UserType;
   };
 };

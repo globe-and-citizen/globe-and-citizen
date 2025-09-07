@@ -1,5 +1,8 @@
 <template>
-  <Dialog :open="isOpen" @update:open="(open) => !open && $emit('close')">
+  <Dialog
+    :open="isOpen"
+    @update:open="(open: boolean) => !open && $emit('close')"
+  >
     <DialogContent
       class="max-h-[95vh] md:max-w-[80vw] overflow-y-auto no-scrollbar"
     >
@@ -64,12 +67,65 @@
                 ],
               },
             }"
-            @update:content="(content) => (formData.content = content)"
+            @update:content="(content: string) => (formData.content = content)"
           />
         </div>
         <div class="grid gap-2">
-          <Label for="imageUrl">Image URL</Label>
-          <Input id="imageUrl" v-model="formData.url_to_image" />
+          <Label>Cover Image</Label>
+          <div class="flex flex-col gap-2">
+            <div class="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                :disabled="imageUploading"
+                @click="triggerImageSelect"
+              >
+                <component
+                  :is="LoaderIcon"
+                  v-if="imageUploading"
+                  class="size-4 animate-spin mr-2"
+                />
+                {{
+                  imageUploading
+                    ? "Uploading..."
+                    : formData.url_to_image
+                    ? "Replace Image"
+                    : "Upload Image"
+                }}
+              </Button>
+              <Button
+                v-if="formData.url_to_image && !imageUploading"
+                type="button"
+                variant="ghost"
+                size="sm"
+                @click="removeUploadedImage"
+              >
+                Remove
+              </Button>
+            </div>
+            <input
+              ref="hiddenImageInput"
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="onImageFileChange"
+            />
+            <div
+              v-if="formData.url_to_image"
+              class="relative w-40 h-24 rounded border overflow-hidden"
+            >
+              <img
+                :src="formData.url_to_image"
+                alt="Cover"
+                class="object-cover w-full h-full"
+              />
+            </div>
+            <p class="text-xs text-muted-foreground">Upload a cover image.</p>
+            <span v-if="imageUploadError" class="text-xs text-destructive">{{
+              imageUploadError
+            }}</span>
+          </div>
         </div>
       </div>
       <DialogFooter class="flex-col-reverse sm:flex-row sm:gap-1 md:gap-2">
@@ -99,6 +155,8 @@ import { Label } from "@/components/ui/label";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import type { Post } from "@/models/Posts";
+import LoaderIcon from "@/assets/icons/loader.svg";
+import { uploadToCloudinary } from "@/api/images.ts";
 
 interface Props {
   isOpen: boolean;
@@ -114,6 +172,9 @@ const props = defineProps<Props>();
 defineEmits<Emits>();
 
 const formData = ref<Partial<Post>>({});
+const hiddenImageInput = ref<HTMLInputElement | null>(null);
+const imageUploading = ref(false);
+const imageUploadError = ref("");
 
 // Watch for opinion changes to update form data
 watch(
@@ -127,4 +188,31 @@ watch(
   },
   { immediate: true }
 );
+
+function triggerImageSelect() {
+  imageUploadError.value = "";
+  hiddenImageInput.value?.click();
+}
+
+async function onImageFileChange(e: Event) {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+  imageUploading.value = true;
+  imageUploadError.value = "";
+  try {
+    const url = await uploadToCloudinary(file);
+    formData.value.url_to_image = url;
+  } catch (err) {
+    console.error(err);
+    imageUploadError.value = "Failed to upload image. Please try again.";
+  } finally {
+    imageUploading.value = false;
+    if (target) target.value = "";
+  }
+}
+
+function removeUploadedImage() {
+  formData.value.url_to_image = undefined;
+}
 </script>

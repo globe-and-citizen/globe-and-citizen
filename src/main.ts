@@ -13,6 +13,7 @@ import "vue3-toastify/dist/index.css";
 
 const app = createApp(App);
 const vfm = createVfm();
+const backend_url = import.meta.env.VITE_API_BASE_URL;
 
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
@@ -42,5 +43,6 @@ app.use(VueQueryPlugin, {
   enableDevtoolsV6Plugin: true,
 });
 const authStore = useAuthStore();
+app.config.globalProperties.$backend_url = backend_url;
 authStore.initializeAuth();
 app.use(router).mount("#app");

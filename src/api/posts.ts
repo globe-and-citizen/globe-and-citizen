@@ -4,14 +4,32 @@ import { useAuthStore } from "../store/authStore";
 
 import { API_BASE_URL, ENTRIES_URL, POSTS_URL, USER_FEED } from "./constants";
 import { toast } from "vue3-toastify";
+import * as interceptorWasm from "layer8-interceptor-production";
+
+// interceptorWasm.fetch(BACKEND_URL + "/api/login/layer8/auth", {
+//   method: "POST",
+//   headers: {
+//     "Content-Type": "Application/Json"
+//   },
+//   body: JSON.stringify({
+//     token: token.value
+//   })
+// })
+//
 
 export async function fetchAllPosts(
   size: number,
   page: number
 ): Promise<FetchPostsType> {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}${POSTS_URL}?size=${size}&page=${page}`
+    const response = await interceptorWasm.fetch(
+      `${API_BASE_URL}${POSTS_URL}?size=${size}&page=${page}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "Application/Json",
+        },
+      }
     );
     if (!response.ok) {
       throw new Error(`Error fetching posts: ${response.statusText}`);
@@ -255,7 +273,9 @@ export async function fetchPostById(id: string) {
   }
 
   // Fall back to guest comment functionality if user is not authenticated
-  const response = await fetch(`${API_BASE_URL}${POSTS_URL}/${id}`);
+  const response = await interceptorWasm.fetch(
+    `${API_BASE_URL}${POSTS_URL}/${id}`
+  );
 
   if (!response.ok) {
     throw new Error(`Error creating comment: ${response.statusText}`);
@@ -291,7 +311,9 @@ export async function fetchOpinionById(opinionId: string) {
   try {
     // For now, we're reusing the same API endpoint but in a real application
     // you would have a dedicated opinions endpoint
-    const response = await fetch(`${API_BASE_URL}${ENTRIES_URL}/${opinionId}`);
+    const response = await interceptorWasm.fetch(
+      `${API_BASE_URL}${ENTRIES_URL}/${opinionId}`
+    );
 
     if (!response.ok) {
       // Fallback to posts endpoint if dedicated opinion endpoint doesn't exist yet
