@@ -5,11 +5,13 @@ import svgLoader from "vite-svg-loader";
 // @ts-expect-error See https://github.com/gxmari007/vite-plugin-eslint/issues/79
 import eslint from "vite-plugin-eslint";
 import path from "path";
+import wasm from "vite-plugin-wasm";
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
+    wasm(),
     eslint({
       include: ["src/**/*.{ts,vue}"],
       emitWarning: true,
@@ -23,6 +25,14 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  build: {
+    target: "esnext",
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "esnext",
     },
   },
 });

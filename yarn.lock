@@ -6840,6 +6840,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"layer8-interceptor-production@npm:^0.3.0":
+  version: 0.3.0
+  resolution: "layer8-interceptor-production@npm:0.3.0"
+  checksum: 10c0/467047e31a2c764d1cb5d4d8674092542193fc11049dfe64559813048852c0dc6a679364e92b5963cea34a55bacac38bf9e7cac07752ef226a28b7e0a16f9e7f
+  languageName: node
+  linkType: hard
+
 "lazystream@npm:^1.0.0":
   version: 1.0.1
   resolution: "lazystream@npm:1.0.1"
@@ -7542,6 +7549,7 @@ __metadata:
     eslint-config-prettier: "npm:^10.1.5"
     eslint-plugin-vue: "npm:^10.1.0"
     globals: "npm:^16.1.0"
+    layer8-interceptor-production: "npm:^0.3.0"
     leaflet: "npm:^1.9.4"
     pinia: "npm:^3.0.2"
     pinia-plugin-persistedstate: "npm:^4.3.0"
@@ -7556,6 +7564,7 @@ __metadata:
     vee-validate: "npm:^4.15.1"
     vite: "npm:^6.3.5"
     vite-plugin-eslint: "npm:^1.8.1"
+    vite-plugin-wasm: "npm:^3.5.0"
     vite-svg-loader: "npm:^5.1.0"
     vue: "npm:^3.5.13"
     vue-echarts: "npm:^7.0.3"
@@ -10989,6 +10998,15 @@ __metadata:
     vite: ^6.0.0 || ^7.0.0
     vue: ^3.5.0
   checksum: 10c0/4723d7b1b741aa90013bd79d2554ba993ead685c1c1968f0cc6567024b54f8bc7fc8d3d1368dadf9f630b4b18d2d70de1d639efee7ad6fe4293a0e1987730cf6
+  languageName: node
+  linkType: hard
+
+"vite-plugin-wasm@npm:^3.5.0":
+  version: 3.5.0
+  resolution: "vite-plugin-wasm@npm:3.5.0"
+  peerDependencies:
+    vite: ^2 || ^3 || ^4 || ^5 || ^6 || ^7
+  checksum: 10c0/39d77b60eb10aececd41e7592ef109fb3404ea1cc3275238eb627e8f3fca9796a4f501fdbee402e7f8c8cbc0aa87b4cae5efcf7fd7de75bbf194b733558661a1
   languageName: node
   linkType: hard
 

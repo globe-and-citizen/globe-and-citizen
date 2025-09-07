@@ -4,6 +4,7 @@ import { defineStore } from "pinia";
 export interface AuthStoreInterface {
   user: UserType | undefined;
   token: string | undefined;
+  refreshToken: string | undefined;
   isUserAuthenticated: boolean;
   isInitialized: boolean;
   userLocation: string;
@@ -15,6 +16,7 @@ export const useAuthStore = defineStore("authStore", {
   state: (): AuthStoreInterface => ({
     user: undefined,
     token: undefined,
+    refreshToken: undefined,
     userLocation: "",
     isUserAuthenticated: false,
     isInitialized: false,
@@ -43,9 +45,14 @@ export const useAuthStore = defineStore("authStore", {
       }
     },
 
+    setRefreshToken(refreshToken: string): void {
+      this.refreshToken = refreshToken;
+    },
+
     clearToken(): void {
       this.token = undefined;
       this.user = undefined;
+      this.refreshToken = undefined;
     },
 
     logout(): void {

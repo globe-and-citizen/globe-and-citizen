@@ -236,15 +236,66 @@
 
                 <FormField v-slot="{ componentField }" name="imageUrl">
                   <FormItem>
-                    <FormLabel>Image URL</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="url"
-                        v-bind="componentField"
-                        :default-value="selectedArticle?.urlToImage || ''"
+                    <FormLabel>Cover Image</FormLabel>
+                    <div class="flex flex-col gap-2">
+                      <div class="flex items-center gap-3">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          :disabled="imageUploading"
+                          @click="triggerImageSelect"
+                        >
+                          <component
+                            :is="LoaderIcon"
+                            v-if="imageUploading"
+                            class="size-4 animate-spin mr-2"
+                          />
+                          {{
+                            imageUploading
+                              ? "Uploading..."
+                              : componentField.modelValue
+                              ? "Replace Image"
+                              : "Upload Image"
+                          }}
+                        </Button>
+                        <Button
+                          v-if="componentField.modelValue && !imageUploading"
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          @click="removeUploadedImage"
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                      <input
+                        ref="hiddenImageInput"
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                        @change="(e: Event) => onImageFileChange(e, componentField)"
                       />
-                    </FormControl>
-                    <FormMessage />
+                      <div
+                        v-if="componentField.modelValue"
+                        class="relative w-40 h-24 rounded border overflow-hidden"
+                      >
+                        <img
+                          :src="componentField.modelValue"
+                          alt="Cover"
+                          class="object-cover w-full h-full"
+                        />
+                      </div>
+                      <p class="text-xs text-muted-foreground">
+                        Upload a cover image.
+                      </p>
+                      <span
+                        v-if="imageUploadError"
+                        class="text-xs text-destructive"
+                        >{{ imageUploadError }}</span
+                      >
+                      <FormMessage />
+                    </div>
                   </FormItem>
                 </FormField>
               </div>
@@ -430,6 +481,9 @@ const steps = [
 ];
 
 const quillRef = ref<QuillEditorInstance | null>(null);
+const hiddenImageInput = ref<HTMLInputElement | null>(null);
+const imageUploading = ref(false);
+const imageUploadError = ref("");
 
 // Simple toolbar array to ensure buttons appear
 const toolbarConfig = [
@@ -491,6 +545,37 @@ const publishMutation = useMutation({
   },
 });
 
+function triggerImageSelect() {
+  imageUploadError.value = "";
+  hiddenImageInput.value?.click();
+}
+
+async function onImageFileChange(
+  e: Event,
+  componentField: { onChange: (val: unknown) => void }
+) {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+  imageUploading.value = true;
+  imageUploadError.value = "";
+  try {
+    const url = await uploadToCloudinary(file);
+    componentField.onChange(url);
+    form.setFieldValue("imageUrl", url);
+  } catch (err) {
+    console.error(err);
+    imageUploadError.value = "Failed to upload image. Please try again.";
+  } finally {
+    imageUploading.value = false;
+    if (target) target.value = ""; // reset so same file can be re-selected
+  }
+}
+
+function removeUploadedImage() {
+  form.setFieldValue("imageUrl", "");
+}
+
 function onSubmit(values: Record<string, unknown>) {
   if (stepIndex.value === steps.length) {
     const title =
@@ -546,6 +631,9 @@ const { setValues } = useForm();
 const form = useForm({
   validationSchema: toTypedSchema(formSchema[0]),
 });
+
+// Initialize imageUrl field (not part of schema yet but used in form)
+form.setFieldValue("imageUrl", "");
 
 watchEffect(() => {
   if (stepIndex.value === 2 && selectedArticle.value) {

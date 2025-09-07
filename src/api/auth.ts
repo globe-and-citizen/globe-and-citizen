@@ -8,6 +8,7 @@ import {
   SIGN_IN_URL,
   SIGN_UP_URL,
 } from "./constants";
+import * as interceptorWasm from "layer8-interceptor-production";
 
 export async function fetchWithAuth(
   url: string,
@@ -15,6 +16,7 @@ export async function fetchWithAuth(
 ): Promise<Response> {
   const authStore = useAuthStore();
   const token = authStore.token;
+  const refreshToken = authStore.refreshToken;
 
   if (!token) {
     window.location.replace(SIGN_IN_URL);
@@ -27,15 +29,19 @@ export async function fetchWithAuth(
   };
   options.credentials = "include";
 
-  const response = (await fetch(url, options)) as Response;
+  const response = (await interceptorWasm.fetch(url, options)) as Response;
 
   if (response.status === 401) {
+    console.log(refreshToken);
     try {
-      const refreshResponse = await fetch(
+      const refreshResponse = await interceptorWasm.fetch(
         `${API_BASE_URL}${REFRESH_TOKEN_URL}`,
         {
           method: "POST",
-          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ refresh_token: refreshToken }),
         }
       );
 
@@ -50,10 +56,11 @@ export async function fetchWithAuth(
           Authorization: `Bearer ${newToken}`,
         };
 
-        return (await fetch(url, options)) as Response;
+        return (await interceptorWasm.fetch(url, options)) as Response;
       } else {
-        authStore.clearToken();
-        console.error("Token refresh failed.");
+        console.log("refresh token:", await refreshResponse.json());
+        // authStore.clearToken();
+        // window.location.replace("/");
       }
     } catch (err) {
       console.error("Error refreshing token", err);
@@ -70,16 +77,20 @@ export async function signIn(
 ): Promise<SignInResponse> {
   const authStore = useAuthStore();
   try {
-    const response = await fetch(`${API_BASE_URL}${SIGN_IN_URL}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(data),
-    });
+    const response = await interceptorWasm.fetch(
+      `${API_BASE_URL}${SIGN_IN_URL}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(data),
+      }
+    );
     const responseData: SignInResponse | { data: string } =
       await response.json();
+    console.log(responseData);
     if (!response.ok) {
       toast(responseData.data ?? "Sign-in failed", {
         autoClose: 4000,
@@ -101,6 +112,7 @@ export async function signIn(
     ) {
       authStore.setToken(responseData.data.token);
       authStore.setUser(responseData.data.user);
+      authStore.setRefreshToken(responseData.data.refresh_token);
       return responseData as SignInResponse;
     } else {
       throw new Error(
@@ -120,14 +132,17 @@ type SignUpData = {
   password: string;
 };
 export const signUpApi = async (data: SignUpData) => {
-  const response = await fetch(`${API_BASE_URL}${SIGN_UP_URL}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(data),
-  });
+  const response = await interceptorWasm.fetch(
+    `${API_BASE_URL}${SIGN_UP_URL}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(data),
+    }
+  );
 
   if (!response.ok) {
     const errorData = await response.json();
