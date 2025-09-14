@@ -175,7 +175,7 @@ const openExternalLink = (url: string) => {
   const popupWindow = window.open(url, "_blank", windowFeatures);
 
   const listener = (event: MessageEvent) => {
-    if (event.origin !== "http://localhost:5001") return;
+    if (event.origin !== "http://auth.layer8proxy.net") return;
     if (event.data?.redr) {
       window.removeEventListener("message", listener);
       mutate(event.data.code);
