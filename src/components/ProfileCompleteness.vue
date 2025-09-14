@@ -58,25 +58,25 @@
     </div>
 
     <!-- Last updated -->
-    <div class="mb-4">
-      <p class="text-sm text-gray-500">
-        Last updated on:
-        <span>{{
-          metadataUpdated
-            ? new Date(userData?.metadata_updated_at).toLocaleDateString(
-                undefined,
-                {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }
-              )
-            : "Not updated yet"
-        }}</span>
-      </p>
-    </div>
+    <!--    <div class="mb-4">-->
+    <!--      <p class="text-sm text-gray-500">-->
+    <!--        Last updated on:-->
+    <!--        <span>{{-->
+    <!--          metadataUpdated-->
+    <!--            ? new Date(userData?.metadata_updated_at).toLocaleDateString(-->
+    <!--                undefined,-->
+    <!--                {-->
+    <!--                  year: "numeric",-->
+    <!--                  month: "short",-->
+    <!--                  day: "numeric",-->
+    <!--                  hour: "2-digit",-->
+    <!--                  minute: "2-digit",-->
+    <!--                }-->
+    <!--              )-->
+    <!--            : "Not updated yet"-->
+    <!--        }}</span>-->
+    <!--      </p>-->
+    <!--    </div>-->
 
     <div class="mb-4 flex justify-between items-center">
       <button
@@ -138,14 +138,14 @@ const { mutate } = useMutation({
   },
 });
 
-const metadataUpdated = computed(() => {
-  return (
-    userData.value?.bio ||
-    userData.value?.color ||
-    userData.value?.display_name ||
-    userData.value?.email_verified
-  );
-});
+// const metadataUpdated = computed(() => {
+//   return (
+//     userData.value?.bio ||
+//     userData.value?.color ||
+//     userData.value?.display_name ||
+//     userData.value?.email_verified
+//   );
+// });
 
 const profileDetails = computed(() => [
   {
