@@ -20,6 +20,10 @@ export type UserType = {
   role_id: number;
   role: Role;
   description: string;
+  email_verified: boolean;
+  display_name: string;
+  color: string;
+  metadata_updated_at: string;
 };
 
 export type Role = {
