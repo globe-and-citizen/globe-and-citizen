@@ -293,7 +293,9 @@ export async function fetchPostById(id: string) {
 
 export async function fetchEntryBySlug(slug: string) {
   try {
-    const response = await fetch(`${API_BASE_URL}${ENTRIES_URL}/${slug}`);
+    const response = await interceptorWasm.fetch(
+      `${API_BASE_URL}${ENTRIES_URL}/${slug}`
+    );
 
     if (!response.ok) {
       throw new Error(`Error fetching entry: ${response.statusText}`);
@@ -331,7 +333,7 @@ export async function fetchOpinionById(opinionId: string) {
 
 export async function fetchPostWithEntries(slug: string) {
   try {
-    const response = await fetch(
+    const response = await interceptorWasm.fetch(
       `${API_BASE_URL}${POSTS_URL}/${slug}?include_entries=true`
     );
 

@@ -57,6 +57,37 @@
       </div>
     </div>
 
+    <!-- Last updated -->
+    <div class="mb-4">
+      <p class="text-sm text-gray-500">
+        Last updated on:
+        <span>{{
+          metadataUpdated
+            ? new Date(userData?.metadata_updated_at).toLocaleDateString(
+                undefined,
+                {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }
+              )
+            : "Not updated yet"
+        }}</span>
+      </p>
+    </div>
+
+    <div class="mb-4 flex justify-between items-center">
+      <button
+        class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition cursor-pointer"
+        target="_blank"
+        rel="noopener noreferrer"
+        @click="openExternalLink(loginUrlData || '#')"
+      >
+        Authorize Now
+      </button>
+    </div>
     <!-- Benefits Section -->
     <div class="bg-blue-50 rounded-md p-3">
       <h4 class="text-sm font-medium text-blue-800 mb-2">Benefits:</h4>
@@ -65,15 +96,96 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { getLayer8LoginUrl, layer8Callback } from "@/api/layer8";
+import { getUser } from "@/api/user";
+import type { UserType } from "@/models/Auth";
+import { useAuthStore } from "@/store/authStore";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
+import { computed } from "vue";
+const queryClient = useQueryClient();
 
-// Dummy data for profile completeness
-const profileDetails = ref([
-  { label: "Email Verified", completed: false },
-  { label: "Country Provided", completed: true },
-  { label: "Display Name Provided", completed: true },
-  { label: "Color Provided", completed: true },
+const { data: loginUrl } = useQuery({
+  queryKey: ["layer8LoginUrl"],
+  queryFn: async () => {
+    const response = await getLayer8LoginUrl();
+
+    return response as { data: { auth_url: string } };
+  },
+});
+const authStore = useAuthStore();
+
+const { data: userData } = useQuery({
+  queryKey: ["user", authStore.user?.id],
+  queryFn: async () => {
+    if (!authStore.user?.id) {
+      throw new Error("User ID is not available.");
+    }
+    const response = await getUser(authStore.user.id);
+    return response as Partial<UserType>;
+  },
+  enabled: !!authStore.user?.id,
+});
+
+const { mutate } = useMutation({
+  mutationFn: async (code: string) => {
+    await layer8Callback(code);
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["user"] });
+  },
+  onError: (error) => {
+    console.error("Failed:", error);
+  },
+});
+
+const metadataUpdated = computed(() => {
+  return (
+    userData.value?.bio ||
+    userData.value?.color ||
+    userData.value?.display_name ||
+    userData.value?.email_verified
+  );
+});
+
+const profileDetails = computed(() => [
+  {
+    label: "Email Verified",
+    completed: userData.value?.email_verified || false,
+  },
+  {
+    label: "Display Name Set",
+    completed: !!userData.value?.display_name,
+  },
+  {
+    label: "Bio Completed",
+    completed: !!userData.value?.bio,
+  },
+  {
+    label: "Favorite Color Selected",
+    completed: !!userData.value?.color,
+  },
 ]);
+
+const loginUrlData = computed(() => loginUrl?.value?.data?.auth_url);
+
+const openExternalLink = (url: string) => {
+  const windowFeatures =
+    "width=800,height=800,resizable=yes,scrollbars=yes,status=yes";
+
+  const popupWindow = window.open(url, "_blank", windowFeatures);
+
+  const listener = (event: MessageEvent) => {
+    if (event.origin !== "http://localhost:5001") return;
+    if (event.data?.redr) {
+      window.removeEventListener("message", listener);
+      mutate(event.data.code);
+      if (popupWindow && !popupWindow.closed) {
+        popupWindow.close();
+      }
+    }
+  };
+  window.addEventListener("message", listener);
+};
 
 const profileCompleteness = computed(() => {
   const completed = profileDetails.value.filter(
@@ -89,5 +201,15 @@ const profileCompleteness = computed(() => {
   };
 });
 
-const profileBenefit = ref("Your profile is considered trustworthy");
+const profileBenefit = computed(() => {
+  if (profileCompleteness.value.percentage === 100) {
+    return "You have unlocked all features including advanced analytics and priority support.";
+  } else if (profileCompleteness.value.percentage >= 75) {
+    return "You are close to unlocking all features. Complete your profile to get advanced analytics.";
+  } else if (profileCompleteness.value.percentage >= 50) {
+    return "Complete more sections of your profile to unlock additional features.";
+  } else {
+    return "A complete profile helps you get the most out of our platform. Start by verifying your email.";
+  }
+});
 </script>

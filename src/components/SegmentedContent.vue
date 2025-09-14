@@ -1,6 +1,6 @@
 <template>
   <!-- Root wrapper: overflow-hidden restored; toolbar coordinates now relative so no internal scroll expansion -->
-  <div ref="rootEl" class="overflow-hidden relative">
+  <div ref="rootEl" class="overflow-hidden relative pb-30">
     <div
       class="post-content flip-container relative"
       :class="{ flipping: isFlipping }"
@@ -87,7 +87,7 @@
       v-if="openCommentBox"
       class="comment-box absolute"
       :style="{
-        top: toolbarPosition?.top ? toolbarPosition?.top + 40 + 'px' : 0,
+        top: toolbarPosition?.top ? toolbarPosition?.top + 40 + 'px' : '40px',
         left: toolbarPosition?.left + 'px',
       }"
     >

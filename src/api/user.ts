@@ -9,7 +9,7 @@ export async function getUser(userId: number): Promise<{ data: UserType }> {
       throw new Error("No response received from fetchWithAuth");
     }
     const data = await response.json();
-
+    console.log("Fetched user data:", data);
     return data.data;
   } catch (error) {
     console.error("Error fetching user:", error);
