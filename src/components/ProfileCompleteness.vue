@@ -181,6 +181,7 @@ const openExternalLink = (url: string) => {
   const popupWindow = window.open(url, "_blank", windowFeatures);
 
   const listener = (event: MessageEvent) => {
+    console.log("event origin", event.origin);
     if (event.origin !== layer8BaseUrl) return;
     if (event.data?.redr) {
       window.removeEventListener("message", listener);
