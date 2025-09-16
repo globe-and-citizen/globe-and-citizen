@@ -134,28 +134,33 @@
                           >
                             Viewpoint
                           </p>
-                          <img
-                            v-if="opinion.user.profile_picture_url"
-                            alt="User profile picture"
-                            :src="opinion.user.profile_picture_url"
-                            class="w-6 h-6 object-cover rounded-full ml-2 mr-1"
-                          />
-                          <div
-                            v-else
-                            class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2 mr-1"
-                            :style="
-                              generateUserIcon(opinion.user?.username || 'A')
-                            "
+                          <RouterLink
+                            :to="`/profile/${opinion.user.username}`"
+                            class="flex items-center ml-2"
                           >
-                            <span class="text-black text-sm font-normal">
-                              {{
-                                opinion.user?.username
-                                  .charAt(0)
-                                  .toUpperCase() || "A"
-                              }}
-                            </span>
-                          </div>
-                          <p>@{{ opinion.user.username }}</p>
+                            <img
+                              v-if="opinion.user.profile_picture_url"
+                              alt="User profile picture"
+                              :src="opinion.user.profile_picture_url"
+                              class="w-6 h-6 object-cover rounded-full mr-1"
+                            />
+                            <div
+                              v-else
+                              class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ml-2 mr-1"
+                              :style="
+                                generateUserIcon(opinion.user?.username || 'A')
+                              "
+                            >
+                              <span class="text-black text-sm font-normal">
+                                {{
+                                  opinion.user?.username
+                                    .charAt(0)
+                                    .toUpperCase() || "A"
+                                }}
+                              </span>
+                            </div>
+                            <p>@{{ opinion.user.username }}</p>
+                          </RouterLink>
                           <p
                             class="ml-auto text-xs font-medium font-lato text-black-40 content-center"
                           >
@@ -193,7 +198,7 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute, onBeforeRouteUpdate } from "vue-router";
+import { useRoute, onBeforeRouteUpdate, RouterLink } from "vue-router";
 import { computed, ref, onMounted } from "vue";
 import type { Post } from "@/models/Posts";
 import NewsPostHeadingSection from "@/views/NewsPost/sections/NewsPostHeadingSection.vue";

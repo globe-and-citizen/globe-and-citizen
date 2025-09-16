@@ -71,7 +71,10 @@
       </p>
     </div>
 
-    <div class="mb-4 flex justify-between items-center">
+    <div
+      v-if="!isProfileByIdView"
+      class="mb-4 flex justify-between items-center"
+    >
       <button
         class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition cursor-pointer"
         target="_blank"
@@ -82,7 +85,7 @@
       </button>
     </div>
     <!-- Benefits Section -->
-    <div class="bg-blue-50 rounded-md p-3">
+    <div v-if="!isProfileByIdView" class="bg-blue-50 rounded-md p-3">
       <h4 class="text-sm font-medium text-blue-800 mb-2">Benefits:</h4>
       <p class="text-sm text-blue-700">{{ profileBenefit }}</p>
     </div>
@@ -96,7 +99,13 @@ import { useAuthStore } from "@/store/authStore";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import dayjs from "dayjs";
 import { computed } from "vue";
+import { useRoute } from "vue-router";
 const queryClient = useQueryClient();
+
+const isProd = import.meta.env.PROD;
+const layer8BaseUrl = isProd
+  ? import.meta.env.VITE_LAYER8_BASE_URL_PROD
+  : import.meta.env.VITE_LAYER8_BASE_URL_DEV;
 
 const { data: loginUrl } = useQuery({
   queryKey: ["layer8LoginUrl"],
@@ -106,18 +115,21 @@ const { data: loginUrl } = useQuery({
     return response as { data: { auth_url: string } };
   },
 });
+const route = useRoute();
+const isProfileByIdView = route.params.id !== undefined;
 const authStore = useAuthStore();
+const username = isProfileByIdView ? route.params.id : authStore.user?.username;
 
 const { data: userData } = useQuery({
-  queryKey: ["user", authStore.user?.id],
+  queryKey: ["user", username],
   queryFn: async () => {
-    if (!authStore.user?.id) {
-      throw new Error("User ID is not available.");
+    if (!authStore.user?.username) {
+      throw new Error("User username is not available.");
     }
-    const response = await getUser(authStore.user.id);
+    const response = await getUser(username as string);
     return response as Partial<UserType>;
   },
-  enabled: !!authStore.user?.id,
+  enabled: !!authStore.user?.username,
 });
 
 const { mutate } = useMutation({
@@ -169,7 +181,7 @@ const openExternalLink = (url: string) => {
   const popupWindow = window.open(url, "_blank", windowFeatures);
 
   const listener = (event: MessageEvent) => {
-    if (event.origin !== "http://auth.layer8proxy.net") return;
+    if (event.origin !== layer8BaseUrl) return;
     if (event.data?.redr) {
       window.removeEventListener("message", listener);
       mutate(event.data.code);

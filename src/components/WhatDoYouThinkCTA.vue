@@ -20,5 +20,4 @@ import { useRoute } from "vue-router";
 import Button from "./Button.vue";
 const route = useRoute();
 const postSlug = route.params.id as string;
-console.log(route);
 </script>

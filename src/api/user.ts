@@ -2,14 +2,13 @@ import type { SignInResponse, UserType } from "@/models/Auth";
 import { fetchWithAuth } from "./auth";
 import { API_BASE_URL } from "./constants";
 
-export async function getUser(userId: number): Promise<{ data: UserType }> {
+export async function getUser(username: string): Promise<{ data: UserType }> {
   try {
-    const response = await fetchWithAuth(`${API_BASE_URL}/users/${userId}`);
+    const response = await fetchWithAuth(`${API_BASE_URL}/users/${username}`);
     if (!response) {
       throw new Error("No response received from fetchWithAuth");
     }
     const data = await response.json();
-    console.log("Fetched user data:", data);
     return data.data;
   } catch (error) {
     console.error("Error fetching user:", error);
@@ -64,11 +63,11 @@ export async function fetchUsersCount(): Promise<{ data: number }> {
 }
 
 export async function updateUser(
-  userId: number,
+  username: string,
   userData: Partial<UserType>
 ): Promise<SignInResponse> {
   try {
-    const response = await fetchWithAuth(`${API_BASE_URL}/users/${userId}`, {
+    const response = await fetchWithAuth(`${API_BASE_URL}/users/${username}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",

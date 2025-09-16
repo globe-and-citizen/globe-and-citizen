@@ -71,6 +71,7 @@ const routes = [
             redirect: "/profile/public-view",
           },
           { path: "public-view", component: PublicView },
+          { path: ":id", component: PublicView },
           { path: "profile-menu", component: MobileProfileMenuView },
           { path: "profile-settings", component: ProfileSettingsView },
           { path: "change-password", component: PublicView },

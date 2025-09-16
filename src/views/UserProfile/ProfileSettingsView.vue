@@ -60,9 +60,8 @@
               <Input
                 id="username"
                 v-model="editForm.username"
-                readonly
+                disabled
                 placeholder="Enter your username"
-                class=":readonly:bg-gray-100"
               />
             </div>
             <div class="grid gap-2">
@@ -73,16 +72,6 @@
                 placeholder="Enter your email"
               />
             </div>
-          </div>
-
-          <div class="grid gap-2">
-            <Label for="bio">Bio (optional)</Label>
-            <Textarea
-              id="bio"
-              v-model="editForm.bio"
-              class="min-h-[84px]"
-              placeholder="Enter your bio (optional)"
-            />
           </div>
           <!-- description -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
@@ -124,6 +113,39 @@
             </div>
           </div>
         </div>
+        <div></div>
+        <div>
+          <h5 class="text-black font-bold text-xl mt-8">
+            Layer8 Provided Metadata
+          </h5>
+          <div class="grid gap-4 py-4">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
+              <div class="grid gap-2">
+                <Label for="username">Display name</Label>
+                <Input
+                  id="displayName"
+                  v-model="editForm.display_name"
+                  disabled
+                />
+              </div>
+              <div class="grid gap-2">
+                <Label for="email">Color</Label>
+                <Input id="color" v-model="editForm.color" disabled />
+              </div>
+            </div>
+
+            <div class="grid gap-2">
+              <Label for="bio">Bio (provided from Layer8)</Label>
+              <Textarea
+                id="bio"
+                v-model="editForm.bio"
+                class="min-h-[84px]"
+                disabled
+                placeholder="Enter your bio (optional)"
+              />
+            </div>
+          </div>
+        </div>
         <Button
           size="small"
           class="ml-auto"
@@ -153,15 +175,15 @@ import { uploadToCloudinary } from "@/api/images.ts";
 const queryClient = useQueryClient();
 const authStore = useAuthStore();
 const { data: userData } = useQuery({
-  queryKey: ["user", authStore.user?.id],
+  queryKey: ["user", authStore.user?.username],
   queryFn: async () => {
-    if (!authStore.user?.id) {
-      throw new Error("User ID is not available.");
+    if (!authStore.user?.username) {
+      throw new Error("User username is not available.");
     }
-    const response = await getUser(authStore.user.id);
+    const response = await getUser(authStore.user.username);
     return response as Partial<UserType>;
   },
-  enabled: !!authStore.user?.id,
+  enabled: !!authStore.user?.username,
 });
 // State for inline avatar upload
 const isUploadingProfileImage = ref(false);
@@ -210,8 +232,9 @@ const { mutate: updateUserMutation } = useMutation({
       profile_picture_url: updatedUser.profile_picture_url,
       role_id: updatedUser.role?.id || 3,
       website: updatedUser.website,
+      username: updatedUser.username,
     };
-    return updateUser(authStore.user.id, payload);
+    return updateUser(authStore.user.username, payload);
   },
   onSuccess: (res: unknown) => {
     // Attempt to update auth store user instantly if API returns user

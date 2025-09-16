@@ -72,6 +72,5 @@ export const generateUserIcon = (username: string) => {
   ];
 
   const index = username.charCodeAt(0) % colors.length;
-  console.log(`background-color: ${username ? colors[index] : "#F0F0F0"}`);
   return `background-color: ${username ? colors[index] : "#F0F0F0"};`;
 };

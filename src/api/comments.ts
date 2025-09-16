@@ -1,7 +1,6 @@
 import { API_BASE_URL, COMMENTS_URL, POSTS_URL } from "./constants";
 import { useAuthStore } from "../store/authStore";
-import { fetchWithAuth } from "./auth";
-import * as interceptorWasm from "layer8-interceptor-production";
+import { fetchWithAuth, interceptorFetch } from "./auth";
 
 export async function createComment(
   postId: string,
@@ -50,19 +49,16 @@ export async function createComment(
     }
   }
 
-  const response = await interceptorWasm.fetch(
-    `${API_BASE_URL}${COMMENTS_URL}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        post_id: postId,
-        content,
-      }),
-    }
-  );
+  const response = await interceptorFetch(`${API_BASE_URL}${COMMENTS_URL}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      post_id: postId,
+      content,
+    }),
+  });
 
   if (!response.ok) {
     throw new Error(`Error creating comment: ${response.statusText}`);
@@ -105,7 +101,7 @@ export async function analyzeComments(
   comments?: string[]
 ): Promise<{ data: { summary: string } }> {
   try {
-    const response = await interceptorWasm.fetch(
+    const response = await interceptorFetch(
       `${API_BASE_URL}${POSTS_URL}/${postId}/analyze-comments`,
       {
         method: "POST",
@@ -129,7 +125,7 @@ export async function analyzeComments(
 
 export async function getCommentChildren(parentId: number) {
   try {
-    const response = await interceptorWasm.fetch(
+    const response = await interceptorFetch(
       `${API_BASE_URL}/comments/children?parent_id=${parentId}`,
       {
         method: "GET",

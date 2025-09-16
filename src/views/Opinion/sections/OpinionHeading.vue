@@ -7,7 +7,9 @@
         Viewpoint by {{ post?.author }}
       </div>
       <h1 class="text-3xl font-bold mb-2"></h1>
-      <UserDetailsBlock :user="post?.user" />
+      <RouterLink :to="`/profile/${post?.user.username}`">
+        <UserDetailsBlock :user="post?.user" />
+      </RouterLink>
 
       <p class="text-4xl font-bold font-libr mt-5 mb-2">{{ post?.title }}</p>
       <p class="font-lato text-base text-white-60">
@@ -20,6 +22,7 @@
 import UserDetailsBlock from "@/components/UserDetailsBlock.vue";
 import type { Post } from "@/models/Posts";
 import dayjs from "dayjs";
+import { RouterLink } from "vue-router";
 
 interface Props {
   post: Post;

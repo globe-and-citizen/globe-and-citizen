@@ -73,7 +73,6 @@ export async function fetchUsersPostReaction(postId: string): Promise<unknown> {
       throw new Error(`Error fetching post reactions`);
     }
     const data = await response.json();
-    console.log("Post reactions response:", data);
     return data;
   } catch (error) {
     console.error("Error fetching post reactions:", error);

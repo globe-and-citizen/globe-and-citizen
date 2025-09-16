@@ -146,10 +146,6 @@ const { open, close } = useModal({
       close();
     },
     onCancel: () => {
-      console.log({
-        commentId: commentToDelete.value.commentId,
-        parentId: commentToDelete.value.parentCommentId,
-      });
       close();
     },
   },

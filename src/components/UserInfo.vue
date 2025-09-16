@@ -22,6 +22,7 @@
         <p class="font-bold text-2xl">@{{ user?.username }}</p>
 
         <RouterLink
+          v-if="!isProfileByIdView"
           to="profile-settings"
           class="cursor-pointer underline underline-offset-4 decoration-black-100 hidden md:block"
           >Edit</RouterLink
@@ -42,17 +43,27 @@ import type { UserType } from "@/models/Auth";
 import { useAuthStore } from "@/store/authStore.ts";
 import { useQuery } from "@tanstack/vue-query";
 import { generateUserIcon } from "@/composables/utils.ts";
+import { useRoute } from "vue-router";
+import { computed } from "vue";
 
+const route = useRoute();
+const isProfileByIdView = computed(() => route.params.id !== undefined);
 const authStore = useAuthStore();
+const username = isProfileByIdView.value
+  ? route.params.id
+  : authStore.user?.username;
+
 const { data: user } = useQuery({
-  queryKey: ["user", authStore.user?.id],
+  queryKey: ["user", username],
   queryFn: async () => {
-    if (!authStore.user?.id) {
-      throw new Error("User ID is not available.");
+    if (!authStore.user?.username) {
+      throw new Error("User username is not available.");
     }
-    const response = await getUser(authStore.user.id);
+    const response = await getUser(username as string);
     return response as Partial<UserType>;
   },
-  enabled: !!authStore.user?.id,
+  enabled: isProfileByIdView.value
+    ? !!route.params.id
+    : !!authStore.user?.username,
 });
 </script>

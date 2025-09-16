@@ -10,7 +10,6 @@ export async function getLayer8LoginUrl(): Promise<unknown> {
     }
 
     const data = await response.json();
-    console.log(data);
     return data;
   } catch (error) {
     console.error("Error fetching layer8 login url:", error);
@@ -35,7 +34,6 @@ export async function layer8Callback(code: string): Promise<unknown> {
     }
 
     const data = await response.json();
-    console.log(data);
     return data;
   } catch (error) {
     console.error("Error fetching layer8 callback url:", error);

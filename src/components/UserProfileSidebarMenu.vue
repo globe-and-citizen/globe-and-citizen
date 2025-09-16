@@ -62,15 +62,15 @@ const groupedMenu = computed(() => {
 });
 
 const { data: userData } = useQuery({
-  queryKey: ["user", authStore.user?.id],
+  queryKey: ["user", authStore.user?.username],
   queryFn: async () => {
-    if (!authStore.user?.id) {
-      throw new Error("User ID is not available.");
+    if (!authStore.user?.username) {
+      throw new Error("User username is not available.");
     }
-    const response = await getUser(authStore.user.id);
+    const response = await getUser(authStore.user.username);
     return response as Partial<UserType>;
   },
-  enabled: !!authStore.user?.id,
+  enabled: !!authStore.user?.username,
 });
 
 const isAdmin = computed(() => {

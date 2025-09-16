@@ -288,7 +288,7 @@ const queryClient = useQueryClient();
 
 const { mutate: updateUserMutation } = useMutation({
   mutationFn: (user: Partial<UserType>) =>
-    updateUser(selectedUser.value!.id, user),
+    updateUser(selectedUser.value!.username, user),
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ["allUsers"] });
   },

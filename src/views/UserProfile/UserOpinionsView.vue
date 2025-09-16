@@ -28,5 +28,4 @@ const { data } = useQuery<FetchPostsType>({
   queryFn: () => getUsersArticles(pageSize.value, currentPage.value),
   refetchOnWindowFocus: true,
 });
-console.log(data);
 </script>
