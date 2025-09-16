@@ -106,7 +106,7 @@ const isProd = import.meta.env.PROD;
 const layer8BaseUrl = isProd
   ? import.meta.env.VITE_LAYER8_BASE_URL_PROD
   : import.meta.env.VITE_LAYER8_BASE_URL_DEV;
-
+console.log(layer8BaseUrl);
 const { data: loginUrl } = useQuery({
   queryKey: ["layer8LoginUrl"],
   queryFn: async () => {
