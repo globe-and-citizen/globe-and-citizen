@@ -103,11 +103,14 @@
               />
             </div>
             <div class="grid gap-2">
-              <Label for="dateOfBirth">Date of Birth</Label>
+              <Label for="dateOfBirth"
+                >Date of Birth <i>(coming soon)</i></Label
+              >
               <Input
                 id="dateOfBirth"
                 v-model="editForm.date_of_birth"
                 type="date"
+                disabled
                 placeholder="Enter your date of birth (optional)"
               />
             </div>
@@ -129,7 +132,7 @@
                 />
               </div>
               <div class="grid gap-2">
-                <Label for="email">Color</Label>
+                <Label for="color">Color</Label>
                 <Input id="color" v-model="editForm.color" disabled />
               </div>
             </div>

@@ -27,9 +27,9 @@
       </div>
     </div>
     <div class="flex gap-8 justify-center mt-2 font-lato text-white-60">
-      <p>Trust Rate <b>99%</b></p>
+      <p>Trust Rate <b>0%</b></p>
       <p>Opinions <b>12</b></p>
-      <p>Followers <b>233</b></p>
+      <p>Followers <b>0</b></p>
     </div>
   </div>
 </template>
