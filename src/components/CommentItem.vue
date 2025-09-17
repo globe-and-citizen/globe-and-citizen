@@ -26,7 +26,10 @@
     <div class="bg-white rounded-lg p-4">
       <!-- Comment Header -->
       <div class="flex items-start justify-between mb-3">
-        <div class="flex items-center gap-3">
+        <RouterLink
+          :to="`/profile/${comment.user.username}`"
+          class="flex items-center gap-3"
+        >
           <div class="w-10 h-10 rounded-full overflow-hidden">
             <img
               v-if="comment.user.profile_picture_url"
@@ -56,7 +59,7 @@
               }}</span>
             </div>
           </div>
-        </div>
+        </RouterLink>
         <button
           v-if="isAdmin || userId === comment.user.id"
           class="h-8 w-8 p-0 flex items-center justify-center text-gray-400 hover:text-gray-600"
@@ -86,7 +89,7 @@
 
       <!-- Comment Actions -->
       <div class="flex items-center gap-1">
-        <button
+        <!-- <button
           class="h-8 px-2 text-sm flex items-center"
           :class="
             comment.isLiked
@@ -108,22 +111,14 @@
           @click="handleDislike(comment.id)"
         >
           👎 {{ comment.dislikes || 0 }}
-        </button>
+        </button> -->
 
         <button
           v-if="depth < maxDepth"
-          class="h-8 px-2 text-sm flex items-center text-gray-400 hover:text-blue-600 disabled:opacity-50"
+          class="h-8 px-2 text-sm flex items-center text-black-100 hover:text-blue-600 disabled:opacity-50"
           :disabled="!isLoggedIn"
           @click="toggleReplyInput"
         >
-          <svg class="h-4 w-4 mr-1" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-            />
-          </svg>
           <span>{{ isLoggedIn ? "Reply" : "Sign-in to reply" }}</span>
         </button>
       </div>
@@ -135,7 +130,7 @@
             v-if="authStore.user?.profile_picture_url"
             :src="authStore.user.profile_picture_url"
             alt="User Avatar"
-            class="w-10 h-10 rounded-full mb-2"
+            class="w-10 h-10 rounded-full mb-2 object-cover"
           />
         </div>
         <textarea
@@ -230,6 +225,7 @@ import { createComment, getCommentChildren } from "@/api/comments.ts";
 import { formatCommentDate, generateUserIcon } from "@/composables/utils.ts";
 import { useAuthStore } from "@/store/authStore.ts";
 import type { Comment } from "@/models/Comments";
+import { RouterLink } from "vue-router";
 
 const props = defineProps<{
   comment: Comment;

@@ -60,7 +60,7 @@
         v-if="user?.profile_picture_url"
         :src="user.profile_picture_url"
         alt="User Avatar"
-        class="w-10 h-10 rounded-full mb-4"
+        class="w-10 h-10 rounded-full mb-4 object-cover"
       />
 
       <div class="mb-4 w-full">
