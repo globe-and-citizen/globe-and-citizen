@@ -488,22 +488,6 @@ watchEffect(() => {
   }
 });
 
-const openModal = () => {
-  if (!post.value) {
-    console.warn("Post data not loaded yet");
-    return;
-  }
-  if (!modalInstance.value) {
-    modalInstance.value = createModal();
-  }
-
-  if (modalInstance.value) {
-    modalInstance.value.open();
-  } else {
-    console.error("Failed to create modal instance");
-  }
-};
-
 const headerState: ComputedRef<HeaderState> = computed(() => {
   return authStore.user?.id ? "logged-in" : "no-user-search";
 });

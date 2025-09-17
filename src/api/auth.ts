@@ -14,7 +14,7 @@ export async function interceptorFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  return (await fetch(url, options)) as Response;
+  return (await interceptorWasm.fetch(url, options)) as Response;
 }
 
 export async function fetchWithAuth(

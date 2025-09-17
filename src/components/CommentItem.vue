@@ -313,13 +313,13 @@ const replyMutation = useMutation({
   },
 });
 
-const handleLike = async (commentId: number) => {
-  console.log("Like comment", commentId);
-};
+// const handleLike = async (commentId: number) => {
+//   console.log("Like comment", commentId);
+// };
 
-const handleDislike = async (commentId: number) => {
-  console.log("Dislike comment", commentId);
-};
+// const handleDislike = async (commentId: number) => {
+//   console.log("Dislike comment", commentId);
+// };
 
 const handleReply = async () => {
   replyFormErrors.value = {};
