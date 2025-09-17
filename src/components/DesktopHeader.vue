@@ -279,10 +279,7 @@
                   v-if="postView"
                   class="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                   :disabled="isLoading || !post"
-                  @click="
-                    openModal();
-                    closeMobileMenu();
-                  "
+                  @click="navigateToCreateOpinion()"
                 >
                   <svg
                     width="20"
@@ -303,7 +300,7 @@
                   Write
                 </button>
 
-                <button
+                <!-- <button
                   class="flex items-center justify-center gap-2 w-full py-3 px-4 bg-gray-100 rounded-md text-gray-700 hover:bg-gray-200 font-medium"
                 >
                   <svg
@@ -319,7 +316,7 @@
                     />
                   </svg>
                   Notifications
-                </button>
+                </button> -->
 
                 <button
                   class="w-full py-3 px-4 border border-red-500 text-red-500 rounded-md hover:bg-red-50 font-medium"
@@ -490,22 +487,6 @@ watchEffect(() => {
     });
   }
 });
-
-const openModal = () => {
-  if (!post.value) {
-    console.warn("Post data not loaded yet");
-    return;
-  }
-  if (!modalInstance.value) {
-    modalInstance.value = createModal();
-  }
-
-  if (modalInstance.value) {
-    modalInstance.value.open();
-  } else {
-    console.error("Failed to create modal instance");
-  }
-};
 
 const headerState: ComputedRef<HeaderState> = computed(() => {
   return authStore.user?.id ? "logged-in" : "no-user-search";

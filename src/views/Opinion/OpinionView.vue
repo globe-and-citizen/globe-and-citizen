@@ -1,7 +1,7 @@
 <template>
   <OpinionHeading v-if="opinion" :post="opinion" />
   <img
-    v-if="opinion"
+    v-if="opinion?.url_to_image"
     :src="opinion?.url_to_image"
     alt="Opinion hero image"
     class="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[557px] xl:h-[557px] w-full object-cover"
@@ -15,7 +15,13 @@
         <p class="text-sm md:text-base">Loading opinion article...</p>
       </div>
 
-      <div v-if="opinion" class="lg:pb-10 font-lato">
+      <div
+        v-if="opinion"
+        class="lg:pb-10 font-lato"
+        @touchstart="handleTouchStart"
+        @touchmove="handleTouchMove"
+        @touchend="handleTouchEnd"
+      >
         <!-- Mobile and Tablet Layout (< lg) -->
         <div class="lg:hidden">
           <!-- Main Content -->
@@ -103,6 +109,61 @@ import OpinionReadersInsights from "@/views/Opinion/sections/OpinionReadersInsig
 const route = useRoute();
 const opinionId = route.params.opinionId as string;
 const showAnnotations = ref(false);
+
+const touchStartX = ref(0);
+const touchStartY = ref(0);
+const touchEndX = ref(0);
+const touchEndY = ref(0);
+const minSwipeDistance = 50;
+const maxVerticalDistance = 100;
+const handleTouchStart = (event: TouchEvent) => {
+  if (window.innerWidth >= 1024) return;
+  const touch = event.touches[0];
+  touchStartX.value = touch.clientX;
+  touchStartY.value = touch.clientY;
+};
+
+const handleTouchMove = (event: TouchEvent) => {
+  if (window.innerWidth >= 1024) return;
+  const touch = event.touches[0];
+  touchEndX.value = touch.clientX;
+  touchEndY.value = touch.clientY;
+};
+
+const handleTouchEnd = () => {
+  if (window.innerWidth >= 1024) return;
+
+  const deltaX = touchEndX.value - touchStartX.value;
+  const deltaY = Math.abs(touchEndY.value - touchStartY.value);
+  const screenWidth = window.innerWidth;
+  const edgeThreshold = screenWidth;
+
+  const isFromLeftEdge = touchStartX.value <= edgeThreshold;
+  const isFromRightEdge = touchStartX.value >= screenWidth - edgeThreshold;
+  const isHorizontalSwipe = Math.abs(deltaX) >= minSwipeDistance;
+  const isNotTooVertical = deltaY <= maxVerticalDistance;
+
+  if (
+    (isFromLeftEdge || isFromRightEdge) &&
+    isHorizontalSwipe &&
+    isNotTooVertical
+  ) {
+    if (
+      (isFromRightEdge && deltaX < -minSwipeDistance) ||
+      (isFromLeftEdge && deltaX > minSwipeDistance)
+    ) {
+      showAnnotations.value = !showAnnotations.value;
+
+      if ("vibrate" in navigator) {
+        navigator.vibrate(50);
+      }
+    }
+  }
+  touchStartX.value = 0;
+  touchStartY.value = 0;
+  touchEndX.value = 0;
+  touchEndY.value = 0;
+};
 
 // Fetch the opinion
 const {

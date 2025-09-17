@@ -13,10 +13,10 @@
       <button
         class="absolute bottom-2 right-2 bg-primary-red text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
         @click="(e:MouseEvent) => {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log('clicked')
           openDeleteModal();
+          e.preventDefault();
+          // e.stopPropagation();
+          console.log('clicked')
         }"
       >
         Delete
@@ -57,12 +57,13 @@
   </RouterLink>
 
   <ConfirmDeleteModal
-    v-if="isDeleteModalOpen"
+    v-model="isDeleteModalOpen"
     :title="'Confirm Deletion'"
     @confirm="() => confirmDelete(data?.slug ?? '')"
     @cancel="closeDeleteModal"
   >
-    Are you sure you want to delete this article?
+    Are you sure you want to delete
+    <b>"{{ data?.title || "this article" }}"</b>?
   </ConfirmDeleteModal>
 </template>
 
@@ -70,7 +71,7 @@
 import { deleteOpinion } from "@/api/opinions.ts";
 import { useAuthStore } from "@/store/authStore.ts";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
-import { computed, defineProps, ref } from "vue";
+import { computed, defineProps, ref, watchEffect } from "vue";
 import dayjs from "dayjs";
 import { RouterLink } from "vue-router";
 import ConfirmDeleteModal from "@/components/modals/ConfirmDeleteModal.vue";
@@ -85,7 +86,6 @@ const queryClient = useQueryClient();
 const authStore = useAuthStore();
 const userName = computed(() => authStore.user?.username || "");
 const isDeleteModalOpen = ref(false);
-
 const openDeleteModal = () => {
   isDeleteModalOpen.value = true;
 };
@@ -116,4 +116,8 @@ const confirmDelete = (slug: string) => {
   deleteOpinionMutation(slug);
   closeDeleteModal();
 };
+
+watchEffect(() => {
+  console.log(isDeleteModalOpen.value);
+});
 </script>

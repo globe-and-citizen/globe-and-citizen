@@ -18,11 +18,14 @@
 
 <script setup lang="ts">
 import UserProfileSidebarMenu from "@/components/UserProfileSidebarMenu.vue";
-import { computed } from "vue";
+import { computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 
 const route = useRoute();
 const isProfileByIdView = computed(() => route.params.id !== undefined);
+onMounted(() => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 </script>
 
 <style scoped></style>
