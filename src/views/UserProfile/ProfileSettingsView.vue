@@ -262,7 +262,7 @@ const { mutate: updateUserMutation } = useMutation({
       user.value = { ...user.value, ...updatedUser } as UserType;
       editForm.value = { ...editForm.value, ...updatedUser };
     }
-    queryClient.invalidateQueries({ queryKey: ["user", authStore.user?.id] });
+    queryClient.invalidateQueries({ queryKey: ["user"] });
     toast("Profile updated successfully!", {
       autoClose: 3000,
       type: "success",
