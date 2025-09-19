@@ -1,5 +1,5 @@
 <template>
-  <div class="px-4 md:px-8 xl:px-[120px] my-4 md:my-10">
+  <div class="px-4 md:px-8 xl:px-[120px] py-4 md:py-10">
     <div class="flex gap-6 gc-container">
       <div v-if="!isProfileByIdView" class="w-fit hidden md:block">
         <UserProfileSidebarMenu />

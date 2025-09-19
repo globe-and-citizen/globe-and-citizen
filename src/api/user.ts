@@ -48,25 +48,6 @@ export async function fetchAllUsers(
   }
 }
 
-export async function fetchUsersCount(): Promise<{ data: number }> {
-  try {
-    const response = await fetchWithAuth(`${API_BASE_URL}/users-count`);
-
-    if (!response || !response.ok) {
-      throw new Error(
-        `Error fetching users count: ${
-          response ? response.statusText : "No response"
-        }`
-      );
-    }
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching users count:", error);
-    throw error;
-  }
-}
-
 export async function updateUser(
   username: string,
   userData: Partial<UserType>

@@ -1,7 +1,9 @@
 <template>
   <DesktopHeader />
   <main>
-    <RouterView />
+    <div class="min-h-[calc(100vh-457px)]">
+      <RouterView />
+    </div>
   </main>
   <ModalsContainer />
   <Footer />
