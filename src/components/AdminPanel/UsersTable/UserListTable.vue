@@ -89,16 +89,23 @@
         <Button
           variant="outline"
           size="sm"
-          :disabled="!table.getCanPreviousPage()"
-          @click="table.previousPage()"
+          :disabled="isLoading || currentPage === 1"
+          @click="currentPage--"
         >
           Previous
         </Button>
+        <span class="text-sm mx-2">
+          Page {{ currentPage }} of
+          {{ Math.ceil((data?.data.totalCount ?? 0) / pageSize) }}
+        </span>
         <Button
           variant="outline"
           size="sm"
-          :disabled="!table.getCanNextPage()"
-          @click="table.nextPage()"
+          :disabled="
+            isLoading ||
+            (data?.data && data.data.totalCount / pageSize < currentPage)
+          "
+          @click="currentPage++"
         >
           Next
         </Button>
@@ -277,13 +284,15 @@ const searchStore = useSearchStore();
 const currentPage = ref(1);
 const pageSize = ref(10);
 
-const { data } = useQuery<{ data: UserType[] }>({
-  queryKey: ["allUsers"],
+const { data, isLoading } = useQuery<{
+  data: { totalCount: number; list: UserType[] };
+}>({
+  queryKey: ["allUsers", currentPage, pageSize],
   queryFn: () =>
     fetchAllUsers(pageSize.value, currentPage.value, searchStore.query),
   refetchOnWindowFocus: true,
 });
-const tableData = computed(() => data.value?.data ?? []);
+const tableData = computed(() => data.value?.data?.list ?? []);
 const queryClient = useQueryClient();
 
 const { mutate: updateUserMutation } = useMutation({

@@ -20,11 +20,16 @@ export async function fetchAllUsers(
   limit?: number,
   offset?: number,
   search?: string
-): Promise<{ data: UserType[] }> {
+): Promise<{
+  data: {
+    totalCount: number;
+    list: UserType[];
+  };
+}> {
   const params = new URLSearchParams();
 
-  if (limit) params.append("limit", limit.toString());
-  if (offset) params.append("offset", offset.toString());
+  if (limit) params.append("size", limit.toString());
+  if (offset) params.append("page", offset.toString());
   if (search) params.append("search", search);
   const queryString = params.toString();
 
