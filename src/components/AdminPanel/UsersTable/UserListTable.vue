@@ -284,7 +284,9 @@ const searchStore = useSearchStore();
 const currentPage = ref(1);
 const pageSize = ref(10);
 
-const { data } = useQuery<{ data: { totalCount: number; list: UserType[] } }>({
+const { data, isLoading } = useQuery<{
+  data: { totalCount: number; list: UserType[] };
+}>({
   queryKey: ["allUsers", currentPage, pageSize],
   queryFn: () =>
     fetchAllUsers(pageSize.value, currentPage.value, searchStore.query),
