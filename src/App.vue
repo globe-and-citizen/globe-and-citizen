@@ -25,6 +25,6 @@ async function Layer8Init() {
 }
 
 onMounted(async () => {
-  // await Layer8Init();
+  await Layer8Init();
 });
 </script>
