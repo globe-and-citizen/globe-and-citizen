@@ -48,7 +48,7 @@ const props = defineProps<{
 
 function handleView() {
   // Navigate to user profile page
-  window.open(`/profile/${props.user.id}`, "_blank");
+  window.open(`/profile/${props.user.username}`, "_blank");
 }
 function handleEdit() {
   props.onEdit(props.user);
