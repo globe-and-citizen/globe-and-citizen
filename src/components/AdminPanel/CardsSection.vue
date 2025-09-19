@@ -8,7 +8,7 @@
         <component :is="UsersIcon" class="h-4 w-4" />
       </CardHeader>
       <CardContent>
-        <div class="text-2xl font-bold">{{ usersCount?.data }}</div>
+        <div class="text-2xl font-bold">{{ users?.data.totalCount }}</div>
       </CardContent>
     </Card>
     <Card class="mt-2 lg:mt-5">
@@ -20,44 +20,19 @@
       </CardHeader>
       <CardContent>
         <div class="text-2xl font-bold">{{ postsCount?.data }}</div>
-        <p class="text-xs text-muted-foreground">Toatl news published</p>
-      </CardContent>
-    </Card>
-    <Card class="mt-2 lg:mt-5">
-      <CardHeader
-        class="flex flex-row items-center justify-between space-y-0 pb-2"
-      >
-        <CardTitle class="text-sm font-medium"> Total Ads </CardTitle>
-        <component :is="Advertisement" class="h-4 w-4" />
-      </CardHeader>
-      <CardContent>
-        <div class="text-2xl font-bold">101</div>
-        <p class="text-xs text-muted-foreground">+20.1% from last month</p>
-      </CardContent>
-    </Card>
-    <Card class="mt-2 lg:mt-5">
-      <CardHeader
-        class="flex flex-row items-center justify-between space-y-0 pb-2"
-      >
-        <CardTitle class="text-sm font-medium"> Total Users </CardTitle>
-        <component :is="UsersIcon" class="h-4 w-4" />
-      </CardHeader>
-      <CardContent>
-        <div class="text-2xl font-bold">101</div>
-        <p class="text-xs text-muted-foreground">+20.1% from last month</p>
+        <p class="text-xs text-muted-foreground">Total news published</p>
       </CardContent>
     </Card>
   </div>
 </template>
 <script setup lang="ts">
 import { fetchPostsCount } from "@/api/posts";
-import { fetchUsersCount } from "@/api/user";
+import { fetchAllUsers } from "@/api/user";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/vue-query";
-
 import UsersIcon from "@/assets/icons/users.svg";
 import JournalsIcon from "@/assets/icons/journals.svg";
-import Advertisement from "@/assets/icons/advertisement.svg";
+import type { UserType } from "@/models/Auth";
 
 const { data: postsCount } = useQuery<{ data: number }>({
   queryKey: ["postsCount"],
@@ -65,9 +40,11 @@ const { data: postsCount } = useQuery<{ data: number }>({
   refetchOnWindowFocus: true,
 });
 
-const { data: usersCount } = useQuery<{ data: number }>({
-  queryKey: ["usersCount"],
-  queryFn: fetchUsersCount,
+const { data: users } = useQuery<{
+  data: { totalCount: number; list: UserType[] };
+}>({
+  queryKey: ["allUsers", 1, 10],
+  queryFn: () => fetchAllUsers(10, 1, ""),
   refetchOnWindowFocus: true,
 });
 </script>

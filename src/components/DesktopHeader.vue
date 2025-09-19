@@ -373,21 +373,12 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  type ComputedRef,
-  onMounted,
-  ref,
-  watch,
-  watchEffect,
-} from "vue";
+import { computed, type ComputedRef, onMounted, ref, watch } from "vue";
 import { useAuthStore } from "@/store/authStore.ts";
 import logo from "../assets/logo.svg";
 import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/store/searchStore.ts";
 import { useDebounceFn } from "@vueuse/core";
-import { useModal } from "vue-final-modal";
-import CreateOpinionModal from "@/components/modals/CreateOpinionModal.vue";
 import { useQuery } from "@tanstack/vue-query";
 import type { Post } from "@/models/Posts";
 import { fetchPostById } from "@/api/posts.ts";
@@ -401,17 +392,20 @@ type HeaderState = "default" | "no-user" | "no-user-search" | "logged-in";
 const authStore = useAuthStore();
 const router = useRouter();
 const searchStore = useSearchStore();
+const storeUsername = computed(() =>
+  authStore.user?.username ? authStore.user.username : ""
+);
 
 const { data: userData } = useQuery({
-  queryKey: ["user", authStore.user?.username],
+  queryKey: ["user", storeUsername.value],
   queryFn: async () => {
-    if (!authStore.user?.username) {
+    if (!storeUsername.value) {
       throw new Error("User username is not available.");
     }
-    const response = await getUser(authStore.user.username);
+    const response = await getUser(storeUsername.value);
     return response as Partial<UserType>;
   },
-  enabled: !!authStore.user?.username,
+  enabled: computed(() => !!storeUsername.value),
 });
 
 const profilePictureUrl = computed(() => {
@@ -458,35 +452,7 @@ const { data: post, isLoading } = useQuery<
   enabled: computed(() => postView.value && !!postId.value),
 });
 
-const modalInstance = ref();
-
-const createModal = () => {
-  if (!post.value) return null;
-  return useModal({
-    component: CreateOpinionModal,
-    attrs: {
-      post_id: post.value.id || 0,
-      post_name: post.value.title || "",
-      post_slug: post.value.slug || "",
-    },
-  });
-};
-
-watch(postId, () => {
-  modalInstance.value = null;
-});
 const newOpinionStore = useNewOpinionStore();
-
-watchEffect(() => {
-  if (post.value && postView.value) {
-    modalInstance.value = createModal();
-    newOpinionStore.setPost({
-      id: post.value.id,
-      title: post.value.title,
-      slug: post.value.slug,
-    });
-  }
-});
 
 const headerState: ComputedRef<HeaderState> = computed(() => {
   return authStore.user?.id ? "logged-in" : "no-user-search";

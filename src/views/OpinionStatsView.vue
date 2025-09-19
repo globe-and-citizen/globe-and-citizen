@@ -1,6 +1,5 @@
 <template>
-  <div class="gc-container px-10">
-    <h1 class="text-2xl">opinion stats page</h1>
+  <div class="gc-container px-32 py-10">
     <LeafletMap />
   </div>
 </template>
