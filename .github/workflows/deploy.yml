@@ -46,7 +46,7 @@ jobs:
       # 6. Setup GCP credentials (write secret to temp file)
       - name: Setup GCP credentials
         run: |
-          echo "${{ secrets.GCP_SA_KEY_B64 }}" | base64 --decode > gcp-key.json
+          echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > gcp-key.json
 
       # 7. Deploy to Google Cloud Storage
       - name: Deploy to GCS
