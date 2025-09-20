@@ -1,0 +1,14 @@
+steps:
+  - name: node:18
+    entrypoint: npm
+    args: ["install"]
+
+  - name: node:18
+    entrypoint: npm
+    args: ["run", "build"]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gsutil
+    args: ["-m", "rsync", "-r", "dist/", "gs://globeandcitizen.com"]
+
+timeout: "900s"
