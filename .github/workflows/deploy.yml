@@ -49,5 +49,4 @@ jobs:
         with:
           path: dist/
           destination: gs://globeandcitizen.com
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GCP_SA_KEY }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
