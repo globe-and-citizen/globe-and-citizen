@@ -9,8 +9,6 @@ steps:
     env:
       - "VITE_API_BASE_URL=$$VITE_API_BASE_URL"
       - "VITE_FORWARD_PROXY_URL=$$VITE_FORWARD_PROXY_URL"
-      - "VITE_LAYER8_BASE_URL_PROD=$VITE_LAYER8_BASE_URL_PROD"
-      - "VITE_LAYER8_BASE_URL_DEV=$VITE_LAYER8_BASE_URL_DEV"
       - "NODE_ENV=production"
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
