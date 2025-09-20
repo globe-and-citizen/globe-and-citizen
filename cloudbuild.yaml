@@ -7,21 +7,22 @@ steps:
     entrypoint: npm
     args: ["run", "build"]
     env:
-      - "VITE_API_BASE_URL=$_VITE_API_BASE_URL"
-      - "VITE_FORWARD_PROXY_URL=$_VITE_FORWARD_PROXY_URL"
-      - "VITE_LAYER8_BASE_URL_PROD=$_VITE_LAYER8_BASE_URL_PROD"
-    availableSecrets:
-      secretManager:
-        - versionName: projects/gc-now-471214/secrets/VITE_API_BASE_URL/versions/latest
-          env: _VITE_API_BASE_URL
-        - versionName: projects/gc-now-471214/secrets/VITE_FORWARD_PROXY_URL/versions/latest
-          env: _VITE_FORWARD_PROXY_URL
-        - versionName: projects/gc-now-471214/secrets/VITE_LAYER8_BASE_URL_PROD/versions/latest
-          env: _VITE_LAYER8_BASE_URL_PROD
+      - "VITE_API_BASE_URL=$$VITE_API_BASE_URL"
+      - "VITE_FORWARD_PROXY_URL=$$VITE_FORWARD_PROXY_URL"
+      - "VITE_LAYER8_BASE_URL_PROD=$$VITE_LAYER8_BASE_URL_PROD"
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gsutil
     args: ["-m", "rsync", "-r", "dist/", "gs://globeandcitizen.com"]
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/gc-now-471214/secrets/VITE_API_BASE_URL/versions/latest
+      env: VITE_API_BASE_URL
+    - versionName: projects/gc-now-471214/secrets/VITE_FORWARD_PROXY_URL/versions/latest
+      env: VITE_FORWARD_PROXY_URL
+    - versionName: projects/gc-now-471214/secrets/VITE_LAYER8_BASE_URL_PROD/versions/latest
+      env: VITE_LAYER8_BASE_URL_PROD
 
 options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
