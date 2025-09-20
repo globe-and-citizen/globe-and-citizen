@@ -1,59 +1,59 @@
-name: Build and Deploy Vue App
+# name: Build and Deploy Vue App
 
-on:
-  push:
-    branches:
-      - main # Trigger on pushes to main branch
+# on:
+#   push:
+#     branches:
+#       - main # Trigger on pushes to main branch
 
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+# jobs:
+#   build-and-deploy:
+#     runs-on: ubuntu-latest
 
-    steps:
-      # 1. Checkout repo
-      - name: Checkout repository
-        uses: actions/checkout@v3
+#     steps:
+#       # 1. Checkout repo
+#       - name: Checkout repository
+#         uses: actions/checkout@v3
 
-      # 2. Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
+#       # 2. Setup Node.js
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: "18"
 
-      # 3. Install dependencies
-      - name: Install dependencies
-        run: npm i
+#       # 3. Install dependencies
+#       - name: Install dependencies
+#         run: npm i
 
-      # 4. Inject VITE_* secrets and optionally generate config.json
-      - name: Generate runtime config (optional)
-        run: |
-          echo "{
-            \"API_BASE_URL\": \"${{ secrets.VITE_API_BASE_URL }}\",
-            \"FORWARD_PROXY_URL\": \"${{ secrets.VITE_FORWARD_PROXY_URL }}\",
-            \"LAYER8_BASE_URL_PROD\": \"${{ secrets.VITE_LAYER8_BASE_URL_PROD }}\",
-            \"LAYER8_BASE_URL_DEV\": \"${{ secrets.VITE_LAYER8_BASE_URL_DEV }}\"
-          }" > public/config.json
+#       # 4. Inject VITE_* secrets and optionally generate config.json
+#       - name: Generate runtime config (optional)
+#         run: |
+#           echo "{
+#             \"API_BASE_URL\": \"${{ secrets.VITE_API_BASE_URL }}\",
+#             \"FORWARD_PROXY_URL\": \"${{ secrets.VITE_FORWARD_PROXY_URL }}\",
+#             \"LAYER8_BASE_URL_PROD\": \"${{ secrets.VITE_LAYER8_BASE_URL_PROD }}\",
+#             \"LAYER8_BASE_URL_DEV\": \"${{ secrets.VITE_LAYER8_BASE_URL_DEV }}\"
+#           }" > public/config.json
 
-      # 5. Build Vue app with VITE_* environment variables
-      - name: Build Vue app
-        run: npm run build
-        env:
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
-          VITE_FORWARD_PROXY_URL: ${{ secrets.VITE_FORWARD_PROXY_URL }}
-          VITE_LAYER8_BASE_URL_PROD: ${{ secrets.VITE_LAYER8_BASE_URL_PROD }}
-          VITE_LAYER8_BASE_URL_DEV: ${{ secrets.VITE_LAYER8_BASE_URL_DEV }}
+#       # 5. Build Vue app with VITE_* environment variables
+#       - name: Build Vue app
+#         run: npm run build
+#         env:
+#           VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+#           VITE_FORWARD_PROXY_URL: ${{ secrets.VITE_FORWARD_PROXY_URL }}
+#           VITE_LAYER8_BASE_URL_PROD: ${{ secrets.VITE_LAYER8_BASE_URL_PROD }}
+#           VITE_LAYER8_BASE_URL_DEV: ${{ secrets.VITE_LAYER8_BASE_URL_DEV }}
 
-      # 6. Setup GCP credentials (write secret to temp file)
-      - name: Setup GCP credentials
-        run: |
-          echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > gcp-key.json
+#       # 6. Setup GCP credentials (write secret to temp file)
+#       - name: Setup GCP credentials
+#         run: |
+#           echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > gcp-key.json
 
-      # 7. Deploy to Google Cloud Storage
-      - name: Deploy to GCS
-        uses: google-github-actions/upload-cloud-storage@v1
-        with:
-          path: dist/
-          destination: globeandcitizen.com
-          process_gcloudignore: false
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcp-key.json
+#       # 7. Deploy to Google Cloud Storage
+#       - name: Deploy to GCS
+#         uses: google-github-actions/upload-cloud-storage@v1
+#         with:
+#           path: dist/
+#           destination: globeandcitizen.com
+#           process_gcloudignore: false
+#         env:
+#           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcp-key.json
