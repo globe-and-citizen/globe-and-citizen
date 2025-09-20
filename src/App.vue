@@ -13,7 +13,7 @@ import { VueQueryDevtools } from "@tanstack/vue-query-devtools";
 
 // const forward_proxy_url = import.meta.env.VITE_FORWARD_PROXY_URL;
 const backend_url = import.meta.env.VITE_API_BASE_URL;
-console.log("backend:", backend_url);
+console.log("backend-:", backend_url);
 // async function Layer8Init() {
 //   try {
 //     const providers = [ServiceProvider.new(backend_url)];
