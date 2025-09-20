@@ -7,9 +7,9 @@ steps:
     entrypoint: npm
     args: ["run", "build"]
     env:
-      - "VITE_API_BASE_URL=$$VITE_API_BASE_URL"
-      - "VITE_FORWARD_PROXY_URL=$$VITE_FORWARD_PROXY_URL"
-      - "NODE_ENV=production"
+      - "VITE_API_BASE_URL=$_VITE_API_BASE_URL"
+      - "VITE_FORWARD_PROXY_URL=$_VITE_FORWARD_PROXY_URL"
+      - "VITE_LAYER8_BASE_URL_PROD=$_VITE_LAYER8_BASE_URL_PROD"
 
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gsutil
