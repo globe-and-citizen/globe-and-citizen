@@ -1,8 +1,7 @@
 steps:
-  # Install dependencies (using ci for faster, reliable builds)
   - name: "node:18"
     entrypoint: "npm"
-    args: ["ci"]
+    args: ["i"]
 
   # Build the application with environment variables
   - name: "node:18"
