@@ -21,11 +21,11 @@ steps:
 
 availableSecrets:
   secretManager:
-    - versionName: projects/gc-now-471214/secrets/_VITE_API_BASE_URL/versions/latest
+    - versionName: projects/gc-now-471214/secrets/_VITE_API_BASE_URL
       env: VITE_API_BASE_URL
-    - versionName: projects/gc-now-471214/secrets/_VITE_FORWARD_PROXY_URL/versions/latest
+    - versionName: projects/gc-now-471214/secrets/_VITE_FORWARD_PROXY_URL
       env: VITE_FORWARD_PROXY_URL
-    - versionName: projects/gc-now-471214/secrets/_VITE_LAYER8_BASE_URL_PROD/versions/latest
+    - versionName: projects/gc-now-471214/secrets/_VITE_LAYER8_BASE_URL_PROD
       env: VITE_LAYER8_BASE_URL_PROD
 
 options:
