@@ -44,9 +44,16 @@ jobs:
           VITE_LAYER8_BASE_URL_DEV: ${{ secrets.VITE_LAYER8_BASE_URL_DEV }}
 
       # 6. Deploy to Google Cloud Storage
+
+      - name: Setup GCP credentials
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" > $HOME/gcp-key.json
+
       - name: Deploy to GCS
         uses: google-github-actions/upload-cloud-storage@v1
         with:
           path: dist/
           destination: gs://globeandcitizen.com
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          process_gcloudignore: false
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: $HOME/gcp-key.json
