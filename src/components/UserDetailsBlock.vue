@@ -19,7 +19,7 @@
       <div class="flex flex-col items-baseline gap-1">
         <p class="text-xl font-bold font-lato">@{{ user?.username }}</p>
         <p class="text-base text-white-60 font-lato font-normal">
-          IT developer at Microsoft
+          {{ !!user?.description.length ? user?.description : "" }}
         </p>
         <p class="text-xs text-white-60 font-lato font-medium">
           Chisinau, Republic of Moldova
@@ -39,6 +39,5 @@ import { generateUserIcon } from "@/composables/utils.ts";
 interface Props {
   user: UserType;
 }
-
 defineProps<Props>();
 </script>

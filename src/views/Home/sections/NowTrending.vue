@@ -42,9 +42,12 @@
         </div>
         <div class="flex items-center gap-2 mb-4">
           <img
-            src="https://randomuser.me/api/portraits/men/32.jpg"
+            :src="
+              post?.user.profile_picture_url ||
+              'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'
+            "
             alt="user image"
-            class="w-8 h-8 rounded-full"
+            class="w-8 h-8 rounded-full object-cover"
           />
           <p class="font-semibold font-lato text-black">
             {{ post?.author.substring(0, 20) + "..." }}

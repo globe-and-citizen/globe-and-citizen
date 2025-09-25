@@ -89,7 +89,12 @@
         </div>
       </div>
       <div>
-        <Button title="See all anthograms" size="medium" variant="secondary" />
+        <Button
+          title="See all anthograms"
+          size="medium"
+          variant="secondary"
+          :url="`${postSlug}/stats`"
+        />
       </div>
     </div>
   </div>
@@ -99,10 +104,14 @@
 import Button from "@/components/Button.vue";
 import type { Sentence } from "@/models/Posts";
 import { computed } from "vue";
+import { useRoute } from "vue-router";
 const props = defineProps<{
   modelValue: boolean;
   sentences?: Sentence[];
 }>();
+const route = useRoute();
+const postSlug = route.params.id as string;
+
 const sentencesComputed = computed(() => props.sentences || []);
 const totals = computed(() =>
   sentencesComputed.value.reduce(

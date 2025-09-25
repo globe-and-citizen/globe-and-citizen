@@ -9,12 +9,13 @@ import {
   SIGN_UP_URL,
 } from "./constants";
 import * as interceptorWasm from "layer8-interceptor-production";
+import { traceUser } from "./user";
 
 export async function interceptorFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  return (await interceptorWasm.fetch(url, options)) as Response;
+  return (await fetch(url, options)) as Response;
 }
 
 export async function fetchWithAuth(
@@ -90,6 +91,7 @@ export async function signIn(
       credentials: "include",
       body: JSON.stringify(data),
     });
+
     const responseData: SignInResponse | { data: string } =
       await response.json();
 
@@ -115,6 +117,15 @@ export async function signIn(
       authStore.setToken(responseData.data.token);
       authStore.setUser(responseData.data.user);
       authStore.setRefreshToken(responseData.data.refresh_token);
+      try {
+        const userLocation = await traceUser();
+        if (userLocation?.country_long) {
+          authStore.setTrackedLocation(userLocation.country_long);
+        }
+      } catch (err) {
+        console.error("Failed to trace user after sign-in", err);
+      }
+
       return responseData as SignInResponse;
     } else {
       throw new Error(

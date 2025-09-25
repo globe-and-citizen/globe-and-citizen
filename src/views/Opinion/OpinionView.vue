@@ -26,18 +26,22 @@
         <div class="lg:hidden">
           <!-- Main Content -->
           <div class="mb-6">
-            <div class="gc-container max-w-[700px] mx-auto">
-              <div class="prose prose-sm md:prose-lg max-w-none relative">
-                <div class="ql-editor">
-                  <Segmented
-                    v-model:show-annotations="showAnnotations"
-                    :content="sanitizedContent"
-                    :sentences="opinion.sentences as any"
-                    :post-type="'opinion'"
-                  />
+            <div class="gc-container max-w-[900px] mx-auto">
+              <!-- Make content + toggle a flex row so toggle can be sticky within this scope -->
+              <div class="prose prose-sm md:prose-lg max-w-none relative flex">
+                <div class="flex-1">
+                  <div class="ql-editor">
+                    <Segmented
+                      v-model:show-annotations="showAnnotations"
+                      :content="sanitizedContent"
+                      :sentences="opinion.sentences as any"
+                      :post-type="'opinion'"
+                    />
+                  </div>
                 </div>
+                <!-- Sticky toggle: only appears on md+ and only while this container is in view -->
                 <div
-                  class="hidden md:flex flex-col items-center gap-3 fixed top-1/2 right-38 xl:-right-16 translate-x-full -translate-y-1/2 transform rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit"
+                  class="hidden md:flex flex-col items-center gap-3 sticky top-1/2 mt-28 -translate-y-1/2 transform ml-4 rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit self-start"
                 >
                   <p
                     class="text-center font-lato font-semibold text-black-60 text-sm"
@@ -58,18 +62,21 @@
           </div>
         </div>
         <!-- Reading content wrapper made relative so we can position toggle beside it -->
-        <div class="mx-auto gap-10 w-full flex-1 max-w-[700px]">
-          <div class="hidden lg:flex flex-col prose prose-lg relative">
-            <div class="ql-editor">
-              <Segmented
-                v-model:show-annotations="showAnnotations"
-                :content="sanitizedContent"
-                :sentences="opinion.sentences as any"
-                :post-type="'opinion'"
-              />
+        <div class="mx-auto gap-10 w-full flex-1 max-w-[1100px]">
+          <!-- Desktop layout (lg+) with sticky toggle inside content scope -->
+          <div class="hidden lg:flex flex-row prose prose-lg relative">
+            <div class="flex-1 ml-36">
+              <div class="ql-editor">
+                <Segmented
+                  v-model:show-annotations="showAnnotations"
+                  :content="sanitizedContent"
+                  :sentences="opinion.sentences as any"
+                  :post-type="'opinion'"
+                />
+              </div>
             </div>
             <div
-              class="hidden lg:flex flex-col items-center gap-3 absolute top-1/2 lg:-right-0 xl:-right-16 translate-x-full -translate-y-1/2 transform rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit"
+              class="flex flex-col items-center gap-3 sticky top-1/2 -translate-y-1/2 transform mt-28 ml-6 rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit self-start"
             >
               <p
                 class="text-center font-lato font-semibold text-black-60 text-sm"
@@ -86,6 +93,16 @@
               </label>
             </div>
           </div>
+          <div class="flex flex-col items-center mb-6 md:mb-8">
+            <!-- Like/Dislike Buttons -->
+            <LikeDislikeButtons
+              :likes="opinion.likes"
+              :dislikes="opinion.dislikes"
+              :user-vote="opinion.user_vote"
+              @react="handleReaction"
+            />
+          </div>
+
           <CommentsSection v-if="opinion" :post="opinion" type="opinion" />
         </div>
       </div>
@@ -101,14 +118,18 @@ import OpinionHeading from "@/views/Opinion/sections/OpinionHeading.vue";
 import DOMPurify from "dompurify";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import "@/quill.css";
-import { useQuery } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { fetchOpinionById } from "@/api/posts.ts";
 import CommentsSection from "@/components/CommentsSection.vue";
 import Segmented from "@/components/SegmentedContent.vue";
 import OpinionReadersInsights from "@/views/Opinion/sections/OpinionReadersInsights.vue";
+import LikeDislikeButtons from "@/components/LikeDislikeButtons.vue";
+import { opinionReaction } from "@/api/reactions";
+
 const route = useRoute();
 const opinionId = route.params.opinionId as string;
 const showAnnotations = ref(false);
+const queryClient = useQueryClient();
 
 const touchStartX = ref(0);
 const touchStartY = ref(0);
@@ -177,6 +198,25 @@ const {
     },
   })
 );
+
+// Likes Mutation
+const publishMutation = useMutation({
+  mutationFn: opinionReaction,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["postReaction", opinionId] });
+    queryClient.invalidateQueries({ queryKey: ["opinion", opinionId] });
+  },
+  onError: () => {
+    console.error("Failed to publish article");
+  },
+});
+
+const handleReaction = (score: 1 | -1) => {
+  publishMutation.mutate({
+    entry_id: opinion.value!.id,
+    score,
+  });
+};
 
 // Handle route updates for opinion changes
 onBeforeRouteUpdate(async (to) => {

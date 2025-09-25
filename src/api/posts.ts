@@ -278,7 +278,7 @@ export async function fetchPostById(id: string) {
 
 export async function fetchEntryBySlug(slug: string) {
   try {
-    const response = await interceptorFetch(
+    const response = await fetchWithAuth(
       `${API_BASE_URL}${ENTRIES_URL}/${slug}`
     );
 
@@ -298,7 +298,7 @@ export async function fetchOpinionById(opinionId: string) {
   try {
     // For now, we're reusing the same API endpoint but in a real application
     // you would have a dedicated opinions endpoint
-    const response = await interceptorFetch(
+    const response = await fetchWithAuth(
       `${API_BASE_URL}${ENTRIES_URL}/${opinionId}`
     );
 

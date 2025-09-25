@@ -169,7 +169,7 @@
     >
       <div
         v-if="isMobileMenuOpen"
-        class="fixed top-0 right-0 h-full w-full bg-white shadow-2xl z-50 lg:hidden overflow-y-auto"
+        class="fixed top-0 right-0 h-full w-full bg-white shadow-2xl z-[999999] lg:hidden overflow-y-auto"
       >
         <!-- Mobile Menu Header -->
         <div class="flex items-center justify-between p-4 border-b">

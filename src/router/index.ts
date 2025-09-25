@@ -61,6 +61,12 @@ const routes = [
         component: OpinionStatsView,
         props: true,
       },
+      {
+        path: "post/:id/stats",
+        name: "PostStatsView",
+        component: () => import("@/views/OpinionStatsView.vue"),
+        props: true,
+      },
       { path: "advertisement/:id", component: AdvertisementView },
       {
         path: "profile",
