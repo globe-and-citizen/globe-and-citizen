@@ -2,7 +2,7 @@
   <!-- Root wrapper: overflow-hidden restored; toolbar coordinates now relative so no internal scroll expansion -->
   <div ref="rootEl" class="overflow-hidden relative pb-30">
     <div
-      class="post-content flip-container relative"
+      class="post-content flip-container relative max-w-[700px]"
       :class="{ flipping: isFlipping }"
       @click="onSentenceClick"
       v-html="annotatedHTML"

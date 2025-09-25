@@ -441,39 +441,44 @@ const handleShares = (data: CountryData[], map: L.Map | null): void => {
 
 // Map initialization
 const initMap = async (): Promise<void> => {
-  if (allInteractions.value && allInteractions.value.length) {
-    await nextTick();
+  await nextTick();
 
-    if (toRaw(mapRef.value)) {
-      toRaw(mapRef.value)!.eachLayer((layer) => {
-        toRaw(mapRef.value)!.removeLayer(layer);
-      });
-    } else {
-      mapRef.value = L.map("map", {
-        zoomControl: false,
-        attributionControl: false,
-        worldCopyJump: true,
-        maxBoundsViscosity: 0,
-      });
+  if (toRaw(mapRef.value)) {
+    // clear previous layers
+    toRaw(mapRef.value)!.eachLayer((layer) => {
+      toRaw(mapRef.value)!.removeLayer(layer);
+    });
+  } else {
+    // initialize map
+    mapRef.value = L.map("map", {
+      zoomControl: false,
+      attributionControl: false,
+      worldCopyJump: true,
+      maxBoundsViscosity: 0,
+    });
+  }
+
+  // add base tiles
+  L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
+    {
+      maxZoom: 10,
+      minZoom: 3,
     }
+  ).addTo(toRaw(mapRef.value) as L.Map);
 
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
-      {
-        maxZoom: 10,
-        minZoom: 3,
-      }
-    ).addTo(toRaw(mapRef.value) as L.Map);
+  // set bounds
+  const bounds: L.LatLngBoundsExpression = [
+    [-85, -180],
+    [85, 180],
+  ];
+  toRaw(mapRef.value)!.setMaxBounds(bounds);
+  toRaw(mapRef.value)!.fitBounds(bounds);
 
-    const bounds: L.LatLngBoundsExpression = [
-      [-85, -180],
-      [85, 180],
-    ];
-
-    toRaw(mapRef.value)!.setMaxBounds(bounds);
-    toRaw(mapRef.value)!.fitBounds(bounds);
-
+  // ✅ Only draw overlays if data exists
+  if (allInteractions.value && allInteractions.value.length) {
     const rawMap = toRaw(mapRef.value);
+
     if (
       selectedDataType.value.value === "interactions" &&
       interactionsExists.value
@@ -487,11 +492,12 @@ const initMap = async (): Promise<void> => {
     } else if (selectedDataType.value.value === "shares" && sharesExist.value) {
       handleShares(allInteractions.value, rawMap as L.Map);
     }
-
-    window.addEventListener("resize", () => {
-      toRaw(mapRef.value)!.invalidateSize();
-    });
   }
+
+  // fix responsiveness
+  window.addEventListener("resize", () => {
+    toRaw(mapRef.value)!.invalidateSize();
+  });
 };
 
 const handleTouchStart = (e: TouchEvent): void => {
