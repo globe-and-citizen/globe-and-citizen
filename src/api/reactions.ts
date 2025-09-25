@@ -57,7 +57,7 @@ export async function opinionReaction(
       throw new Error(`Post reactions api error`);
     }
 
-    return await response.json();
+    return response;
   } catch (error) {
     console.error("Error adding/removing reaction:", error);
     throw error;

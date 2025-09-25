@@ -5,6 +5,13 @@ export type FetchPostsType = {
   data: Post[];
 };
 
+type CountryVote = {
+  country: string;
+  likes: number;
+  dislikes: number;
+  comments: number;
+};
+
 export type Post = {
   id: number;
   created_at: string;
@@ -34,6 +41,7 @@ export type Post = {
   userId?: number;
   total_comments: number;
   entries_count?: number;
+  country_votes?: CountryVote[];
 };
 
 export type Sentence = {

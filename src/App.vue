@@ -23,7 +23,6 @@ async function Layer8Init() {
     throw new Error(`Failed to initialize encrypted tunnel: ${err}`);
   }
 }
-
 onMounted(async () => {
   await Layer8Init();
 });

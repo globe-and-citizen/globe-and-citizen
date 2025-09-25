@@ -36,6 +36,8 @@ import { computed, ref, watch } from "vue";
 import type { FetchPostsType } from "@/models/Posts";
 import { fetchAllPosts } from "@/api/posts.ts";
 import { type Id, toast, type ToastOptions } from "vue3-toastify";
+// import { useAuthStore } from "@/store/authStore";
+// import { traceUser } from "@/api/user";
 
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
@@ -46,6 +48,31 @@ const postsQuery = useQuery<FetchPostsType>({
   queryFn: () => fetchAllPosts(10, 1),
   refetchOnWindowFocus: true,
 });
+
+// const authStore = useAuthStore();
+// // Get user location
+// const { data: userLocation } = useQuery<{
+//   country_long: string;
+//   ip_addr: string;
+// }>({
+//   queryKey: ["userLocation"],
+//   queryFn: traceUser,
+//   staleTime: 1000 * 60 * 60 * 24, // 24 hours
+//   enabled: computed(
+//     () => authStore.isUserAuthenticated && !authStore.trackedLocation
+//   ),
+// });
+
+// watch(
+//   () => authStore.token,
+//   async (newVal) => {
+//     console.log(newVal);
+//     if (newVal && userLocation.value?.country_long) {
+//       console.log("updating?");
+//       authStore.setTrackedLocation(userLocation.value.country_long);
+//     }
+//   }
+// );
 
 watch(
   () => postsQuery.error.value,

@@ -72,6 +72,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import CustomSelect from "@/components/CustomSelect.vue";
 import CustomButton from "@/components/CustomButton.vue";
+import { countries as allCountries } from "@/components/Charts/Map/countries";
 
 // Types
 interface DataOption {
@@ -106,89 +107,70 @@ interface CountryWithMostParticipants {
   totalShares?: number;
 }
 
-// Dummy data
-const dummyInteractions: CountryData[] = [
-  {
-    location: "US",
-    comments: 1250,
-    interactions: { likes: 3400, dislikes: 120 },
-    shares: 890,
-  },
-  {
-    location: "GB",
-    comments: 980,
-    interactions: { likes: 2100, dislikes: 95 },
-    shares: 654,
-  },
-  {
-    location: "DE",
-    comments: 756,
-    interactions: { likes: 1800, dislikes: 78 },
-    shares: 432,
-  },
-  {
-    location: "FR",
-    comments: 623,
-    interactions: { likes: 1450, dislikes: 65 },
-    shares: 321,
-  },
-  {
-    location: "JP",
-    comments: 534,
-    interactions: { likes: 1200, dislikes: 45 },
-    shares: 287,
-  },
-  {
-    location: "CA",
-    comments: 445,
-    interactions: { likes: 950, dislikes: 38 },
-    shares: 198,
-  },
-  {
-    location: "AU",
-    comments: 312,
-    interactions: { likes: 720, dislikes: 25 },
-    shares: 156,
-  },
-  {
-    location: "IT",
-    comments: 267,
-    interactions: { likes: 610, dislikes: 22 },
-    shares: 134,
-  },
-];
+// Prop for real data
+type IncomingCountryVote = {
+  country: string;
+  likes: number;
+  dislikes: number;
+  comments: number;
+};
+const props = defineProps<{ countryVotes?: IncomingCountryVote[] }>();
 
-const countries: CountryInfo[] = [
-  { code: "US", country: "United States", coordinates: [39.8283, -98.5795] },
-  { code: "GB", country: "United Kingdom", coordinates: [55.3781, -3.436] },
-  { code: "DE", country: "Germany", coordinates: [51.1657, 10.4515] },
-  { code: "FR", country: "France", coordinates: [46.2276, 2.2137] },
-  { code: "JP", country: "Japan", coordinates: [36.2048, 138.2529] },
-  { code: "CA", country: "Canada", coordinates: [56.1304, -106.3468] },
-  { code: "AU", country: "Australia", coordinates: [-25.2744, 133.7751] },
-  { code: "IT", country: "Italy", coordinates: [41.8719, 12.5674] },
-];
+// Full countries catalogue from file, normalized to expected type
+type RawCountry = {
+  country: string;
+  code: string;
+  coordinates: [number, number] | number[];
+};
+const countries: CountryInfo[] = (allCountries as RawCountry[]).map((c) => ({
+  code: c.code,
+  country: c.country,
+  coordinates: [c.coordinates[0] as number, c.coordinates[1] as number],
+}));
 
 // Refs
 const mapRef = ref<L.Map | null>(null);
 const totalCountries = ref<number>(0);
 const isStatsVisible = ref<boolean>(false);
 
-// Data processing
-const allInteractions = dummyInteractions;
-const interactionsExists = allInteractions?.some(
-  (el) => el.interactions?.likes || el.interactions?.dislikes
-);
-const commentsExists = allInteractions?.some((el) => el.comments);
-const sharesExist = allInteractions?.some((el) => el.shares);
+// Utilities
+const normalizeCountryCode = (code: string): string => {
+  const upper = (code || "").toUpperCase();
+  if (upper === "UK") return "GB"; // alias
+  return upper;
+};
 
-const selectedDataType = ref<DataOption>(
-  interactionsExists
-    ? { label: "Likes and dislikes", value: "interactions" }
-    : commentsExists
-    ? { label: "Comments", value: "comments" }
-    : { label: "Shares", value: "shares" }
+// Data processing from props
+const allInteractions = computed<CountryData[]>(() => {
+  const input = props.countryVotes || [];
+  return input.map((cv) => ({
+    location: normalizeCountryCode(cv.country),
+    comments: cv.comments || 0,
+    interactions: {
+      likes: cv.likes || 0,
+      dislikes: cv.dislikes || 0,
+    },
+    shares: 0, // not provided currently
+  }));
+});
+
+const interactionsExists = computed<boolean>(() =>
+  allInteractions.value?.some(
+    (el) =>
+      (el.interactions?.likes || 0) > 0 || (el.interactions?.dislikes || 0) > 0
+  )
 );
+const commentsExists = computed<boolean>(() =>
+  allInteractions.value?.some((el) => (el.comments || 0) > 0)
+);
+const sharesExist = computed<boolean>(() =>
+  allInteractions.value?.some((el) => (el.shares || 0) > 0)
+);
+
+const selectedDataType = ref<DataOption>({
+  label: "Likes and dislikes",
+  value: "interactions",
+});
 
 const initialDataOptions: DataOption[] = [
   { label: "Likes and dislikes", value: "interactions" },
@@ -196,23 +178,16 @@ const initialDataOptions: DataOption[] = [
   { label: "Shares", value: "shares" },
 ];
 
-const dataOptions = ref<DataOption[]>(
-  initialDataOptions.filter(
-    (option) =>
-      (option.value === "interactions" && interactionsExists) ||
-      (option.value === "comments" && commentsExists) ||
-      (option.value === "shares" && sharesExist)
-  )
-);
+const dataOptions = ref<DataOption[]>([]);
 
 // Functions
 const updateDataOptions = (): void => {
-  dataOptions.value = initialDataOptions.filter(
-    (option) =>
-      (option.value === "interactions" && interactionsExists) ||
-      (option.value === "comments" && commentsExists) ||
-      (option.value === "shares" && sharesExist)
-  );
+  dataOptions.value = initialDataOptions.filter((option) => {
+    if (option.value === "interactions") return interactionsExists.value;
+    if (option.value === "comments") return commentsExists.value;
+    if (option.value === "shares") return sharesExist.value;
+    return false;
+  });
 
   if (
     !dataOptions.value.some(
@@ -225,16 +200,22 @@ const updateDataOptions = (): void => {
 };
 
 const updateTotalCountries = (): void => {
-  if (!allInteractions) return;
+  if (!allInteractions.value) return;
 
   if (selectedDataType.value.value === "interactions") {
-    totalCountries.value = allInteractions.filter(
-      (el) => el.interactions?.likes || el.interactions?.dislikes
+    totalCountries.value = allInteractions.value.filter(
+      (el) =>
+        (el.interactions?.likes || 0) > 0 ||
+        (el.interactions?.dislikes || 0) > 0
     ).length;
   } else if (selectedDataType.value.value === "comments") {
-    totalCountries.value = allInteractions.filter((el) => el.comments).length;
+    totalCountries.value = allInteractions.value.filter(
+      (el) => (el.comments || 0) > 0
+    ).length;
   } else if (selectedDataType.value.value === "shares") {
-    totalCountries.value = allInteractions.filter((el) => el.shares).length;
+    totalCountries.value = allInteractions.value.filter(
+      (el) => (el.shares || 0) > 0
+    ).length;
   }
 };
 
@@ -248,12 +229,13 @@ const getFlagEmoji = (countryCode: string): string => {
 
 // Computed properties
 const totalCountriesParticipated = computed<number>(() => {
-  return new Set(allInteractions.map((entry) => entry.location)).size;
+  return new Set(allInteractions.value.map((entry) => entry.location)).size;
 });
 
 const countryWithMostParticipants = computed<CountryWithMostParticipants>(
   () => {
-    const maxCountryCode = allInteractions.reduce(
+    const data = allInteractions.value;
+    const maxCountryCode = data.reduce(
       (maxCountry, entry) => {
         const totalParticipation =
           entry.comments +
@@ -285,7 +267,7 @@ const countryWithMostParticipants = computed<CountryWithMostParticipants>(
 
     const icon = getFlagEmoji(maxCountryCode.country);
 
-    const allEqual = allInteractions.every((entry) => {
+    const allEqual = data.every((entry) => {
       const totalParticipations =
         entry.comments +
         entry.interactions.likes +
@@ -294,7 +276,7 @@ const countryWithMostParticipants = computed<CountryWithMostParticipants>(
       return totalParticipations === maxCountryCode.participation;
     });
 
-    if (allEqual && allInteractions.length > 1) {
+    if (allEqual && data.length > 1) {
       return { country: "Equal participation. 🌍" };
     }
 
@@ -459,7 +441,7 @@ const handleShares = (data: CountryData[], map: L.Map | null): void => {
 
 // Map initialization
 const initMap = async (): Promise<void> => {
-  if (allInteractions && Object.keys(allInteractions).length) {
+  if (allInteractions.value && allInteractions.value.length) {
     await nextTick();
 
     if (toRaw(mapRef.value)) {
@@ -492,12 +474,18 @@ const initMap = async (): Promise<void> => {
     toRaw(mapRef.value)!.fitBounds(bounds);
 
     const rawMap = toRaw(mapRef.value);
-    if (selectedDataType.value.value === "interactions" && interactionsExists) {
-      handleLikesAndDislikes(allInteractions, rawMap as L.Map | null);
-    } else if (selectedDataType.value.value === "comments" && commentsExists) {
-      handleComments(allInteractions, rawMap as L.Map);
-    } else if (selectedDataType.value.value === "shares" && sharesExist) {
-      handleShares(allInteractions, rawMap as L.Map);
+    if (
+      selectedDataType.value.value === "interactions" &&
+      interactionsExists.value
+    ) {
+      handleLikesAndDislikes(allInteractions.value, rawMap as L.Map | null);
+    } else if (
+      selectedDataType.value.value === "comments" &&
+      commentsExists.value
+    ) {
+      handleComments(allInteractions.value, rawMap as L.Map);
+    } else if (selectedDataType.value.value === "shares" && sharesExist.value) {
+      handleShares(allInteractions.value, rawMap as L.Map);
     }
 
     window.addEventListener("resize", () => {
@@ -516,7 +504,7 @@ const toggleStats = (): void => {
 
 // Watchers
 watchEffect(() => {
-  if (allInteractions) {
+  if (allInteractions.value) {
     updateDataOptions();
     initMap();
   }
@@ -529,11 +517,12 @@ watch(selectedDataType, async (newValue, oldValue) => {
 });
 
 watch(
-  () => allInteractions,
+  () => props.countryVotes,
   () => {
     updateDataOptions();
     initMap();
-  }
+  },
+  { deep: true }
 );
 </script>
 

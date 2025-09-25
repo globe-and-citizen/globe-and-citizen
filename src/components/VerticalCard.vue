@@ -33,9 +33,11 @@
     <div class="flex-1 py-4 px-2 flex flex-col">
       <div class="flex items-center gap-2 mb-4">
         <img
-          src="https://randomuser.me/api/portraits/men/32.jpg"
+          :src="
+            post.user?.profile_picture_url || 'https://via.placeholder.com/150'
+          "
           alt="user image"
-          class="w-8 h-8 rounded-full"
+          class="w-8 h-8 rounded-full object-cover flex-none"
         />
         <p class="font-medium font-lato w-full text-black-80 text-xs">
           {{

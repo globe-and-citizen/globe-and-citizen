@@ -8,7 +8,9 @@ export interface AuthStoreInterface {
   isUserAuthenticated: boolean;
   isInitialized: boolean;
   userLocation: string;
+  trackedLocation: string;
   setUser: (user: UserType) => void;
+  setTrackedLocation: (location: string) => void;
   logout: () => void;
 }
 
@@ -18,9 +20,11 @@ export const useAuthStore = defineStore("authStore", {
     token: undefined,
     refreshToken: undefined,
     userLocation: "",
+    trackedLocation: "",
     isUserAuthenticated: false,
     isInitialized: false,
     setUser: (): void => {},
+    setTrackedLocation: (): void => {},
     logout: (): void => {},
   }),
 
@@ -36,6 +40,10 @@ export const useAuthStore = defineStore("authStore", {
 
     setUserLocation(location: string): void {
       this.userLocation = location;
+    },
+
+    setTrackedLocation(location: string): void {
+      this.trackedLocation = location;
     },
 
     setToken(token: string): void {

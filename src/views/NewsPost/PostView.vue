@@ -32,11 +32,14 @@
           alt="Post hero image"
           class="h-[200px] md:h-[320px] lg:h-[522px] w-full object-cover rounded-lg mb-6 md:mb-6"
         />
-        <ReadersInsightsAndStats
-          :sentences="post?.sentences"
-          :model-value="showAnnotations"
-          @update:model-value="showAnnotations = $event"
-        />
+        <!-- Sticky Readers Insights + Stats (becomes fixed once scrolled past its original position) -->
+        <div ref="insightsWrapper" class="reader-insights-sticky p-4 lg:p-0.5">
+          <ReadersInsightsAndStats
+            :sentences="post?.sentences"
+            :model-value="showAnnotations"
+            @update:model-value="showAnnotations = $event"
+          />
+        </div>
         <div v-if="post" class="lg:pb-10 flex flex-col lg:flex-row font-lato">
           <div class="w-full lg:w-7/12">
             <div class="gc-container">
@@ -383,6 +386,21 @@ const displayedEntries = computed(() => {
 
   .prose p {
     margin-bottom: 1em;
+  }
+}
+
+/* Sticky Readers Insights bar */
+.reader-insights-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: #ffffff;
+  /* backdrop-filter: saturate(180%) blur(4px); */
+}
+
+@media (min-width: 1024px) {
+  .reader-insights-sticky {
+    top: 0px; /* Leave room for desktop header if exists */
   }
 }
 </style>

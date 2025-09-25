@@ -96,12 +96,22 @@
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
             <div class="grid gap-2">
               <Label for="location">Location</Label>
-              <Input
+              <select
                 id="location"
                 v-model="editForm.location"
-                placeholder="Enter your location (optional)"
-              />
+                class="border border-[rgba(229,229,229, 0.92)] rounded-md px-3 py-2 text-sm text-black bg-[rgb(243,243,243)] min-w-[0px]"
+              >
+                <option disabled value="">Select your country</option>
+                <option
+                  v-for="country in countries"
+                  :key="country.code"
+                  :value="country.code"
+                >
+                  {{ country.country }}
+                </option>
+              </select>
             </div>
+
             <div class="grid gap-2">
               <Label for="dateOfBirth"
                 >Date of Birth <i>(coming soon)</i></Label
@@ -174,6 +184,7 @@ import { toast } from "vue3-toastify";
 import arrowBackIcon from "../../assets/arrow-back.svg";
 import { RouterLink } from "vue-router";
 import { uploadToCloudinary } from "@/api/images.ts";
+import { countries } from "@/composables/countries.ts";
 
 const queryClient = useQueryClient();
 const authStore = useAuthStore();
@@ -218,7 +229,10 @@ watch(userData, (newData) => {
   }
 });
 
-const editForm = ref({ ...user.value });
+const editForm = ref({
+  ...user.value,
+  location: user.value.location || "",
+});
 
 const { mutate: updateUserMutation } = useMutation({
   mutationFn: (updatedUser: Partial<typeof user.value>) => {
@@ -282,7 +296,10 @@ const { mutate: updateUserMutation } = useMutation({
 watch(userData, (newData) => {
   if (newData) {
     user.value = newData;
-    editForm.value = { ...newData };
+    editForm.value = {
+      ...newData,
+      location: newData.location || "",
+    };
   }
 });
 
