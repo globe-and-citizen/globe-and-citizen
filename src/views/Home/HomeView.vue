@@ -36,8 +36,8 @@ import { computed, ref, watch } from "vue";
 import type { FetchPostsType } from "@/models/Posts";
 import { fetchAllPosts } from "@/api/posts.ts";
 import { type Id, toast, type ToastOptions } from "vue3-toastify";
-import { useAuthStore } from "@/store/authStore";
-import { traceUser } from "@/api/user";
+// import { useAuthStore } from "@/store/authStore";
+// import { traceUser } from "@/api/user";
 
 const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
