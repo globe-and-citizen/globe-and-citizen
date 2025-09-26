@@ -295,25 +295,42 @@ export async function fetchEntryBySlug(slug: string) {
 }
 
 export async function fetchOpinionById(opinionId: string) {
-  try {
-    // For now, we're reusing the same API endpoint but in a real application
-    // you would have a dedicated opinions endpoint
-    const response = await fetchWithAuth(
-      `${API_BASE_URL}${ENTRIES_URL}/${opinionId}`
-    );
+  const authStore = useAuthStore();
+  if (authStore.isUserAuthenticated && authStore.token) {
+    try {
+      const response = await fetchWithAuth(
+        `${API_BASE_URL}${ENTRIES_URL}/${opinionId}`
+      );
 
-    if (!response.ok) {
-      // Fallback to posts endpoint if dedicated opinion endpoint doesn't exist yet
-      return fetchPostById(opinionId);
+      // Check if we have a valid response (not redirected)
+      if (response && !response.ok) {
+        throw new Error(`Error getting post: ${response.statusText}`);
+      }
+
+      if (response) {
+        const data = await response.json();
+        const opinionData = data.data || data;
+        return opinionData;
+      }
+      return;
+    } catch (error) {
+      console.error("Error creating authenticated comment:", error);
+      // If token refresh failed, fall through to guest comment as fallback
     }
-
-    const data = await response.json();
-    return data.data || data;
-  } catch (error) {
-    console.error("Error fetching opinion:", error);
-    // Fallback to posts endpoint if the opinion endpoint fails
-    return fetchPostById(opinionId);
   }
+
+  // Fall back to guest comment functionality if user is not authenticated
+  const response = await interceptorFetch(
+    `${API_BASE_URL}${ENTRIES_URL}/${opinionId}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Error creating comment: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const opinionData = data.data || data;
+  return opinionData;
 }
 
 export async function fetchPostWithEntries(slug: string) {
