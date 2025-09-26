@@ -19,6 +19,7 @@
     "@types/node": "^22.15.30",
     "@vee-validate/zod": "^4.15.1",
     "@vueup/vue-quill": "^1.2.0",
+    "@vueuse/components": "^13.9.0",
     "@vueuse/core": "^13.3.0",
     "autoprefixer": "^10.4.21",
     "axios": "^1.9.0",

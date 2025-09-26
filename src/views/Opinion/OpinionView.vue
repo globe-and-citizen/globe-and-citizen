@@ -28,9 +28,9 @@
           <div class="mb-6">
             <div class="gc-container max-w-[900px] mx-auto">
               <!-- Make content + toggle a flex row so toggle can be sticky within this scope -->
-              <div class="prose prose-sm md:prose-lg max-w-none relative flex">
+              <div class="prose prose-sm md:prose-lg relative">
                 <div class="flex-1">
-                  <div class="ql-editor">
+                  <div ref="target" class="ql-editor">
                     <Segmented
                       v-model:show-annotations="showAnnotations"
                       :content="sanitizedContent"
@@ -39,9 +39,10 @@
                     />
                   </div>
                 </div>
-                <!-- Sticky toggle: only appears on md+ and only while this container is in view -->
+
                 <div
-                  class="hidden md:flex flex-col items-center gap-3 sticky top-1/2 mt-28 -translate-y-1/2 transform ml-4 rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit self-start"
+                  v-if="targetIsVisible"
+                  class="hidden md:flex flex-col items-center gap-3 fixed right-0 top-1/2 -translate-y-4 transform ml-0 rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit self-start"
                 >
                   <p
                     class="text-center font-lato font-semibold text-black-60 text-sm"
@@ -62,11 +63,11 @@
           </div>
         </div>
         <!-- Reading content wrapper made relative so we can position toggle beside it -->
-        <div class="mx-auto gap-10 w-full flex-1 max-w-[1100px]">
+        <div class="mx-auto gap-10 w-full flex-1 max-w-[700px]">
           <!-- Desktop layout (lg+) with sticky toggle inside content scope -->
-          <div class="hidden lg:flex flex-row prose prose-lg relative">
-            <div class="flex-1 ml-36">
-              <div class="ql-editor">
+          <div class="hidden lg:flex prose prose-lg relative">
+            <div class="flex-1">
+              <div ref="target2" class="ql-editor">
                 <Segmented
                   v-model:show-annotations="showAnnotations"
                   :content="sanitizedContent"
@@ -76,7 +77,8 @@
               </div>
             </div>
             <div
-              class="flex flex-col items-center gap-3 sticky top-1/2 -translate-y-1/2 transform mt-28 ml-6 rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit self-start"
+              v-if="target2IsVisible"
+              class="flex flex-col items-center gap-3 fixed top-1/2 right-10 -translate-y-1/2 transform ml-6 rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit self-start"
             >
               <p
                 class="text-center font-lato font-semibold text-black-60 text-sm"
@@ -112,7 +114,7 @@
 
 <script setup lang="ts">
 import { useRoute, onBeforeRouteUpdate } from "vue-router";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, shallowRef, useTemplateRef } from "vue";
 import type { Post } from "@/models/Posts";
 import OpinionHeading from "@/views/Opinion/sections/OpinionHeading.vue";
 import DOMPurify from "dompurify";
@@ -126,10 +128,36 @@ import OpinionReadersInsights from "@/views/Opinion/sections/OpinionReadersInsig
 import LikeDislikeButtons from "@/components/LikeDislikeButtons.vue";
 import { opinionReaction } from "@/api/reactions";
 
+import { useIntersectionObserver } from "@vueuse/core";
+
 const route = useRoute();
 const opinionId = route.params.opinionId as string;
 const showAnnotations = ref(false);
 const queryClient = useQueryClient();
+const target = useTemplateRef<HTMLDivElement>("target");
+const target2 = useTemplateRef<HTMLDivElement>("target2");
+const targetIsVisible = shallowRef(false);
+const target2IsVisible = shallowRef(false);
+
+useIntersectionObserver(
+  target,
+  ([entry]) => {
+    targetIsVisible.value = entry?.isIntersecting || false;
+  },
+  {
+    threshold: [0.08],
+  }
+);
+
+useIntersectionObserver(
+  target2,
+  ([entry]) => {
+    target2IsVisible.value = entry?.isIntersecting || false;
+  },
+  {
+    threshold: [0.11],
+  }
+);
 
 const touchStartX = ref(0);
 const touchStartY = ref(0);
