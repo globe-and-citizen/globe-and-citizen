@@ -85,7 +85,18 @@
           <p class="font-semibold text-black-100 text-base">553</p>
         </div>
       </div>
+      <Button
+        size="medium"
+        class="px-6 py-3"
+        title="See all anthograms"
+        @click="$router.push(`${fullPath}/stats`)"
+      />
     </div>
   </div>
 </template>
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import Button from "@/components/Button.vue";
+import { useRoute } from "vue-router";
+const route = useRoute();
+const fullPath = route.fullPath;
+</script>

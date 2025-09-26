@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-black-100 text-white-100 px-4 md:px-8 lg:px-[120px] py-6">
+  <div
+    class="bg-black-100 text-white-100 px-4 md:px-8 lg:px-[120px] py-6 relative"
+  >
     <div class="mx-auto gc-container text-center">
       <div
         class="underline font-lato underline-offset-4 decoration-primary-red text-heading-h6 font-semibold mb-4"

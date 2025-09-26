@@ -302,7 +302,7 @@ const publishMutation = useMutation({
     queryClient.invalidateQueries({ queryKey: ["post", postId] });
   },
   onError: () => {
-    console.error("Failed to publish article");
+    console.error("Failed add reaction");
   },
 });
 
@@ -394,13 +394,13 @@ const displayedEntries = computed(() => {
   position: sticky;
   top: 0;
   z-index: 30;
-  background: #ffffff;
-  /* backdrop-filter: saturate(180%) blur(4px); */
+  background: var(--color-white-100);
+  backdrop-filter: saturate(180%) blur(4px);
 }
 
 @media (min-width: 1024px) {
   .reader-insights-sticky {
-    top: 0px; /* Leave room for desktop header if exists */
+    top: 0px;
   }
 }
 </style>

@@ -27,6 +27,7 @@ export async function fetchWithAuth(
   const refreshToken = authStore.refreshToken;
 
   if (!token) {
+    sessionStorage.setItem("redirectAfterLogin", window.location.href);
     window.location.replace(SIGN_IN_URL);
     throw new Error("Redirecting to sign-in page");
   }
@@ -117,6 +118,15 @@ export async function signIn(
       authStore.setToken(responseData.data.token);
       authStore.setUser(responseData.data.user);
       authStore.setRefreshToken(responseData.data.refresh_token);
+      const redirectUrl = sessionStorage.getItem("redirectAfterLogin");
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+        sessionStorage.removeItem("redirectAfterLogin");
+      } else {
+        window.location.href = "/";
+      }
+
+      // Trace user location after sign-in
       try {
         const userLocation = await traceUser();
         if (userLocation?.country_long) {

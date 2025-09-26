@@ -6,7 +6,10 @@
     alt="Opinion hero image"
     class="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[557px] xl:h-[557px] w-full object-cover"
   />
-  <div v-if="opinion" class="shadow-card-soft mb-4 md:mb-6 lg:mb-8">
+  <div
+    v-if="opinion"
+    class="shadow-card-soft mb-4 md:mb-6 lg:mb-8 sticky top-0 z-10 bg-white-100"
+  >
     <OpinionReadersInsights />
   </div>
   <div class="mt-6 lg:mt-0 px-4 md:px-8 lg:px-[120px] lg:pb-10">

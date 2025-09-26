@@ -180,7 +180,4 @@ defineEmits<{
 .toggle-switch input:checked + .toggle-slider:before {
   transform: translateX(26px);
 }
-
-.toggle-switch input:focus + .toggle-slider {
-}
 </style>

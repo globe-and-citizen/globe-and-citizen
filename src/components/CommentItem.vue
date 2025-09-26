@@ -23,7 +23,7 @@
       <div class="absolute -left-8 top-6 w-px h-px bg-gray-300"></div>
     </template>
 
-    <div class="bg-white rounded-lg p-4">
+    <div class="rounded-lg p-4 shadow-card-soft">
       <!-- Comment Header -->
       <div class="flex items-start justify-between mb-3">
         <RouterLink
