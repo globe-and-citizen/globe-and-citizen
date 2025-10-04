@@ -28,6 +28,7 @@ use([
 const props = defineProps<{ post: Post }>();
 
 const option = ref({});
+const isMobile = window.innerWidth < 640;
 
 watchEffect(() => {
   if (!props.post) return;
@@ -37,8 +38,14 @@ watchEffect(() => {
 
   option.value = {
     title: {
-      text: `${totalLikes} Likes & ${totalDislikes} Dislikes`,
+      text: `${totalLikes} opinion likes & ${totalDislikes} opinion dislikes`,
       left: "center",
+      textStyle: {
+        fontSize: isMobile ? 14 : 20,
+        fontWeight: "600",
+        color: "rgba(14, 12, 12, 0.8)",
+        fontFamily: "Lato",
+      },
     },
     tooltip: { trigger: "axis" },
     legend: { data: ["Likes", "Dislikes"], bottom: "1%" },
@@ -52,13 +59,13 @@ watchEffect(() => {
         name: "Likes",
         type: "bar",
         data: [totalLikes],
-        color: "#48982a",
+        color: "#0b831e",
       },
       {
         name: "Dislikes",
         type: "bar",
         data: [totalDislikes],
-        color: "#ea3423",
+        color: "#9d0c1a",
       },
     ],
   };

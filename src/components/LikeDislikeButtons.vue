@@ -7,7 +7,9 @@
         userVote === 1
           ? 'bg-green-50 border-green-300 text-green-700'
           : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100',
+        pending ? 'opacity-70 cursor-not-allowed' : '',
       ]"
+      :disabled="pending"
       @click="$emit('react', 1)"
     >
       <svg
@@ -29,7 +31,9 @@
         userVote === -1
           ? 'bg-red-50 border-red-300 text-red-700'
           : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100',
+        pending ? 'opacity-70 cursor-not-allowed' : '',
       ]"
+      :disabled="pending"
       @click="$emit('react', -1)"
     >
       <svg
@@ -47,11 +51,14 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
+const props = defineProps<{
   likes: number | undefined;
   dislikes: number | undefined;
   userVote: number | null | undefined;
+  pending?: boolean;
 }>();
+
+console.log("props in likeDislike", props.pending);
 
 defineEmits<{
   (e: "react", score: 1 | -1): void;

@@ -33,7 +33,10 @@
           class="h-[200px] md:h-[320px] lg:h-[522px] w-full object-cover rounded-lg mb-6 md:mb-6"
         />
         <!-- Sticky Readers Insights + Stats (becomes fixed once scrolled past its original position) -->
-        <div ref="insightsWrapper" class="reader-insights-sticky p-4 lg:p-0.5">
+        <div
+          ref="insightsWrapper"
+          class="reader-insights-sticky p-4 lg:p-0.5 lg:pt-3"
+        >
           <ReadersInsightsAndStats
             :sentences="post?.sentences"
             :model-value="showAnnotations"
@@ -59,6 +62,7 @@
                   :likes="post.likes"
                   :dislikes="post.dislikes"
                   :user-vote="post.user_vote"
+                  :pending="reactionPending"
                   @react="handleReaction"
                 />
               </div>
@@ -79,11 +83,6 @@
                   class="block hover:opacity-90 flex-shrink-0 w-64"
                 >
                   <div class="bg-white rounded-lg shadow-sm border p-2">
-                    <img
-                      :src="opinion.url_to_image"
-                      alt="Related opinion"
-                      class="w-full h-32 object-cover rounded mb-3"
-                    />
                     <div>
                       <h4 class="text-lg font-bold line-clamp-2">
                         {{ opinion.title }}
@@ -101,14 +100,6 @@
                   </div>
                 </router-link>
               </div>
-              <div class="mt-4">
-                <router-link
-                  to="/opinions"
-                  class="text-blue-600 hover:underline text-sm"
-                >
-                  View all opinions
-                </router-link>
-              </div>
             </div>
 
             <!-- Desktop: Show related opinions in sidebar -->
@@ -118,7 +109,7 @@
             >
               <WhatDoYouThinkCTA />
 
-              <div class="mb-40">
+              <div class="mb-40 ml-5">
                 <h3 class="text-xl font-bold mb-4 max-w-3/4 mt-8">
                   What our readers are saying about it
                 </h3>
@@ -294,17 +285,60 @@ const {
   })
 );
 
-// Likes Mutation
+// Optimistic Likes/Dislikes Mutation for Posts
 const publishMutation = useMutation({
   mutationFn: postReaction,
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["postReaction", postId] });
+  onMutate: async (variables: { post_id: number; score: 1 | -1 }) => {
+    await queryClient.cancelQueries({ queryKey: ["post", postId] });
+    const prevData = queryClient.getQueryData<Post | null>(["post", postId]);
+    if (prevData) {
+      const prevLikeCount = prevData.likes || 0;
+      const prevDislikeCount = prevData.dislikes || 0;
+      const prevUserVote = prevData.user_vote || 0; // 0 none
+      let newLikes = prevLikeCount;
+      let newDislikes = prevDislikeCount;
+      let newUserVote: 1 | -1 | 0 =
+        prevUserVote === 1 || prevUserVote === -1 ? prevUserVote : 0;
+      const sameVote = prevUserVote === variables.score;
+      const switching = prevUserVote !== 0 && prevUserVote !== variables.score;
+      if (sameVote) {
+        if (variables.score === 1) newLikes = Math.max(0, newLikes - 1);
+        else newDislikes = Math.max(0, newDislikes - 1);
+        newUserVote = 0;
+      } else if (switching) {
+        if (prevUserVote === 1) newLikes = Math.max(0, newLikes - 1);
+        if (prevUserVote === -1) newDislikes = Math.max(0, newDislikes - 1);
+        if (variables.score === 1) newLikes += 1;
+        else newDislikes += 1;
+        newUserVote = variables.score;
+      } else {
+        if (variables.score === 1) newLikes += 1;
+        else newDislikes += 1;
+        newUserVote = variables.score;
+      }
+      queryClient.setQueryData<Post | null>(["post", postId], {
+        ...prevData,
+        likes: newLikes,
+        dislikes: newDislikes,
+        user_vote: newUserVote,
+      });
+    }
+    return { prevData };
+  },
+  onError: (err, _vars, context) => {
+    if (context?.prevData) {
+      queryClient.setQueryData(["post", postId], context.prevData);
+    }
+    console.error("Failed to add reaction", err);
+  },
+  onSettled: () => {
     queryClient.invalidateQueries({ queryKey: ["post", postId] });
   },
-  onError: () => {
-    console.error("Failed add reaction");
-  },
 });
+
+const reactionPending = computed(
+  () => publishMutation.status.value === "pending"
+);
 
 onBeforeRouteUpdate(async (to) => {
   const newPostId = to.params.id as string;
@@ -327,10 +361,8 @@ const entriesLimit = 3;
 const showAllEntries = ref(false);
 
 const handleReaction = (score: 1 | -1) => {
-  publishMutation.mutate({
-    post_id: post.value!.id,
-    score,
-  });
+  if (!post.value) return;
+  publishMutation.mutate({ post_id: post.value.id, score });
 };
 
 const displayedEntries = computed(() => {

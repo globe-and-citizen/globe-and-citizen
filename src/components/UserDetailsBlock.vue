@@ -22,14 +22,14 @@
           {{ !!user?.description.length ? user?.description : "" }}
         </p>
         <p class="text-xs text-white-60 font-lato font-medium">
-          Chisinau, Republic of Moldova
+          {{ user?.location || "Unknown location" }}
         </p>
       </div>
     </div>
     <div class="flex gap-8 justify-center mt-2 font-lato text-white-60">
-      <p>Trust Rate <b>0%</b></p>
-      <p>Opinions <b>12</b></p>
-      <p>Followers <b>0</b></p>
+      <p>Trust Rate <b>N/A</b></p>
+      <p>Opinions <b>N/A</b></p>
+      <p>Followers <b>N/A</b></p>
     </div>
   </div>
 </template>

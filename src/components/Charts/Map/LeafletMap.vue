@@ -5,12 +5,13 @@
         v-model="selectedDataType"
         :options="dataOptions"
         label="Filter By"
-        class="select-class"
+        class="select-class rounded-md"
         data-test="filter-select"
       />
       <CustomButton
         :label="isStatsVisible ? 'Hide Stats' : 'Show Stats'"
         color="primary"
+        size="small"
         data-test="toggle-stats"
         @click="toggleStats"
       />
@@ -63,6 +64,11 @@
     </div>
 
     <div id="map" @mousedown.stop.prevent @touchstart="handleTouchStart"></div>
+    <component
+      :is="FullScreen"
+      class="fullscreen-toggle"
+      @click="toggleFullscreen"
+    />
   </div>
 </template>
 
@@ -73,6 +79,7 @@ import "leaflet/dist/leaflet.css";
 import CustomSelect from "@/components/CustomSelect.vue";
 import CustomButton from "@/components/CustomButton.vue";
 import { countries as allCountries } from "@/components/Charts/Map/countries";
+import FullScreen from "@/assets/icons/fullscreen.svg";
 
 // Types
 interface DataOption {
@@ -139,6 +146,31 @@ const normalizeCountryCode = (code: string): string => {
   if (upper === "UK") return "GB"; // alias
   return upper;
 };
+
+const isFullscreen = ref(false);
+
+const toggleFullscreen = () => {
+  const el = document.querySelector(".map-container") as HTMLElement;
+  if (!el) return;
+
+  if (!document.fullscreenElement) {
+    el.requestFullscreen?.().catch((err) => {
+      console.error("Failed to enter fullscreen:", err);
+    });
+  } else {
+    document.exitFullscreen?.().catch((err) => {
+      console.error("Failed to exit fullscreen:", err);
+    });
+  }
+};
+
+document.addEventListener("fullscreenchange", () => {
+  isFullscreen.value = !!document.fullscreenElement;
+
+  nextTick(() => {
+    toRaw(mapRef.value)?.invalidateSize();
+  });
+});
 
 // Data processing from props
 const allInteractions = computed<CountryData[]>(() => {
@@ -340,7 +372,7 @@ const handleLikesAndDislikes = (
       if (countryInfo.coordinates) {
         L.circle(countryInfo.coordinates, circleOptions)
           .addTo(toRaw(map))
-          .bindPopup(popupContent, { autoClose: false, closeOnClick: false });
+          .bindPopup(popupContent, { autoClose: false, closeOnClick: true });
       }
     }
   });
@@ -387,7 +419,7 @@ const handleComments = (data: CountryData[], map: L.Map | null): void => {
         toRaw(map).setView(countryInfo.coordinates, 3);
         L.circle(countryInfo.coordinates, circleOptions)
           .addTo(toRaw(map))
-          .bindPopup(popupContent, { autoClose: false, closeOnClick: false });
+          .bindPopup(popupContent, { autoClose: false, closeOnClick: true });
       }
     }
   });
@@ -433,7 +465,7 @@ const handleShares = (data: CountryData[], map: L.Map | null): void => {
         toRaw(map).setView(countryInfo.coordinates, 3);
         L.circle(countryInfo.coordinates, circleOptions)
           .addTo(toRaw(map))
-          .bindPopup(popupContent, { autoClose: false, closeOnClick: false });
+          .bindPopup(popupContent, { autoClose: false, closeOnClick: true });
       }
     }
   });
@@ -462,7 +494,7 @@ const initMap = async (): Promise<void> => {
   L.tileLayer(
     "https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png",
     {
-      maxZoom: 10,
+      maxZoom: 7,
       minZoom: 3,
     }
   ).addTo(toRaw(mapRef.value) as L.Map);
@@ -474,6 +506,7 @@ const initMap = async (): Promise<void> => {
   ];
   toRaw(mapRef.value)!.setMaxBounds(bounds);
   toRaw(mapRef.value)!.fitBounds(bounds);
+  toRaw(mapRef.value)!.setView([50, 30], 3);
 
   // ✅ Only draw overlays if data exists
   if (allInteractions.value && allInteractions.value.length) {
@@ -569,14 +602,16 @@ watch(
 }
 
 #map {
-  height: 80vh;
+  height: 100%;
+  min-height: 200px;
   border-radius: 10px;
   touch-action: none;
 }
 
 @media (max-width: 720px) {
   #map {
-    height: 60vh;
+    height: 100%;
+    min-height: 200px;
   }
 }
 
@@ -652,5 +687,28 @@ watch(
     width: 49%;
     padding: 10px;
   }
+}
+
+.fullscreen-toggle {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  z-index: 33333;
+}
+
+.map-container:fullscreen {
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: white;
+}
+
+.map-container:-webkit-full-screen {
+  /* Safari support */
+  width: 100vw;
+  height: 100vh;
 }
 </style>
