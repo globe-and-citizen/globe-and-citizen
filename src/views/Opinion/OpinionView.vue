@@ -8,16 +8,16 @@
   />
   <div
     v-if="opinion"
-    class="shadow-card-soft mb-4 md:mb-6 lg:mb-8 sticky top-0 z-10 bg-white-100"
-  >
-    <OpinionReadersInsights />
-  </div>
+    ref="insightsWrapper"
+    class="reader-insights-sticky shadow-card-soft mb-4 md:mb-6 lg:mb-8 sticky top-0 z-10 bg-white-100"
+  ></div>
   <div class="mt-6 lg:mt-0 px-4 md:px-8 lg:px-[120px] lg:pb-10">
     <div class="gc-container">
       <div v-if="!opinion" class="flex justify-center items-center h-64">
         <p class="text-sm md:text-base">Loading opinion article...</p>
       </div>
 
+      <OpinionReadersInsights />
       <div
         v-if="opinion"
         class="lg:pb-10 font-lato"
@@ -29,7 +29,7 @@
         <div class="lg:hidden">
           <!-- Main Content -->
           <div class="mb-6">
-            <div class="gc-container max-w-[900px] mx-auto">
+            <div class="gc-container max-w-[850px] mx-auto">
               <!-- Make content + toggle a flex row so toggle can be sticky within this scope -->
               <div class="prose prose-sm md:prose-lg relative">
                 <div class="flex-1">
@@ -104,6 +104,7 @@
               :likes="opinion.likes"
               :dislikes="opinion.dislikes"
               :user-vote="opinion.user_vote"
+              :pending="reactionPending"
               @react="handleReaction"
             />
           </div>
@@ -217,7 +218,6 @@ const handleTouchEnd = () => {
   touchEndY.value = 0;
 };
 
-// Fetch the opinion
 const {
   value: { data: opinion },
 } = computed(() =>
@@ -230,26 +230,74 @@ const {
   })
 );
 
-// Likes Mutation
 const publishMutation = useMutation({
   mutationFn: opinionReaction,
-  onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ["postReaction", opinionId] });
-    queryClient.invalidateQueries({ queryKey: ["opinion", opinionId] });
+  onMutate: async (variables: { entry_id: number; score: 1 | -1 }) => {
+    await queryClient.cancelQueries({ queryKey: ["opinion", opinionId] });
+
+    const prevData = queryClient.getQueryData<Post | null>([
+      "opinion",
+      opinionId,
+    ]);
+
+    if (prevData) {
+      const prevLikeCount = prevData.likes || 0;
+      const prevDislikeCount = prevData.dislikes || 0;
+      const prevUserVote = prevData.user_vote || 0;
+      let newLikes = prevLikeCount;
+      let newDislikes = prevDislikeCount;
+      let newUserVote: 1 | -1 | 0 =
+        prevUserVote === 1 || prevUserVote === -1 ? prevUserVote : 0;
+
+      const sameVote = prevUserVote === variables.score;
+      const switching = prevUserVote !== 0 && prevUserVote !== variables.score;
+
+      if (sameVote) {
+        if (variables.score === 1) newLikes = Math.max(0, newLikes - 1);
+        else newDislikes = Math.max(0, newDislikes - 1);
+        newUserVote = 0;
+      } else if (switching) {
+        if (prevUserVote === 1) newLikes = Math.max(0, newLikes - 1);
+        if (prevUserVote === -1) newDislikes = Math.max(0, newDislikes - 1);
+        if (variables.score === 1) newLikes += 1;
+        else newDislikes += 1;
+        newUserVote = variables.score;
+      } else {
+        if (variables.score === 1) newLikes += 1;
+        else newDislikes += 1;
+        newUserVote = variables.score;
+      }
+
+      queryClient.setQueryData<Post | null>(["opinion", opinionId], {
+        ...prevData,
+        likes: newLikes,
+        dislikes: newDislikes,
+        user_vote: newUserVote,
+      });
+    }
+
+    return { prevData };
   },
-  onError: () => {
-    console.error("Failed to publish article");
+  onError: (err, _vars, context) => {
+    if (context?.prevData) {
+      queryClient.setQueryData(["opinion", opinionId], context.prevData);
+    }
+    console.error("Failed to publish opinion reaction", err);
+  },
+  onSettled: () => {
+    queryClient.invalidateQueries({ queryKey: ["opinion", opinionId] });
   },
 });
 
+const reactionPending = computed(
+  () => publishMutation.status.value === "pending"
+);
+
 const handleReaction = (score: 1 | -1) => {
-  publishMutation.mutate({
-    entry_id: opinion.value!.id,
-    score,
-  });
+  if (!opinion.value) return;
+  publishMutation.mutate({ entry_id: opinion.value.id, score });
 };
 
-// Handle route updates for opinion changes
 onBeforeRouteUpdate(async (to) => {
   const newOpinionId = to.params.opinionId as string;
   if (newOpinionId !== opinionId) {

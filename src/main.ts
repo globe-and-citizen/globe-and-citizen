@@ -42,7 +42,7 @@ app.use(VueQueryPlugin, {
   },
   enableDevtoolsV6Plugin: true,
 });
-const authStore = useAuthStore();
 app.config.globalProperties.$backend_url = backend_url;
-authStore.initializeAuth();
 app.use(router).mount("#app");
+const authStore = useAuthStore();
+authStore.initializeAuth();

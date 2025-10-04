@@ -74,3 +74,10 @@ export const generateUserIcon = (username: string) => {
   const index = username.charCodeAt(0) % colors.length;
   return `background-color: ${username ? colors[index] : "#F0F0F0"};`;
 };
+
+export const getReadingTime = (content: string): number => {
+  if (!content) return 0;
+  const wordsPerMinute = 200;
+  const words = content.split(" ").length;
+  return Math.ceil(words / wordsPerMinute);
+};

@@ -4,9 +4,9 @@
       <HeroSection />
     </div>
     <div class="gc-container py-10">
-      <NowTrending show-winner-tag :post="filteredPosts?.[0]" />
+      <NowTrending :post="filteredPosts?.[0]" />
     </div>
-    <div class="gc-container py-10">
+    <div class="gc-container pt-0 pb-10">
       <ExploreMore :posts="filteredPosts ? filteredPosts : []" />
     </div>
 
@@ -48,31 +48,6 @@ const postsQuery = useQuery<FetchPostsType>({
   queryFn: () => fetchAllPosts(10, 1),
   refetchOnWindowFocus: true,
 });
-
-// const authStore = useAuthStore();
-// // Get user location
-// const { data: userLocation } = useQuery<{
-//   country_long: string;
-//   ip_addr: string;
-// }>({
-//   queryKey: ["userLocation"],
-//   queryFn: traceUser,
-//   staleTime: 1000 * 60 * 60 * 24, // 24 hours
-//   enabled: computed(
-//     () => authStore.isUserAuthenticated && !authStore.trackedLocation
-//   ),
-// });
-
-// watch(
-//   () => authStore.token,
-//   async (newVal) => {
-//     console.log(newVal);
-//     if (newVal && userLocation.value?.country_long) {
-//       console.log("updating?");
-//       authStore.setTrackedLocation(userLocation.value.country_long);
-//     }
-//   }
-// );
 
 watch(
   () => postsQuery.error.value,

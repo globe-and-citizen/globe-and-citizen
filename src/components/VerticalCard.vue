@@ -34,7 +34,8 @@
       <div class="flex items-center gap-2 mb-4">
         <img
           :src="
-            post.user?.profile_picture_url || 'https://via.placeholder.com/150'
+            post.user?.profile_picture_url ||
+            'https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_960_720.png'
           "
           alt="user image"
           class="w-8 h-8 rounded-full object-cover flex-none"
@@ -61,18 +62,11 @@
       <div
         class="text-black-80 mb-3 font-lato font-normal text-base flex-1"
         v-html="
+          post?.description.substring(0, 110) + '...' ||
           post?.content.substring(0, 110) + '...' ||
-          post?.description ||
           'No content available'
         "
       />
-      <!--        {{-->
-      <!--          post?.description-->
-      <!--            ? post?.description?.substring(0, 110) + "..."-->
-      <!--            : post?.content?.substring(0, 110) + "..." ||-->
-      <!--              "No description available"-->
-      <!--        }}-->
-      <!--      </div>-->
       <div v-if="showTags" class="flex gap-3 mb-4 font-lato font-bold text-xs">
         <span
           v-for="(tag, index) in post?.categories"
@@ -88,11 +82,11 @@
       >
         <div class="flex items-center gap-1">
           <component :is="timeIcon" />
-          5 min
+          {{ getReadingTime(post?.content) }} min
         </div>
         <div class="flex items-center gap-1">
           <component :is="commentsIcon" />
-          3
+          {{ post?.entries_count || 0 }} discussions
         </div>
       </div>
     </div>
@@ -104,6 +98,7 @@ import timeIcon from "../assets/clock-icon.svg";
 import commentsIcon from "../assets/comment-icon.svg";
 import type { Post } from "@/models/Posts";
 import dayjs from "dayjs";
+import { getReadingTime } from "@/composables/utils";
 
 withDefaults(
   defineProps<{

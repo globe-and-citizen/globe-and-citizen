@@ -22,7 +22,7 @@
             'https://media.istockphoto.com/id/1409329028/vector/no-picture-available-placeholder-thumbnail-icon-illustration-design.jpg?s=612x612&w=0&k=20&c=_zOuJu755g2eEUioiOUdz_mHKJQJn-tDgIAhQzyeKUQ='
           "
           alt="American Flag"
-          class="object-cover h-full w-full rounded-sm max-h-[300px] lg:max-h-[unset]"
+          class="object-cover h-full w-full rounded-sm max-h-[300px] lg:max-h-[400px]"
         />
         <div
           v-if="showWinnerTag"
@@ -34,7 +34,7 @@
       </div>
 
       <!-- Right Content Section -->
-      <div class="flex-1 p-6 pl-8 flex flex-col justify-between">
+      <div class="flex-1 p-6 pl-8 flex flex-col">
         <div
           class="hidden md:block font-lato text-primary-red font-bold text-xl mb-2 border-b border-b-red-20 w-fit"
         >
@@ -70,9 +70,11 @@
           {{ post?.title }}
         </h4>
         <p class="text-black-80 mb-3 font-lato font-normal text-base">
-          {{ post?.description?.substring(0, 90) + "..." }}
+          {{ post?.description?.substring(0, 400) + "..." }}
         </p>
-        <div class="flex gap-3 mb-4 font-lato font-bold text-xs capitalize">
+        <div
+          class="flex gap-3 mb-4 font-lato font-bold text-xs capitalize mt-auto"
+        >
           <span
             v-for="(tag, index) in post?.categories || []"
             :key="index"
@@ -86,11 +88,11 @@
         >
           <div class="flex items-center gap-1">
             <component :is="timeIcon" />
-            Reading time: 5 minutes
+            Reading time: {{ getReadingTime(post?.content) }} minutes
           </div>
           <div class="flex items-center gap-1">
             <component :is="commentsIcon" />
-            Discussions: 3
+            Discussions: {{ post?.entries_count || 0 }}
           </div>
         </div>
       </div>
@@ -103,6 +105,7 @@ import editorsChoice from "../../../assets/editors-choice.svg";
 import timeIcon from "../../../assets/clock-icon.svg";
 import commentsIcon from "../../../assets/comment-icon.svg";
 import type { Post } from "../../../models/Posts";
+import { getReadingTime } from "@/composables/utils";
 withDefaults(
   defineProps<{
     post?: Post;

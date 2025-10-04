@@ -96,13 +96,13 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 6px 16px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   background-color: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-height: 44px;
+  min-height: 20px;
   box-sizing: border-box;
 }
 
