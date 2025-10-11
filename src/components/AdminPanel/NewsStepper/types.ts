@@ -13,5 +13,7 @@ export const formSchema = [
     description: z.string().min(1, "Description is required"),
     content: z.string().min(1, "Content is required"),
     imageUrl: z.string().url().optional().or(z.literal("")),
+    author: z.string().optional(),
+    source: z.string().url().optional().or(z.literal("")),
   }),
 ];
