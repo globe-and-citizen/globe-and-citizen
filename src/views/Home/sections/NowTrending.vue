@@ -15,7 +15,7 @@
       @click="navigate"
     >
       <!-- Left Image Section -->
-      <div class="lg:max-w-[480px] relative">
+      <div class="lg:max-w-[480px] lg:min-w-[480px] relative">
         <img
           :src="
             post?.url_to_image ||

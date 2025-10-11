@@ -2,7 +2,7 @@
   <div class="my-4">
     <div class="flex flex-col max-w-[1086px]">
       <a
-        :href="post.source_url ?? '#'"
+        :href="post.source_name ? post.source_name : '#'"
         target="_blank"
         rel="noopener noreferrer"
         class="underline underline-offset-2 decoration-primary-red text-heading-h6 font-semibold mb-4"
@@ -23,7 +23,7 @@
           <component :is="clock" /> {{ readingTime }} min
         </p>
         <p
-          class="text-gray-600 mb-2 text-xs flex items-center gap-2 cursor-pointer"
+          class="text-gray-600 mb-2 text-xs flex items-center gapd-2 cursor-pointer"
           @click="scrollToComments"
         >
           <component :is="comments" />

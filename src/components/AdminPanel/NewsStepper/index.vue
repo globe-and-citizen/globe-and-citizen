@@ -1,411 +1,316 @@
 <template>
   <h1 class="text-2xl font-bold mb-4 uppercase">News Processing Workflow</h1>
   <div class="w-full mx-auto p-6">
-    <Form
-      v-slot="{ meta, values, validate }"
-      as=""
-      :form="form"
-      keep-values
-      :validation-schema="toTypedSchema(formSchema[0])"
-    >
-      <Stepper
-        v-slot="{ isNextDisabled, isPrevDisabled, nextStep, prevStep }"
-        v-model="stepIndex"
-        class="block w-full"
-      >
-        <form
-          @submit="
-            (e: Event) => {
-              e.preventDefault();
-              validate();
-
-              if (stepIndex === steps.length && meta.valid) {
-                onSubmit(values);
-              }
-            }
-          "
-        >
-          <!-- Stepper Header -->
-          <div class="flex w-full flex-start gap-2 mb-6 border-b-1 pb-5">
-            <StepperItem
-              v-for="step in steps"
-              :key="step.step"
-              v-slot="{ state }"
-              class="relative flex w-full flex-col items-center justify-center"
-              :step="step.step"
-            >
-              <StepperSeparator
-                v-if="step.step !== steps[steps.length - 1].step"
-                class="absolute left-[calc(50%+20px)] right-[calc(-50%+10px)] top-5 block h-0.5 shrink-0 rounded-full bg-muted group-data-[state=completed]:bg-primary"
-              />
-
-              <StepperTrigger as-child>
-                <Button
-                  :variant="
-                    state === 'completed' || state === 'active'
-                      ? 'default'
-                      : 'outline'
-                  "
-                  size="icon"
-                  class="z-10 rounded-full shrink-0"
-                  :class="[
-                    state === 'active' &&
-                      'ring-2 ring-ring ring-offset-2 ring-offset-background',
-                  ]"
-                  :disabled="state !== 'completed' && !meta.valid"
+    <Stepper v-model="stepIndex" class="block w-full">
+      <form @submit.prevent="onSubmit(savedValues)">
+        <div class="flex w-full flex-start gap-2 mb-6 border-b-1 pb-5"></div>
+        <!-- Step Content -->
+        <div class="min-h-[400px]">
+          <template v-if="stepIndex === 1">
+            <div class="space-y-4">
+              <h2 class="text-xl font-semibold">Edit Article Details</h2>
+              <div class="mb-4 space-y-2">
+                <label class="block font-medium text-sm"
+                  >Select input method:</label
                 >
-                  <component
-                    :is="CheckIcon"
-                    v-if="state === 'completed'"
-                    class="size-5"
-                  />
-                  <component :is="CircleIcon" v-if="state === 'active'" />
-                  <component :is="DotIcon" v-if="state === 'inactive'" />
-                </Button>
-              </StepperTrigger>
+                <div class="flex items-center gap-6">
+                  <label class="flex items-center space-x-2 text-sm">
+                    <input
+                      v-model="inputMode"
+                      type="radio"
+                      name="inputMode"
+                      value="ai-summary"
+                      class="form-radio"
+                    />
+                    <span>Summarize with AI</span>
+                  </label>
 
-              <div class="mt-5 flex flex-col items-center text-center">
-                <StepperTitle
-                  :class="[state === 'active' && 'text-primary']"
-                  class="text-sm font-semibold transition lg:text-base"
-                >
-                  {{ step.title }}
-                </StepperTitle>
-              </div>
-            </StepperItem>
-          </div>
-
-          <!-- Step Content -->
-          <div class="min-h-[400px]">
-            <!-- Step 3: Edit Details -->
-            <template v-if="stepIndex === 1">
-              <div class="space-y-4">
-                <h2 class="text-xl font-semibold">Edit Article Details</h2>
-
-                <div class="space-y-2 p-3 border rounded-md bg-muted/30">
-                  <h3 class="text-sm font-semibold">
-                    Optional: Paste source text to summarize with AI
-                  </h3>
-                  <p class="text-xs text-muted-foreground">
-                    Paste any article/body text below and click "Summarize
-                    Text". The generated summary will populate the Content
-                    editor. You can still edit it afterwards.
-                  </p>
-                  <textarea
-                    v-model="rawTextForSummary"
-                    rows="5"
-                    class="w-full text-sm rounded-md border bg-background p-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Paste raw article or notes here..."
-                  />
-                  <div class="flex items-center gap-3">
-                    <Button
-                      type="button"
-                      size="sm"
-                      :disabled="
-                        !rawTextForSummary.length ||
-                        textSummaryMutation.isPending.value
-                      "
-                      @click="textSummaryMutation.mutate()"
-                    >
-                      <component
-                        :is="LoaderIcon"
-                        v-if="textSummaryMutation.isPending.value"
-                        class="size-4 animate-spin mr-2"
-                      />
-                      Summarize Text
-                    </Button>
-                    <span v-if="generatedSummary" class="text-xs text-green-600"
-                      >Summary ready. You can refine it below.</span
-                    >
-                  </div>
+                  <label class="flex items-center space-x-2 text-sm">
+                    <input
+                      v-model="inputMode"
+                      type="radio"
+                      name="inputMode"
+                      value="polymarket"
+                      class="form-radio"
+                    />
+                    <span>Use Polymarket URL</span>
+                  </label>
                 </div>
-
-                <FormField v-slot="{ componentField }" name="title">
-                  <FormItem>
-                    <FormLabel>Title</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        v-bind="componentField"
-                        :default-value="selectedArticle?.title || ''"
-                        @input="(e: Event) => {
-                          componentField.onChange(e);
-                          // Auto-generate slug when title changes
-                          const target = e.target as HTMLInputElement;
-                          if (target.value) {
-                            form.setFieldValue('slug', generateSlug(target.value));
-                          }
-                        }"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </FormField>
-
-                <FormField v-slot="{ componentField }" name="slug">
-                  <FormItem>
-                    <FormLabel>Slug</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        v-bind="componentField"
-                        placeholder="article-slug"
-                        :default-value="
-                          generateSlug(selectedArticle?.title || '')
-                        "
-                      />
-                    </FormControl>
-                    <FormMessage />
-                    <p class="text-xs text-muted-foreground mt-1">
-                      URL-friendly version of the title. Only lowercase letters,
-                      numbers, and hyphens are allowed.
-                    </p>
-                  </FormItem>
-                </FormField>
-
-                <FormField v-slot="{ componentField }" name="description">
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        v-bind="componentField"
-                        rows="3"
-                        :default-value="selectedArticle?.description || ''"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </FormField>
-
-                <FormField v-slot="{ componentField }" name="content">
-                  <FormItem>
-                    <FormLabel>Content</FormLabel>
-                    <FormControl>
-                      <QuillEditor
-                        ref="quillRef"
-                        content-type="html"
-                        theme="snow"
-                        :options="{
-                          modules: {
-                            toolbar: {
-                              container: toolbarConfig,
-                              handlers: customHandlers,
-                            },
-                          },
-                        }"
-                        style="min-height: 200px"
-                        :content="
-                          generatedSummary || componentField.modelValue || ''
-                        "
-                        @update:content="componentField.onChange"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                </FormField>
-
-                <div class="grid grid-cols-2 gap-4">
-                  <FormField v-slot="{ componentField }" name="author">
-                    <FormItem>
-                      <FormLabel>Author</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          v-bind="componentField"
-                          :default-value="selectedArticle?.author || ''"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  </FormField>
-
-                  <FormField v-slot="{ componentField }" name="source">
-                    <FormItem>
-                      <FormLabel>Source</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="text"
-                          v-bind="componentField"
-                          :default-value="selectedArticle?.source?.name || ''"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  </FormField>
-                </div>
-
-                <FormField v-slot="{ componentField }" name="imageUrl">
-                  <FormItem>
-                    <FormLabel>Cover Image</FormLabel>
-                    <div class="flex flex-col gap-2">
-                      <div class="flex items-center gap-3">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          :disabled="imageUploading"
-                          @click="triggerImageSelect"
-                        >
-                          <component
-                            :is="LoaderIcon"
-                            v-if="imageUploading"
-                            class="size-4 animate-spin mr-2"
-                          />
-                          {{
-                            imageUploading
-                              ? "Uploading..."
-                              : componentField.modelValue
-                              ? "Replace Image"
-                              : "Upload Image"
-                          }}
-                        </Button>
-                        <Button
-                          v-if="componentField.modelValue && !imageUploading"
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          @click="removeUploadedImage"
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                      <input
-                        ref="hiddenImageInput"
-                        type="file"
-                        accept="image/*"
-                        class="hidden"
-                        @change="(e: Event) => onImageFileChange(e, componentField)"
-                      />
-                      <div
-                        v-if="componentField.modelValue"
-                        class="relative w-40 h-24 rounded border overflow-hidden"
-                      >
-                        <img
-                          :src="componentField.modelValue"
-                          alt="Cover"
-                          class="object-cover w-full h-full"
-                        />
-                      </div>
-                      <p class="text-xs text-muted-foreground">
-                        Upload a cover image.
-                      </p>
-                      <span
-                        v-if="imageUploadError"
-                        class="text-xs text-destructive"
-                        >{{ imageUploadError }}</span
-                      >
-                      <FormMessage />
-                    </div>
-                  </FormItem>
-                </FormField>
               </div>
-            </template>
 
-            <!-- Step 4: Approve & Publish -->
-            <template v-if="stepIndex === 2">
-              <div class="space-y-4">
-                <h2 class="text-xl font-semibold">Review & Publish</h2>
-
-                <Card class="pt-0">
-                  <img
-                    v-if="values.imageUrl || selectedArticle?.urlToImage"
-                    :src="values.imageUrl || selectedArticle?.urlToImage"
-                    alt="Article image"
-                    class="w-full h-48 object-cover rounded-t-lg"
-                  />
-                  <CardHeader>
-                    <CardTitle>
-                      {{ values.title || selectedArticle?.title }}
-                    </CardTitle>
-                    <CardDescription>
-                      By:
-                      {{
-                        values.author || selectedArticle?.author || "Unknown"
-                      }}
-                      | Source:
-                      {{
-                        values.source ||
-                        selectedArticle?.source?.name ||
-                        "Unknown"
-                      }}
-                    </CardDescription>
-                    <div class="text-xs text-muted-foreground mt-1">
-                      <span class="font-medium">Slug:</span>
-                      {{
-                        values.slug ||
-                        generateSlug(selectedArticle?.title || "")
-                      }}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p class="text-sm text-muted-foreground mb-2">
-                      {{ values.description || selectedArticle?.description }}
-                    </p>
-                    <div
-                      class="text-sm prose prose-sm max-w-none"
-                      v-html="(values.content as string) || generatedSummary || ''"
-                    ></div>
-                  </CardContent>
-                </Card>
-              </div>
-            </template>
-          </div>
-
-          <!-- Navigation Buttons -->
-          <div class="flex items-center justify-between mt-8">
-            <Button
-              :disabled="isPrevDisabled"
-              variant="outline"
-              size="sm"
-              @click="prevStep()"
-            >
-              Back
-            </Button>
-            <div class="flex items-center gap-3">
-              <Button
-                v-if="stepIndex !== 2"
-                :type="meta.valid ? 'button' : 'submit'"
-                :disabled="isNextDisabled"
-                size="sm"
-                @click="meta.valid && nextStep()"
+              <div
+                v-if="inputMode === 'ai-summary' && !polymarketSummary"
+                class="space-y-2 p-3 border rounded-md bg-muted/30"
               >
-                Next
-              </Button>
-              <Button
-                v-if="stepIndex === 2"
-                size="sm"
-                type="submit"
-                :disabled="publishMutation.isPending.value"
-              >
-                <component
-                  :is="LoaderIcon"
-                  v-if="publishMutation.isPending.value"
-                  class="size-4 animate-spin mr-2"
+                <h3 class="text-sm font-semibold">
+                  Optional: Paste source text to summarize with AI
+                </h3>
+                <p class="text-xs text-muted-foreground">
+                  Paste any article/body text below and click "Summarize Text".
+                  The generated summary will populate the Content editor.
+                </p>
+                <textarea
+                  v-model="rawTextForSummary"
+                  rows="5"
+                  class="w-full text-sm rounded-md border bg-background p-2 focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Paste raw article or notes here..."
                 />
-                Publish Article
-              </Button>
+                <div class="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    size="sm"
+                    :disabled="
+                      !rawTextForSummary.length ||
+                      textSummaryMutation.isPending.value
+                    "
+                    @click="textSummaryMutation.mutate()"
+                  >
+                    <component
+                      :is="LoaderIcon"
+                      v-if="textSummaryMutation.isPending.value"
+                      class="size-4 animate-spin mr-2"
+                    />
+                    Summarize Text
+                  </Button>
+                  <span
+                    v-if="generatedSummary && !polymarketSummary"
+                    class="text-xs text-green-600"
+                  >
+                    Summary ready. You can refine it below.
+                  </span>
+                </div>
+              </div>
+
+              <div
+                v-if="inputMode === 'polymarket'"
+                class="space-y-2 p-3 border rounded-md bg-muted/30"
+              >
+                <h3 class="text-sm font-semibold">
+                  Optional: Paste Polymarket Event or Market URL
+                  <span class="text-muted-foreground text-xs"
+                    >(form will auto-fill)</span
+                  >
+                </h3>
+                <Input
+                  v-model="polymarketUrl"
+                  placeholder="https://polymarket.com/event/some-slug"
+                  class="text-sm"
+                />
+                <div class="flex items-center gap-3 mt-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    :disabled="!polymarketUrl || polymarketLoading"
+                    @click="handlePolymarketFetch"
+                  >
+                    <component
+                      :is="LoaderIcon"
+                      v-if="polymarketLoading"
+                      class="size-4 animate-spin mr-2"
+                    />
+                    Get Data
+                  </Button>
+                  <span v-if="polymarketError" class="text-xs text-red-600">
+                    {{ polymarketError }}
+                  </span>
+                  <span v-if="polymarketSuccess" class="text-xs text-green-600">
+                    Data loaded successfully!
+                  </span>
+                </div>
+                <p class="text-xs text-muted-foreground mt-1">
+                  Paste a valid Polymarket event or market URL.
+                </p>
+              </div>
+
+              <FormField v-slot="{ componentField }" name="title">
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input type="text" v-bind="componentField" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              </FormField>
+
+              <FormField v-slot="{ componentField }" name="slug">
+                <FormItem>
+                  <FormLabel>Slug</FormLabel>
+                  <FormControl>
+                    <Input v-bind="componentField" type="text" />
+                  </FormControl>
+                  <FormMessage />
+                  <p class="text-xs text-muted-foreground mt-1">
+                    URL-friendly version of the title. Only lowercase letters,
+                    numbers, and hyphens are allowed.
+                  </p>
+                </FormItem>
+              </FormField>
+
+              <FormField v-slot="{ componentField }" name="description">
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea v-bind="componentField" rows="3" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              </FormField>
+
+              <FormField v-slot="{ componentField }" name="content">
+                <FormItem>
+                  <FormLabel>Content</FormLabel>
+                  <FormControl>
+                    <QuillEditor
+                      ref="quillRef"
+                      content-type="html"
+                      theme="snow"
+                      :options="{
+                        modules: {
+                          toolbar: {
+                            container: toolbarConfig,
+                            handlers: customHandlers,
+                          },
+                        },
+                      }"
+                      style="min-height: 200px"
+                      :content="componentField.modelValue || ''"
+                      @update:content="componentField.onChange"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              </FormField>
+
+              <FormField v-slot="{ componentField }" name="source">
+                <FormItem>
+                  <FormLabel>Source</FormLabel>
+                  <FormControl>
+                    <Input type="text" v-bind="componentField" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              </FormField>
+
+              <FormField v-slot="{ componentField }" name="imageUrl">
+                <FormItem>
+                  <FormLabel>Cover Image</FormLabel>
+                  <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-3">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        :disabled="imageUploading"
+                        @click="triggerImageSelect"
+                      >
+                        <component
+                          :is="LoaderIcon"
+                          v-if="imageUploading"
+                          class="size-4 animate-spin mr-2"
+                        />
+                        {{
+                          imageUploading
+                            ? "Uploading..."
+                            : componentField.modelValue
+                            ? "Replace Image"
+                            : "Upload Image"
+                        }}
+                      </Button>
+                      <Button
+                        v-if="componentField.modelValue && !imageUploading"
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        @click="removeUploadedImage"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                    <input
+                      ref="hiddenImageInput"
+                      type="file"
+                      accept="image/*"
+                      class="hidden"
+                      @change="(e: Event) => onImageFileChange(e, componentField)"
+                    />
+                    <div
+                      v-if="componentField.modelValue"
+                      class="relative w-40 h-24 rounded border overflow-hidden"
+                    >
+                      <img
+                        :src="componentField.modelValue"
+                        alt="Cover"
+                        class="object-cover w-full h-full"
+                      />
+                    </div>
+                    <p class="text-xs text-muted-foreground">
+                      Upload a cover image.
+                    </p>
+                    <span
+                      v-if="imageUploadError"
+                      class="text-xs text-destructive"
+                      >{{ imageUploadError }}</span
+                    >
+                    <FormMessage />
+                  </div>
+                </FormItem>
+              </FormField>
             </div>
+          </template>
+
+          <!-- Step 2: Approve & Publish -->
+          <ApproveAndPublish
+            v-if="stepIndex === 2"
+            :review-data="savedValues"
+          />
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="flex items-center justify-between mt-8">
+          <Button
+            :disabled="isFirstStep"
+            variant="outline"
+            size="sm"
+            @click.prevent="handlePrev"
+          >
+            Back
+          </Button>
+          <div class="flex items-center gap-3">
+            <Button
+              v-if="!isLastStep"
+              type="button"
+              size="sm"
+              :disabled="!meta.valid"
+              @click.prevent="handleNext"
+            >
+              Next
+            </Button>
+            <Button v-if="isLastStep" size="sm" type="submit">
+              <component
+                :is="LoaderIcon"
+                v-if="publishMutation.isPending.value"
+                class="size-4 animate-spin mr-2"
+              />
+              Publish Article
+            </Button>
           </div>
-        </form>
-      </Stepper>
-    </Form>
+        </div>
+      </form>
+    </Stepper>
   </div>
 </template>
 
 <script setup lang="ts">
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { toTypedSchema } from "@vee-validate/zod";
-import CircleIcon from "@/assets/icons/circle.svg";
 import LoaderIcon from "@/assets/icons/loader.svg";
-import CheckIcon from "@/assets/icons/check.svg";
-import DotIcon from "@/assets/icons/dot.svg";
-import { ref, watchEffect } from "vue";
+import { computed, ref, watch, watchEffect } from "vue";
 
-import { useMutation } from "@tanstack/vue-query";
+import { useMutation, useQuery } from "@tanstack/vue-query";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import { Button } from "../../../components/ui/button";
 import {
-  Form,
   FormControl,
   FormField,
   FormItem,
@@ -414,21 +319,6 @@ import {
 } from "../../../components/ui/form";
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
-import {
-  Stepper,
-  StepperItem,
-  StepperSeparator,
-  StepperTitle,
-  StepperTrigger,
-} from "../../../components/ui/stepper";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "../../../components/ui/card";
-
 import type { NewsApiArticle } from "@/models/News";
 import type { NewPostType } from "@/models/Posts";
 import { useForm } from "vee-validate";
@@ -436,6 +326,10 @@ import { formSchema } from "./types";
 import { postNewsArticle, generateSummaryFromText } from "@/api/posts.ts";
 import { generateSlug } from "@/composables/utils.ts";
 import { uploadToCloudinary } from "@/api/images.ts";
+import { getPolymarketDataBySlug } from "@/api/polymarket";
+import { useRouter } from "vue-router";
+import ApproveAndPublish from "./ApproveAndPublish.vue";
+const router = useRouter();
 
 // Type for QuillEditor instance
 export interface QuillEditorInstance {
@@ -453,22 +347,7 @@ export interface QuillEditorInstance {
   };
 }
 
-const stepIndex = ref(1);
-const selectedArticle = ref<NewsApiArticle | null>(null);
-const generatedSummary = ref<string>("");
-const rawTextForSummary = ref<string>("");
-
-// AI summarization mutation (manual paste text)
-const textSummaryMutation = useMutation({
-  mutationFn: async () => {
-    return await generateSummaryFromText(rawTextForSummary.value);
-  },
-  onSuccess: (data) => {
-    generatedSummary.value = data;
-    form.setFieldValue("content", data);
-  },
-});
-
+const stepIndex = ref<number>(1);
 const steps = [
   {
     step: 1,
@@ -479,11 +358,47 @@ const steps = [
     title: "Approve & Publish",
   },
 ];
+const selectedArticle = ref<NewsApiArticle | null>(null);
+const generatedSummary = ref<string>("");
+const polymarketSummary = ref<string>("");
+const rawTextForSummary = ref<string>("");
 
 const quillRef = ref<QuillEditorInstance | null>(null);
 const hiddenImageInput = ref<HTMLInputElement | null>(null);
 const imageUploading = ref(false);
 const imageUploadError = ref("");
+const polymarketUrl = ref("");
+const polymarketError = ref("");
+const polymarketLoading = ref(false);
+const polymarketSuccess = ref(false);
+const inputMode = ref<"ai-summary" | "polymarket">("ai-summary");
+
+const form = useForm({
+  validationSchema: toTypedSchema(formSchema[0]),
+  initialValues: {
+    title: "",
+    slug: "",
+    description: "",
+    content: "",
+    imageUrl: "",
+  },
+});
+
+const { setValues, setFieldValue, setFieldTouched, meta, validate, values } =
+  form;
+
+const formValues = computed(() => values);
+
+const textSummaryMutation = useMutation({
+  mutationFn: async () => {
+    return await generateSummaryFromText(rawTextForSummary.value);
+  },
+  onSuccess: (data) => {
+    generatedSummary.value = data;
+    setFieldValue("content", data);
+    setFieldTouched("content", true);
+  },
+});
 
 // Simple toolbar array to ensure buttons appear
 const toolbarConfig = [
@@ -537,13 +452,90 @@ const customHandlers = {
 const publishMutation = useMutation({
   mutationFn: postNewsArticle,
   onSuccess: () => {
-    stepIndex.value = 1;
+    router.push(`/`).catch((err) => {
+      console.error("Navigation error:", err);
+    });
+
     selectedArticle.value = null;
     generatedSummary.value = "";
     rawTextForSummary.value = "";
+    polymarketUrl.value = "";
+    polymarketSuccess.value = false;
     form.resetForm();
   },
 });
+
+const {
+  data: polymarketData,
+  isFetching: polymarketIsFetching,
+  error: polymarketQueryError,
+  refetch: fetchPolymarket,
+} = useQuery({
+  queryKey: computed(() => ["polyMarketData", polymarketUrl.value]),
+  queryFn: async () => {
+    const url = new URL(polymarketUrl.value);
+    const pathParts = url.pathname.split("/").filter(Boolean);
+    const typeFromUrl = pathParts[0];
+    const slug = pathParts[1];
+
+    const type =
+      typeFromUrl === "event"
+        ? "events"
+        : typeFromUrl === "market"
+        ? "markets"
+        : null;
+
+    if (!type || !slug) {
+      throw new Error("Invalid Polymarket URL.");
+    }
+
+    const response = await getPolymarketDataBySlug(type, slug);
+    return response;
+  },
+  enabled: false,
+});
+
+watchEffect(() => {
+  polymarketLoading.value = polymarketIsFetching.value;
+  polymarketError.value = polymarketQueryError.value?.message || "";
+});
+
+const savedValues = ref(
+  {} as {
+    title?: string | undefined;
+    description?: string | undefined;
+    content?: string | undefined;
+    imageUrl?: string | undefined;
+    author?: string | undefined;
+    source?: string | undefined;
+    slug?: string | undefined;
+  }
+);
+watch(
+  () => polymarketData.value,
+  async (data: any) => {
+    if (!data) return;
+
+    const formValues = {
+      title: data.title,
+      slug: generateSlug(data.title),
+      description: data.description,
+      content: data.summary,
+      imageUrl: data.image,
+      author: form.values.author,
+      source: polymarketUrl.value,
+    };
+    polymarketSummary.value = data.description || "";
+    setValues(formValues);
+    savedValues.value = { ...formValues };
+  }
+);
+
+function handlePolymarketFetch() {
+  polymarketError.value = "";
+  polymarketSuccess.value = false;
+  fetchPolymarket();
+}
 
 function triggerImageSelect() {
   imageUploadError.value = "";
@@ -562,22 +554,54 @@ async function onImageFileChange(
   try {
     const url = await uploadToCloudinary(file);
     componentField.onChange(url);
-    form.setFieldValue("imageUrl", url);
+    setFieldValue("imageUrl", url);
+    setFieldTouched("imageUrl", true);
   } catch (err) {
     console.error(err);
     imageUploadError.value = "Failed to upload image. Please try again.";
   } finally {
     imageUploading.value = false;
-    if (target) target.value = ""; // reset so same file can be re-selected
+    if (target) target.value = "";
   }
 }
 
 function removeUploadedImage() {
-  form.setFieldValue("imageUrl", "");
+  setFieldValue("imageUrl", "");
+  setFieldTouched("imageUrl", true);
+}
+
+// Helper computed values
+const totalSteps = computed(() => steps.length);
+const isFirstStep = computed(() => stepIndex.value === 1);
+const isLastStep = computed(() => stepIndex.value === totalSteps.value);
+
+async function handleNext() {
+  try {
+    const result = await validate();
+    if (result) {
+      if (stepIndex.value < totalSteps.value) stepIndex.value += 1;
+      savedValues.value = { ...result.values };
+    } else {
+      // validation failed - errors will be shown via FormMessage
+      // keep the user on current step
+    }
+  } catch (err) {
+    console.error("Validation error:", err);
+  }
+}
+
+function handlePrev() {
+  console.log(formValues);
+  if (stepIndex.value > 1) {
+    if (savedValues.value) {
+      setValues(savedValues.value);
+    }
+    stepIndex.value -= 1;
+  }
 }
 
 function onSubmit(values: Record<string, unknown>) {
-  if (stepIndex.value === steps.length) {
+  if (stepIndex.value === totalSteps.value) {
     const title =
       (values.title as string)?.trim() ||
       selectedArticle.value?.title ||
@@ -606,9 +630,7 @@ function onSubmit(values: Record<string, unknown>) {
       (values.imageUrl as string)?.trim() ||
       selectedArticle.value?.urlToImage ||
       "";
-
     const sourceUrl = selectedArticle.value?.url || "";
-
     const finalData = {
       title,
       slug,
@@ -622,32 +644,10 @@ function onSubmit(values: Record<string, unknown>) {
       description,
     };
     publishMutation.mutate(finalData as NewPostType);
+  } else {
+    handleNext();
   }
 }
-
-const { setValues } = useForm();
-
-// Initialize the form
-const form = useForm({
-  validationSchema: toTypedSchema(formSchema[0]),
-});
-
-// Initialize imageUrl field (not part of schema yet but used in form)
-form.setFieldValue("imageUrl", "");
-
-watchEffect(() => {
-  if (stepIndex.value === 2 && selectedArticle.value) {
-    setValues({
-      title: selectedArticle.value.title || "",
-      slug: generateSlug(selectedArticle.value.title || ""),
-      description: selectedArticle.value.description || "",
-      content: selectedArticle.value.content || "",
-      author: selectedArticle.value.author || "Unknown",
-      source: selectedArticle.value.source?.name || "Unknown",
-      imageUrl: selectedArticle.value.urlToImage || "",
-    });
-  }
-});
 </script>
 
 <style scoped>
