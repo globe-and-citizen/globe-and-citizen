@@ -6881,10 +6881,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"layer8-interceptor-production@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "layer8-interceptor-production@npm:0.3.0"
-  checksum: 10c0/467047e31a2c764d1cb5d4d8674092542193fc11049dfe64559813048852c0dc6a679364e92b5963cea34a55bacac38bf9e7cac07752ef226a28b7e0a16f9e7f
+"layer8-interceptor-production@npm:^0.3.1":
+  version: 0.3.1
+  resolution: "layer8-interceptor-production@npm:0.3.1"
+  checksum: 10c0/4bb675972cf4ebbd8cb5395cac405d31ffc05a88a62b52dc0265975a621c27e4208c8d4113ac6c48d0996fe1950f16be2bc67d1b926723d02e70a9d24f6b13d8
   languageName: node
   linkType: hard
 
@@ -7591,7 +7591,7 @@ __metadata:
     eslint-config-prettier: "npm:^10.1.5"
     eslint-plugin-vue: "npm:^10.1.0"
     globals: "npm:^16.1.0"
-    layer8-interceptor-production: "npm:^0.3.0"
+    layer8-interceptor-production: "npm:^0.3.1"
     leaflet: "npm:^1.9.4"
     pinia: "npm:^3.0.2"
     pinia-plugin-persistedstate: "npm:^4.3.0"
