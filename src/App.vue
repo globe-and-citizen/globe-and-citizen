@@ -18,7 +18,7 @@ async function Layer8Init() {
   try {
     const providers = [ServiceProvider.new(backend_url)];
 
-    await initEncryptedTunnel(forward_proxy_url, providers, true);
+    await initEncryptedTunnel(forward_proxy_url, providers, false);
   } catch (err) {
     throw new Error(`Failed to initialize encrypted tunnel: ${err}`);
   }
