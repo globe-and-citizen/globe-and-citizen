@@ -384,10 +384,7 @@ const form = useForm({
   },
 });
 
-const { setValues, setFieldValue, setFieldTouched, meta, validate, values } =
-  form;
-
-const formValues = computed(() => values);
+const { setValues, setFieldValue, setFieldTouched, meta, validate } = form;
 
 const textSummaryMutation = useMutation({
   mutationFn: async () => {
