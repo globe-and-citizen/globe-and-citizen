@@ -591,7 +591,6 @@ async function handleNext() {
 }
 
 function handlePrev() {
-  console.log(formValues);
   if (stepIndex.value > 1) {
     if (savedValues.value) {
       setValues(savedValues.value);

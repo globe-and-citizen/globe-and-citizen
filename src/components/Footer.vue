@@ -23,6 +23,12 @@
           class="flex items-center text-base font-semibold"
           >Become a contributor</RouterLink
         >
+        <div
+          class="flex items-center text-base font-semibold cursor-pointer"
+          @click="runLatencyTest"
+        >
+          Run Latency Test
+        </div>
       </nav>
 
       <div
@@ -65,6 +71,7 @@ import logo from "@/assets/logo.svg";
 import telegram from "@/assets/icons/telegram.svg";
 import github from "@/assets/icons/github.svg";
 import discord from "@/assets/icons/discord.svg";
+import { runLatencyTest } from "@/api/latency";
 </script>
 
 <style scoped>
