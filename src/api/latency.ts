@@ -16,6 +16,7 @@ export async function runLatencyTest(): Promise<LatencyResult[]> {
     type: "info",
     position: toast.POSITION.BOTTOM_RIGHT,
   } as ToastOptions);
+
   const results: LatencyResult[] = [];
 
   for (let i = 0; i < 10; i++) {
@@ -41,12 +42,25 @@ export async function runLatencyTest(): Promise<LatencyResult[]> {
       results.push({ request: i + 1, sizeInKB, latency: null });
     }
   }
+
   toast("Test completed. See logs", {
     autoClose: 3000,
     type: "success",
     position: toast.POSITION.BOTTOM_RIGHT,
   } as ToastOptions);
 
+  const validResults = results.filter((r) => r.latency !== null);
+  const totalLatency = validResults.reduce(
+    (sum, r) => sum + (r.latency ?? 0),
+    0
+  );
+  const totalSize = validResults.reduce((sum, r) => sum + r.sizeInKB, 0);
+
+  const avgLatencyPer10KB =
+    totalSize > 0 ? ((totalLatency / totalSize) * 10).toFixed(2) : "N/A";
+
   console.log("✅ Latency check completed. Results:", results);
+  console.log(`📊 Average latency: ${avgLatencyPer10KB} ms per 10KB`);
+
   return results;
 }
