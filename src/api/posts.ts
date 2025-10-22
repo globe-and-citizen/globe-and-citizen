@@ -352,3 +352,24 @@ export async function fetchPostWithEntries(slug: string) {
     return null;
   }
 }
+
+export async function getUsersNewsPosts(
+  size: number,
+  page: number
+): Promise<FetchPostsType> {
+  try {
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}/profile/articles?size=${size}&page=${page}`
+    );
+
+    if (!response) {
+      throw new Error(`Error fetching user's articles: ${response}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching user's articles:", error);
+    throw error;
+  }
+}

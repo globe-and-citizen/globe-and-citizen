@@ -22,6 +22,9 @@ import PublicView from "@/views/UserProfile/PublicView.vue";
 import ProfileSettingsView from "@/views/UserProfile/ProfileSettingsView.vue";
 import MobileProfileMenuView from "@/views/UserProfile/MobileProfileMenuView.vue";
 import UserOpinionsView from "@/views/UserProfile/UserOpinionsView.vue";
+import TopHeadlines from "@/views/TopHeadlines.vue";
+import CreateArticle from "@/views/UserProfile/CreateArticle.vue";
+import UserNewsView from "@/views/UserProfile/UserNewsView.vue";
 const routes = [
   {
     path: "/",
@@ -33,6 +36,7 @@ const routes = [
         component: TrendingView,
       },
       { path: "about-us", component: AboutView },
+      { path: "top-headlines", component: TopHeadlines },
       { path: "become-a-contributor", component: BecomeAContributorView },
       { path: "sign-in", component: SignInView },
       { path: "sign-up", component: SignUpView },
@@ -85,6 +89,8 @@ const routes = [
           { path: "subscriptions", component: PublicView },
           { path: "notifications", component: PublicView },
           { path: "my-articles", component: UserOpinionsView },
+          { path: "articles", component: UserNewsView },
+          { path: "create", component: CreateArticle },
           { path: "my-comments", component: PublicView },
         ],
       },

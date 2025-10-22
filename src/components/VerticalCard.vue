@@ -62,8 +62,8 @@
       <div
         class="text-black-80 mb-3 font-lato font-normal text-base flex-1"
         v-html="
-          post?.description.substring(0, 110) + '...' ||
-          post?.content.substring(0, 110) + '...' ||
+          post?.description?.substring(0, 110) + '...' ||
+          post?.content?.substring(0, 110) + '...' ||
           'No content available'
         "
       />
