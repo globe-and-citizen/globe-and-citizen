@@ -1,5 +1,11 @@
 <template>
-  <RouterLink :to="`/post/${data?.post_slug}/${data.slug}`">
+  <RouterLink
+    :to="
+      data.post_slug
+        ? `/post/${data?.post_slug}/${data.slug}`
+        : `/post/${data.slug}`
+    "
+  >
     <div
       class="relative group flex border border-transparent hover:border-black-20 rounded-md hover:shadow-card-hard"
     >
@@ -11,19 +17,22 @@
       />
 
       <button
+        v-if="showDeleteButton !== false"
         class="absolute bottom-2 right-2 bg-primary-red text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
         @click="(e:MouseEvent) => {
           openDeleteModal();
           e.preventDefault();
-          // e.stopPropagation();
-          console.log('clicked')
         }"
       >
         Delete
       </button>
       <RouterLink
-        :to="`/post/${data?.post_slug}`"
-        class="absolute bottom-2 right-18 bg-secondary-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+        :to="data.post_slug ? `/post/${data?.post_slug}` : `/post/${data.slug}`"
+        class="absolute bottom-2 bg-secondary-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+        :class="{
+          ' right-18': props.showDeleteButton,
+          'right-4': !props.showDeleteButton,
+        }"
       >
         Go to news
       </RouterLink>
@@ -71,7 +80,7 @@
 import { deleteOpinion } from "@/api/opinions.ts";
 import { useAuthStore } from "@/store/authStore.ts";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
-import { computed, defineProps, ref, watchEffect } from "vue";
+import { computed, defineProps, ref } from "vue";
 import dayjs from "dayjs";
 import { RouterLink } from "vue-router";
 import ConfirmDeleteModal from "@/components/modals/ConfirmDeleteModal.vue";
@@ -79,8 +88,9 @@ import type { Post } from "@/models/Posts";
 
 interface PostType {
   data: Partial<Post>;
+  showDeleteButton: boolean;
 }
-defineProps<PostType>();
+const props = defineProps<PostType>();
 
 const queryClient = useQueryClient();
 const authStore = useAuthStore();
@@ -106,6 +116,9 @@ const { mutate: deleteOpinionMutation } = useMutation({
     queryClient.invalidateQueries({
       queryKey: ["users-articles"],
     });
+    queryClient.invalidateQueries({
+      queryKey: ["users-news-articles"],
+    });
   },
   onError: (error) => {
     console.error("Failed to delete opinion:", error);
@@ -116,8 +129,4 @@ const confirmDelete = (slug: string) => {
   deleteOpinionMutation(slug);
   closeDeleteModal();
 };
-
-watchEffect(() => {
-  console.log(isDeleteModalOpen.value);
-});
 </script>

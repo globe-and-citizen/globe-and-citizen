@@ -8,14 +8,14 @@ import {
   SIGN_IN_URL,
   SIGN_UP_URL,
 } from "./constants";
-import * as interceptorWasm from "layer8-interceptor-production";
+// import * as interceptorWasm from "layer8-interceptor-production";
 import { traceUser } from "./user";
 
 export async function interceptorFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  return (await interceptorWasm.fetch(url, options)) as Response;
+  return (await fetch(url, options)) as Response;
 }
 
 export async function fetchWithAuth(

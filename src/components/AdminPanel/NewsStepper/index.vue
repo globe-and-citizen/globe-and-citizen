@@ -3,18 +3,23 @@
   <div class="w-full mx-auto p-6">
     <Stepper v-model="stepIndex" class="block w-full">
       <form @submit.prevent="onSubmit(savedValues)">
-        <div class="flex w-full flex-start gap-2 mb-6 border-b-1 pb-5"></div>
+        <div class="flex w-full flex-start gap-2"></div>
         <!-- Step Content -->
         <div class="min-h-[400px]">
           <template v-if="stepIndex === 1">
             <div class="space-y-4">
               <h2 class="text-xl font-semibold">Edit Article Details</h2>
               <div class="mb-4 space-y-2">
-                <label class="block font-medium text-sm"
+                <label
+                  v-if="hideSummarize === false"
+                  class="block font-medium text-sm"
                   >Select input method:</label
                 >
                 <div class="flex items-center gap-6">
-                  <label class="flex items-center space-x-2 text-sm">
+                  <label
+                    v-if="hideSummarize === false"
+                    class="flex items-center space-x-2 text-sm"
+                  >
                     <input
                       v-model="inputMode"
                       type="radio"
@@ -306,7 +311,7 @@ import { toTypedSchema } from "@vee-validate/zod";
 import LoaderIcon from "@/assets/icons/loader.svg";
 import { computed, ref, watch, watchEffect } from "vue";
 
-import { useMutation, useQuery } from "@tanstack/vue-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import { Button } from "../../../components/ui/button";
@@ -330,6 +335,14 @@ import { getPolymarketDataBySlug } from "@/api/polymarket";
 import { useRouter } from "vue-router";
 import ApproveAndPublish from "./ApproveAndPublish.vue";
 const router = useRouter();
+const queryClient = useQueryClient();
+
+const props = defineProps({
+  hideSummarize: {
+    type: Boolean,
+    default: false,
+  },
+});
 
 // Type for QuillEditor instance
 export interface QuillEditorInstance {
@@ -371,7 +384,9 @@ const polymarketUrl = ref("");
 const polymarketError = ref("");
 const polymarketLoading = ref(false);
 const polymarketSuccess = ref(false);
-const inputMode = ref<"ai-summary" | "polymarket">("ai-summary");
+const inputMode = ref<"ai-summary" | "polymarket">(
+  props.hideSummarize ? "polymarket" : "ai-summary"
+);
 
 const form = useForm({
   validationSchema: toTypedSchema(formSchema[0]),
@@ -444,7 +459,6 @@ const customHandlers = {
     };
   },
 };
-
 // Publish article mutation
 const publishMutation = useMutation({
   mutationFn: postNewsArticle,
@@ -453,6 +467,12 @@ const publishMutation = useMutation({
       console.error("Navigation error:", err);
     });
 
+    queryClient.invalidateQueries({
+      queryKey: ["users-news-articles"],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["allPosts"],
+    });
     selectedArticle.value = null;
     generatedSummary.value = "";
     rawTextForSummary.value = "";

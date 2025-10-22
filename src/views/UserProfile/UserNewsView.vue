@@ -8,7 +8,7 @@
         v-for="article in data.data"
         :key="article?.id"
         :data="article"
-        show-delete-button
+        :show-delete-button="false"
       />
     </div>
     <div v-else class="text-center py-10 text-gray-500">
@@ -17,19 +17,19 @@
   </div>
 </template>
 <script setup lang="ts">
-import { getUsersArticles } from "@/api/opinions.ts";
 import type { FetchPostsType } from "@/models/Posts";
 import { useQuery } from "@tanstack/vue-query";
 
 import { ref } from "vue";
 
 import MyViewpointsCard from "../../components/MyViewpointsCard.vue";
+import { getUsersNewsPosts } from "@/api/posts";
 const currentPage = ref(0);
 const pageSize = ref(10);
 
 const { data, isLoading } = useQuery<FetchPostsType>({
-  queryKey: ["users-articles", currentPage, pageSize],
-  queryFn: () => getUsersArticles(pageSize.value, currentPage.value),
+  queryKey: ["users-news-articles", currentPage, pageSize],
+  queryFn: () => getUsersNewsPosts(pageSize.value, currentPage.value),
   refetchOnWindowFocus: true,
 });
 </script>

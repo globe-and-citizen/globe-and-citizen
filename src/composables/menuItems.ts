@@ -45,7 +45,19 @@ export const menuItems = [
   //   url: "/notifications",
   // },
   {
-    section: "My Activity",
+    section: "Studio",
+    icon: articles,
+    title: "Create Article",
+    url: "/create",
+  },
+  {
+    section: "Studio",
+    icon: articles,
+    title: "My Articles",
+    url: "/articles",
+  },
+  {
+    section: "Studio",
     icon: articles,
     title: "My Viewpoints",
     url: "/my-articles",

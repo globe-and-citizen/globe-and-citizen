@@ -8,7 +8,9 @@ export async function fetchNewsApi(): Promise<{ data: NewsApiResponse }> {
     if (!response) {
       throw new Error(`Error fetching posts`);
     }
-    return await response.json();
+
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error("Error fetching all posts:", error);
     throw error;

@@ -274,6 +274,7 @@ const { mutate: deletePost } = useMutation({
   },
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ["allPosts"] });
+    queryClient.invalidateQueries({ queryKey: ["users-news-articles"] });
   },
   onError: (error) => {
     console.error("Failed to delete post:", error);
