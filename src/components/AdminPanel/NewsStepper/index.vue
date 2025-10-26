@@ -309,7 +309,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { toTypedSchema } from "@vee-validate/zod";
 import LoaderIcon from "@/assets/icons/loader.svg";
-import { computed, ref, watch, watchEffect } from "vue";
+import { computed, ref, watch, watchEffect, onMounted } from "vue";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { QuillEditor } from "@vueup/vue-quill";
@@ -334,6 +334,7 @@ import { uploadToCloudinary } from "@/api/images.ts";
 import { getPolymarketDataBySlug } from "@/api/polymarket";
 import { useRouter } from "vue-router";
 import ApproveAndPublish from "./ApproveAndPublish.vue";
+import { useGlobalStore } from "@/store/globalStore";
 const router = useRouter();
 const queryClient = useQueryClient();
 
@@ -388,15 +389,41 @@ const inputMode = ref<"ai-summary" | "polymarket">(
   props.hideSummarize ? "polymarket" : "ai-summary"
 );
 
+const globalStore = useGlobalStore();
+const generatedApiPost = computed(() => globalStore.generatedPost);
+const initialValues = {
+  title: "",
+  slug: "",
+  description: "",
+  content: "",
+  imageUrl: "",
+};
+
 const form = useForm({
   validationSchema: toTypedSchema(formSchema[0]),
-  initialValues: {
-    title: "",
-    slug: "",
-    description: "",
-    content: "",
-    imageUrl: "",
-  },
+  initialValues,
+});
+
+onMounted(() => {
+  if (generatedApiPost.value) {
+    const post = generatedApiPost.value;
+    setValues({
+      title: post.title || "",
+      slug: generateSlug(post.title || ""),
+      description: post.description || "",
+      content: post.content || "",
+      imageUrl: post.urlToImage || "",
+      source: post.url || "",
+    });
+    savedValues.value = {
+      title: post.title || "",
+      slug: generateSlug(post.title || ""),
+      description: post.description || "",
+      content: post.content || "",
+      imageUrl: post.urlToImage || "",
+      source: post.url || "",
+    };
+  }
 });
 
 const { setValues, setFieldValue, setFieldTouched, meta, validate } = form;
@@ -473,12 +500,23 @@ const publishMutation = useMutation({
     queryClient.invalidateQueries({
       queryKey: ["allPosts"],
     });
+    globalStore.setGeneratedPost({
+      author: "",
+      content: null,
+      description: null,
+      publishedAt: null,
+      source: "",
+      title: null,
+      url: null,
+      urlToImage: null,
+    });
     selectedArticle.value = null;
     generatedSummary.value = "";
     rawTextForSummary.value = "";
     polymarketUrl.value = "";
     polymarketSuccess.value = false;
     form.resetForm();
+    form.setValues(initialValues);
   },
 });
 
@@ -660,10 +698,17 @@ function onSubmit(values: Record<string, unknown>) {
       description,
     };
     publishMutation.mutate(finalData as NewPostType);
+    form.resetForm();
   } else {
     handleNext();
   }
 }
+
+onMounted(() => {
+  if (!generatedApiPost.value?.content) {
+    form.resetForm();
+  }
+});
 </script>
 
 <style scoped>

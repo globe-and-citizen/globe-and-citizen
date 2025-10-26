@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="w-full">
     <h1 class="text-2xl font-bold mb-4 uppercase">News-Api latest posts</h1>
 
@@ -86,4 +86,4 @@ function formatDate(dateString: string): string {
     timeStyle: "short",
   }).format(date);
 }
-</script>
+</script> -->
