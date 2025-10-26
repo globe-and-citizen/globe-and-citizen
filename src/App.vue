@@ -10,6 +10,8 @@ import { VueQueryDevtools } from "@tanstack/vue-query-devtools";
 //   ServiceProvider,
 // } from "layer8-interceptor-production";
 import { onMounted } from "vue";
+import { useGlobalStore } from "@/store/globalStore";
+const globalStore = useGlobalStore();
 // console.log("here");
 
 // const forward_proxy_url = import.meta.env.VITE_FORWARD_PROXY_URL;
@@ -26,5 +28,6 @@ import { onMounted } from "vue";
 // }
 onMounted(async () => {
   // await Layer8Init();
+  globalStore.clearGeneratedPost();
 });
 </script>
