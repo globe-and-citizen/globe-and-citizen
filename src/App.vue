@@ -5,29 +5,32 @@
 
 <script setup lang="ts">
 import { VueQueryDevtools } from "@tanstack/vue-query-devtools";
-// import {
-//   initEncryptedTunnel,
-//   ServiceProvider,
-// } from "layer8-interceptor-production";
+import {
+  initEncryptedTunnel,
+  ServiceProvider,
+} from "layer8-interceptor-production";
 import { onMounted } from "vue";
 import { useGlobalStore } from "@/store/globalStore";
 const globalStore = useGlobalStore();
-// console.log("here");
 
-// const forward_proxy_url = import.meta.env.VITE_FORWARD_PROXY_URL;
-// const backend_url = import.meta.env.VITE_API_BASE_URL;
+const layer8Enabled = import.meta.env.VITE_ENABLE_LAYER8 === "true";
 
-// async function Layer8Init() {
-//   try {
-//     const providers = [ServiceProvider.new(backend_url)];
+const forward_proxy_url = import.meta.env.VITE_FORWARD_PROXY_URL;
+const backend_url = import.meta.env.VITE_API_BASE_URL;
 
-//     await initEncryptedTunnel(forward_proxy_url, providers, false);
-//   } catch (err) {
-//     throw new Error(`Failed to initialize encrypted tunnel: ${err}`);
-//   }
-// }
+async function Layer8Init() {
+  try {
+    const providers = [ServiceProvider.new(backend_url)];
+
+    await initEncryptedTunnel(forward_proxy_url, providers, false);
+  } catch (err) {
+    throw new Error(`Failed to initialize encrypted tunnel: ${err}`);
+  }
+}
 onMounted(async () => {
-  // await Layer8Init();
+  if (layer8Enabled) {
+    await Layer8Init();
+  }
   globalStore.clearGeneratedPost();
 });
 </script>

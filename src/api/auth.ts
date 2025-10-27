@@ -8,14 +8,20 @@ import {
   SIGN_IN_URL,
   SIGN_UP_URL,
 } from "./constants";
-// import * as interceptorWasm from "layer8-interceptor-production";
+import * as interceptorWasm from "layer8-interceptor-production";
 import { traceUser } from "./user";
+
+const layer8Enabled = import.meta.env.VITE_ENABLE_LAYER8 === "true";
 
 export async function interceptorFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  return (await fetch(url, options)) as Response;
+  if (layer8Enabled) {
+    return (await interceptorWasm.fetch(url, options)) as Response;
+  } else {
+    return (await fetch(url, options)) as Response;
+  }
 }
 
 export async function fetchWithAuth(
