@@ -11,7 +11,7 @@ import {
 import * as interceptorWasm from "layer8-interceptor-production";
 import { traceUser } from "./user";
 
-const layer8Enabled = import.meta.env.VITE_ENABLE_LAYER8 === "true";
+const layer8Enabled = import.meta.env.VITE_API_BASE_URL.includes('globeandcitizenreverseproxy');
 
 export async function interceptorFetch(
   url: string,
