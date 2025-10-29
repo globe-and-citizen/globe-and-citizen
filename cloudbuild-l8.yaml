@@ -13,30 +13,10 @@ steps:
       - VITE_FORWARD_PROXY_URL
       - VITE_LAYER8_BASE_URL_PROD
 
-  # 3️⃣ Ensure GCS bucket exists for l8.globeandcitizen.com
-  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
-    id: "create-bucket"
-    entrypoint: bash
-    args:
-      - -c
-      - |
-        # Get the active project ID dynamically
-        PROJECT_ID=$(gcloud config get-value project)
-
-        if ! gsutil ls -b gs://l8.globeandcitizen.com >/dev/null 2>&1; then
-          echo "Creating bucket gs://l8.globeandcitizen.com in project $PROJECT_ID"
-          gsutil mb -p $PROJECT_ID -l us-central1 gs://l8-globeandcitizen-com
-          gsutil web set -m index.html -e index.html gs://l8-globeandcitizen-com
-          gsutil iam ch allUsers:objectViewer gs://l8-globeandcitizen-com
-
-        else
-          echo "Bucket already exists."
-        fi
-
-  # 4️⃣ Sync build output to the new bucket
+  # 3️⃣ Sync build output to the verified bucket
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gsutil
-    args: ["-m", "rsync", "-r", "dist/", "gs://l8-globeandcitizen-com"]
+    args: ["-m", "rsync", "-r", "dist/", "gs://l8.globeandcitizen.com"]
 
 availableSecrets:
   secretManager:
