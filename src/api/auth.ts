@@ -17,6 +17,7 @@ export async function interceptorFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
+  console.log("Layer8 Enabled:", layer8Enabled);
   if (layer8Enabled) {
     return (await interceptorWasm.fetch(url, options)) as Response;
   } else {
