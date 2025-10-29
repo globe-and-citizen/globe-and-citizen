@@ -36,7 +36,7 @@ steps:
   # 4️⃣ Sync build output to the new bucket
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
     entrypoint: gsutil
-    args: ["-m", "rsync", "-r", "dist/", "gs://l8.globeandcitizen.com"]
+    args: ["-m", "rsync", "-r", "dist/", "gs://l8-globeandcitizen-com"]
 
 availableSecrets:
   secretManager:
