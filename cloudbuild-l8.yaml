@@ -20,8 +20,11 @@ steps:
     args:
       - -c
       - |
+        # Get the active project ID dynamically
+        PROJECT_ID=$(gcloud config get-value project)
+
         if ! gsutil ls -b gs://l8.globeandcitizen.com >/dev/null 2>&1; then
-          echo "Creating bucket gs://l8.globeandcitizen.com"
+          echo "Creating bucket gs://l8.globeandcitizen.com in project $PROJECT_ID"
           gsutil mb -p $PROJECT_ID -l us-central1 gs://l8.globeandcitizen.com
           gsutil web set -m index.html -e index.html gs://l8.globeandcitizen.com
           gsutil iam ch allUsers:objectViewer gs://l8.globeandcitizen.com
