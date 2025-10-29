@@ -12,7 +12,9 @@ import {
 import { onMounted } from "vue";
 import { useGlobalStore } from "@/store/globalStore";
 const globalStore = useGlobalStore();
-
+console.log("App.vue loaded");
+const baseurl = import.meta.env.VITE_API_BASE_URL;
+console.log("API Base URL:", baseurl);
 const layer8Enabled = import.meta.env.VITE_API_BASE_URL.includes(
   "globeandcitizenreverseproxy"
 );
