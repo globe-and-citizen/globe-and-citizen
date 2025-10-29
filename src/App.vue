@@ -29,6 +29,7 @@ async function Layer8Init() {
   }
 }
 onMounted(async () => {
+  console.log(layer8Enabled);
   if (layer8Enabled) {
     await Layer8Init();
   }
