@@ -11,7 +11,7 @@ steps:
     secretEnv:
       - VITE_API_BASE_URL
       - VITE_FORWARD_PROXY_URL
-      - VITE_LAYER8_BASE_URL
+      - VITE_LAYER8_BASE_URL_PROD
 
   # 3️⃣ Ensure GCS bucket exists for l8.globeandcitizen.com
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
