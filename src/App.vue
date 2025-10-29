@@ -28,11 +28,13 @@ async function Layer8Init() {
     throw new Error(`Failed to initialize encrypted tunnel: ${err}`);
   }
 }
-onMounted(async () => {
-  console.log(layer8Enabled);
-  if (layer8Enabled) {
-    await Layer8Init();
-  }
+console.log("before onmount", layer8Enabled);
+
+onMounted(() => {
+  console.log("onMounted start", layer8Enabled);
   globalStore.clearGeneratedPost();
+  setTimeout(async () => {
+    if (layer8Enabled) await Layer8Init();
+  }, 0);
 });
 </script>
