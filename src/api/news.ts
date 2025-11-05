@@ -4,12 +4,23 @@ import { fetchWithAuth } from "@/api/auth.ts";
 
 export async function fetchNewsApi({
   page = 1,
+  source,
+  category,
 }: {
   page?: number;
+  source?: string;
+  category?: string;
 }): Promise<{ data: NewsApiResponse }> {
   try {
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    if (source) {
+      params.set("sources", source);
+    } else if (category) {
+      params.set("category", category);
+    }
     const response = await fetchWithAuth(
-      `${API_BASE_URL}/news-api?page=${page}`
+      `${API_BASE_URL}/news-api?${params.toString()}`
     );
     if (!response) {
       throw new Error(`Error fetching posts`);
@@ -19,6 +30,35 @@ export async function fetchNewsApi({
     return data;
   } catch (error) {
     console.error("Error fetching all posts:", error);
+    throw error;
+  }
+}
+
+export type FetchNewsApiSource = {
+  category: string;
+  country: string;
+  description: string;
+  id: string;
+  language: string;
+  name: string;
+  url: string;
+};
+
+export type FetchNewsApiSourcesResponse = {
+  data: { status: string; sources: FetchNewsApiSource[] };
+};
+
+export async function fetchNewsApiSources(): Promise<FetchNewsApiSourcesResponse> {
+  try {
+    const response = await fetchWithAuth(`${API_BASE_URL}/sources`);
+    if (!response) {
+      throw new Error(`Error fetching news sources`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching news sources:", error);
     throw error;
   }
 }
@@ -39,7 +79,8 @@ export async function generateNewsApiSummary(
 ): Promise<{ success: boolean; data: NewsApiSummaryPayload }> {
   try {
     const response = await fetch(
-      "https://n8n-g4mv.onrender.com/webhook/40a2cac2-7cae-44ee-b35a-7b694045375e",
+      // "https://n8n-g4mv.onrender.com/webhook/40a2cac2-7cae-44ee-b35a-7b694045375e",
+      "https://globeandcitizen.zeabur.app/webhook/40a2cac2-7cae-44ee-b35a-7b694045375e",
       {
         method: "POST",
         headers: {
@@ -53,7 +94,7 @@ export async function generateNewsApiSummary(
       if (response.status === 409) {
         throw new Error("Opinion with this title already exists");
       }
-      throw new Error(`Error adding news opinion: ${response}`);
+      throw new Error(`Opinion generation failed: ${response}`);
     }
 
     const data = await response.json();
