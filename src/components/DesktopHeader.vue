@@ -390,8 +390,8 @@ import { computed, type ComputedRef, onMounted, ref, watch } from "vue";
 import { useAuthStore } from "@/store/authStore.ts";
 import logo from "../assets/logo.svg";
 import { useRoute, useRouter } from "vue-router";
-import { useSearchStore } from "@/store/searchStore.ts";
-import { useDebounceFn } from "@vueuse/core";
+// import { useSearchStore } from "@/store/searchStore.ts";
+// import { useDebounceFn } from "@vueuse/core";
 import { useQuery } from "@tanstack/vue-query";
 import type { Post } from "@/models/Posts";
 import { fetchPostById } from "@/api/posts.ts";
@@ -404,7 +404,7 @@ import { useNewOpinionStore } from "@/store/newOpinionStore.ts";
 type HeaderState = "default" | "no-user" | "no-user-search" | "logged-in";
 const authStore = useAuthStore();
 const router = useRouter();
-const searchStore = useSearchStore();
+// const searchStore = useSearchStore();
 const storeUsername = computed(() =>
   authStore.user?.username ? authStore.user.username : ""
 );
@@ -475,14 +475,14 @@ const logOut = () => {
   router.push("/");
 };
 
-const debounceSearch = useDebounceFn((val: string) => {
-  searchStore.setQuery(val);
-}, 500);
+// const debounceSearch = useDebounceFn((val: string) => {
+//   searchStore.setQuery(val);
+// }, 500);
 
-const onSearchInput = (e: Event) => {
-  const target = e.target as HTMLInputElement;
-  debounceSearch(target.value);
-};
+// const onSearchInput = (e: Event) => {
+//   const target = e.target as HTMLInputElement;
+//   debounceSearch(target.value);
+// };
 
 const navigateToCreateOpinion = () => {
   if (!post.value) {
