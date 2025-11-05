@@ -39,48 +39,50 @@
         <!-- Form -->
         <form class="flex flex-col gap-6" @submit.prevent="handleSubmit">
           <!-- Title Input -->
-          <div class="grid gap-2">
+          <div class="grid gap-2 relative">
             <Label
               for="title"
-              class="text-base font-semibold text-black-100 dark:text-gray-300"
+              class="text-base font-semibold text-black-100 dark:text-gray-300 flex items-center gap-1"
             >
-              Viewpoint title
+              Viewpoint title <span class="text-red-500">*</span>
             </Label>
-            <Input
-              v-bind="{ id: 'title', placeholder: 'Enter your opinion title' }"
-              v-model="formData.title"
-              class="w-full"
-            />
-            <div
-              class="text-xs font-lato text-black-60 font-medium mt-0 leading-[1] flex justify-between items-center"
-            >
-              <p>
-                Give your article a headline that grabs attention. Aim for max
-                60 characters.
-              </p>
-              <!-- character counter -->
-              <p
-                class="text-right text-xs text-black-60"
-                :style="
-                  formData?.title && formData?.title?.length > 60
-                    ? 'color: rgba(205, 66, 59, 1)'
+
+            <div class="relative">
+              <Input
+                v-bind="{
+                  id: 'title',
+                  placeholder: 'Enter your opinion title',
+                }"
+                v-model="formData.title"
+                class="w-full"
+                :class="
+                  validationErrors.title
+                    ? 'border-red-500 focus:ring-red-500'
                     : ''
                 "
+              />
+              <div
+                v-if="validationErrors.title"
+                class="absolute top-full left-0 mt-1 text-xs text-red-500"
               >
-                {{ formData?.title?.length ?? 0 }} / 60
-              </p>
+                Title is required.
+              </div>
             </div>
           </div>
 
           <!-- Content Editor -->
-          <div class="grid gap-2">
+          <div class="grid gap-2 relative">
             <Label
               for="content"
-              class="text-base font-semibold text-black-100 dark:text-gray-300"
+              class="text-base font-semibold text-black-100 dark:text-gray-300 flex items-center gap-1"
             >
-              Viewpoint text
+              Viewpoint text <span class="text-red-500">*</span>
             </Label>
-            <div class="border rounded-md overflow-hidden">
+
+            <div
+              class="border rounded-md overflow-hidden relative"
+              :class="validationErrors.content ? 'border-red-500' : ''"
+            >
               <QuillEditor
                 v-bind="{ id: 'content' }"
                 ref="quillRef"
@@ -96,8 +98,17 @@
                     },
                   },
                 }"
-                @update:content="(content: any) => (formData.content = content)"
+                @update:content="(content: any) => {
+        formData.content = content;
+        validationErrors.content = false;
+      }"
               />
+            </div>
+            <div
+              v-if="validationErrors.content"
+              class="absolute top-full left-0 mt-1 text-xs text-red-500"
+            >
+              Viewpoint text is required.
             </div>
           </div>
 
@@ -189,7 +200,6 @@
               class="flex-1 bg-blue-600 text-white hover:bg-blue-700 transition-colors"
               v-bind="{
                 type: 'submit',
-                disabled: !formData.title || !formData.content,
               }"
             >
               Submit Opinion
@@ -208,7 +218,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { addOpinion } from "@/api/opinions.ts";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import type { Post } from "@/models/Posts";
 import type { OpinionPayload } from "@/models/Opinions";
 import { generateSlug } from "@/composables/utils.ts";
@@ -313,10 +323,17 @@ const customHandlers = {
     };
   },
 };
+const validationErrors = ref({
+  title: false,
+  content: false,
+});
 
 function handleSubmit() {
-  if (!formData.value.title || !formData.value.content) {
-    toast("Please fill in all required fields", {
+  validationErrors.value.title = !formData.value.title?.trim();
+  validationErrors.value.content = !formData.value.content?.trim();
+
+  if (validationErrors.value.title || validationErrors.value.content) {
+    toast("Please fill in all required fields before submitting.", {
       autoClose: 3000,
       type: "warning",
     });
@@ -325,7 +342,6 @@ function handleSubmit() {
 
   handleSaveEdit(formData.value as OpinionPayload);
 }
-
 function handleSaveEdit(data: OpinionPayload) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { post_id, slug, ...otherData } = data;
@@ -382,6 +398,12 @@ onBeforeRouteUpdate(async (to) => {
   }
 });
 
+watch(
+  () => formData.value.title,
+  (newVal) => {
+    if (newVal?.trim()) validationErrors.value.title = false;
+  }
+);
 onMounted(() => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
