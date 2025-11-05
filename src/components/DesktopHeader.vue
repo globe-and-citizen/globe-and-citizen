@@ -348,7 +348,7 @@
     </Transition>
 
     <!-- Search -->
-    <div
+    <!-- <div
       v-if="headerState === 'no-user-search' || headerState === 'logged-in'"
       class="max-w-7xl mx-auto pb-4 px-4 md:px-0"
     >
@@ -356,9 +356,9 @@
         <div class="relative">
           <span
             class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400"
-          >
-            <!-- Search Icon -->
-            <svg
+          > -->
+    <!-- Search Icon -->
+    <!-- <svg
               class="w-5 h-5"
               fill="none"
               stroke="currentColor"
@@ -381,7 +381,7 @@
           />
         </div>
       </div>
-    </div>
+    </div> -->
   </header>
 </template>
 
