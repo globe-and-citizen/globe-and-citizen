@@ -12,9 +12,6 @@ import {
 import { onMounted } from "vue";
 import { useGlobalStore } from "@/store/globalStore";
 const globalStore = useGlobalStore();
-console.log("App.vue loaded");
-const baseurl = import.meta.env.VITE_API_BASE_URL;
-console.log("API Base URL:", baseurl);
 const layer8Enabled = import.meta.env.VITE_API_BASE_URL.includes(
   "globeandcitizenreverseproxy"
 );
@@ -30,10 +27,8 @@ async function Layer8Init() {
     throw new Error(`Failed to initialize encrypted tunnel: ${err}`);
   }
 }
-console.log("before onmount", layer8Enabled);
 
 onMounted(() => {
-  console.log("onMounted start", layer8Enabled);
   globalStore.clearGeneratedPost();
   setTimeout(async () => {
     if (layer8Enabled) await Layer8Init();
