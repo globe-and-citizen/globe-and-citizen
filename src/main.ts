@@ -10,6 +10,7 @@ import { useAuthStore } from "@/store/authStore.ts";
 import { createVfm } from "vue-final-modal";
 import Vue3Toastify, { toast } from "vue3-toastify";
 import "vue3-toastify/dist/index.css";
+import * as Sentry from "@sentry/vue";
 
 const app = createApp(App);
 const vfm = createVfm();
@@ -43,6 +44,16 @@ app.use(VueQueryPlugin, {
   enableDevtoolsV6Plugin: true,
 });
 app.config.globalProperties.$backend_url = backend_url;
+Sentry.init({
+  app,
+  dsn: "https://a39a7dc57b658f138b0ab53f45a20478@o4507662781382656.ingest.us.sentry.io/4510299777073152",
+  sendDefaultPii: true,
+  integrations: [
+    Sentry.feedbackIntegration({
+      colorScheme: "system",
+    }),
+  ],
+});
 app.use(router).mount("#app");
 const authStore = useAuthStore();
 authStore.initializeAuth();

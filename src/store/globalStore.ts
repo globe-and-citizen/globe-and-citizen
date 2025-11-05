@@ -1,13 +1,12 @@
 import { defineStore } from "pinia";
-import axios from "axios";
 import type { Post } from "../models/Posts";
 import type { NewsApiSummaryPayload } from "@/api/news";
 
 export type GlobalStore = {
   posts: Post[];
-  fetchPosts: () => Promise<Post[]>;
   setGeneratedPost: (post: NewsApiSummaryPayload) => void;
   generatedPost: NewsApiSummaryPayload | null;
+  newsApiFilters: Record<string, unknown>;
 };
 
 export const useGlobalStore = defineStore("globalStore", {
@@ -15,6 +14,7 @@ export const useGlobalStore = defineStore("globalStore", {
     ({
       posts: [] as Post[],
       generatedPost: null,
+      newsApiFilters: {},
     } as GlobalStore),
   persist: true,
   getters: {
@@ -24,24 +24,14 @@ export const useGlobalStore = defineStore("globalStore", {
   },
 
   actions: {
-    async fetchPosts(): Promise<Post[]> {
-      try {
-        const response = await axios.get<{ posts: Post[] }>(
-          "https://dummyjson.com/posts"
-        );
-        this.posts = response.data.posts;
-        return this.posts;
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-        this.posts = [];
-        return [];
-      }
-    },
     setGeneratedPost(post: NewsApiSummaryPayload) {
       this.generatedPost = post;
     },
     clearGeneratedPost() {
       this.generatedPost = null;
+    },
+    setNewsApiFilters(filters: Record<string, unknown>) {
+      this.newsApiFilters = filters;
     },
   },
 });

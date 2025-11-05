@@ -211,6 +211,13 @@
             class="flex flex-col gap-4 font-semibold text-base font-lato mb-6"
           >
             <RouterLink
+              to="/top-headlines"
+              active-class="text-red-500"
+              class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
+              @click="closeMobileMenu"
+              >Top Headlines</RouterLink
+            >
+            <RouterLink
               to="/about-us"
               active-class="text-red-500"
               class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
@@ -413,7 +420,6 @@ const { data: userData } = useQuery({
   },
   enabled: computed(() => !!storeUsername.value),
 });
-
 const profilePictureUrl = computed(() => {
   return userData.value?.profile_picture_url;
 });
