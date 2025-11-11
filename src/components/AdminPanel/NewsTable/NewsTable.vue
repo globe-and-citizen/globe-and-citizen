@@ -135,16 +135,18 @@
       <Button
         variant="outline"
         size="sm"
-        :disabled="isLoading || currentPage === 1"
+        :disabled="isLoading || !canGoPrev"
         @click="currentPage--"
       >
         Previous
       </Button>
-      <span class="text-sm mx-2"> Page {{ currentPage }} </span>
+      <span class="text-sm mx-2">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
       <Button
         variant="outline"
         size="sm"
-        :disabled="isLoading || (data?.data && data.data.length < pageSize)"
+        :disabled="isLoading || !canGoNext"
         @click="currentPage++"
       >
         Next
@@ -249,7 +251,7 @@ import {
   fetchPostById,
   patchNewsArticle,
 } from "@/api/posts.ts";
-import type { NewPostType, Post, FetchPostsType } from "@/models/Posts";
+import type { NewPostType, Post, AllNewsResponseType } from "@/models/Posts";
 import "@/quill.css";
 
 import { useQueryClient } from "@tanstack/vue-query";
@@ -262,11 +264,17 @@ const queryClient = useQueryClient();
 const currentPage = ref(1);
 const pageSize = ref(10);
 
-const { data, isLoading } = useQuery<FetchPostsType>({
+const { data, isLoading } = useQuery<AllNewsResponseType>({
   queryKey: ["allPosts", currentPage, pageSize],
   queryFn: () => fetchAllPosts(pageSize.value, currentPage.value),
   refetchOnWindowFocus: true,
 });
+
+const totalCount = computed(() => data.value?.data.totalCount ?? 0);
+const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value));
+
+const canGoPrev = computed(() => currentPage.value > 1);
+const canGoNext = computed(() => currentPage.value < totalPages.value);
 
 const { mutate: deletePost } = useMutation({
   mutationFn: async (postId: string) => {
@@ -347,7 +355,7 @@ const { mutate: deleteOpinionMutation } = useMutation({
   },
 });
 
-const tableData = computed(() => data.value?.data ?? []);
+const tableData = computed(() => data.value?.data.posts ?? []);
 
 // State for dialogs
 const previewDialogOpen = ref(false);

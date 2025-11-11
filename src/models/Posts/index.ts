@@ -5,6 +5,15 @@ export type FetchPostsType = {
   data: Post[];
 };
 
+export type AllNewsResponseType = {
+  data: {
+    posts: Post[];
+    totalCount: number;
+    page: number;
+    pageSize: number;
+  };
+};
+
 type CountryVote = {
   country: string;
   likes: number;
@@ -42,6 +51,12 @@ export type Post = {
   total_comments: number;
   entries_count?: number;
   country_votes?: CountryVote[];
+  publishedAt?: string;
+  url?: string;
+  source?: {
+    name: string;
+    url: string;
+  };
 };
 
 export type Sentence = {
