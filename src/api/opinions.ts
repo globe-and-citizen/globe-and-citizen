@@ -1,4 +1,4 @@
-import type { FetchPostsType } from "@/models/Posts";
+import type { AllNewsResponseType, FetchPostsType } from "@/models/Posts";
 import { fetchWithAuth } from "./auth";
 import { API_BASE_URL, ENTRIES_URL } from "./constants";
 import type { OpinionPatchPayload, OpinionPayload } from "@/models/Opinions";
@@ -98,6 +98,27 @@ export async function getUsersArticles(
     return data;
   } catch (error) {
     console.error("Error fetching user's articles:", error);
+    throw error;
+  }
+}
+
+export async function fetchAllOpinions(
+  size: number,
+  page: number
+): Promise<AllNewsResponseType> {
+  try {
+    const response = await fetchWithAuth(
+      `${API_BASE_URL}${ENTRIES_URL}?size=${size}&page=${page}`
+    );
+
+    if (!response) {
+      throw new Error(`Error fetching opinions: ${response}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching opinions:", error);
     throw error;
   }
 }
