@@ -1,5 +1,9 @@
 import { fetchWithAuth, interceptorFetch } from "@/api/auth.ts";
-import type { FetchPostsType, NewPostType } from "../models/Posts";
+import type {
+  AllNewsResponseType,
+  FetchPostsType,
+  NewPostType,
+} from "../models/Posts";
 import { useAuthStore } from "../store/authStore";
 
 import { API_BASE_URL, ENTRIES_URL, POSTS_URL, USER_FEED } from "./constants";
@@ -8,7 +12,7 @@ import { toast } from "vue3-toastify";
 export async function fetchAllPosts(
   size: number,
   page: number
-): Promise<FetchPostsType> {
+): Promise<AllNewsResponseType> {
   try {
     const response = await interceptorFetch(
       `${API_BASE_URL}${POSTS_URL}?size=${size}&page=${page}`,
