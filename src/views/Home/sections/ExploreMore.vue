@@ -1,7 +1,12 @@
 <template>
   <div class="flex items-center py-2 mb-6 justify-between">
     <p class="font-lato font-bold text-2xl">Explore more</p>
-    <Button class="!w-fit" :variant="'tertiary'" :title="'See all'" />
+    <Button
+      class="!w-fit hover:text-red-500 hover:border-b-red-500"
+      :variant="'tertiary'"
+      :title="'See all'"
+      url="/all-news"
+    />
   </div>
   <div
     ref="scrollContainer"

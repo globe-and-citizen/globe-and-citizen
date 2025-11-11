@@ -33,7 +33,7 @@ import AdvertisementCard from "@/components/AdvertisementCard.vue";
 import { useWindowSize } from "@vueuse/core";
 import { useQuery } from "@tanstack/vue-query";
 import { computed, ref, watch } from "vue";
-import type { FetchPostsType } from "@/models/Posts";
+import type { AllNewsResponseType } from "@/models/Posts";
 import { fetchAllPosts } from "@/api/posts.ts";
 import { type Id, toast, type ToastOptions } from "vue3-toastify";
 // import { useAuthStore } from "@/store/authStore";
@@ -43,7 +43,7 @@ const { width } = useWindowSize();
 const isMobile = computed(() => width.value < 768);
 const loadingToastId = ref<Id>(0);
 
-const postsQuery = useQuery<FetchPostsType>({
+const postsQuery = useQuery<AllNewsResponseType>({
   queryKey: ["allPosts"],
   queryFn: () => fetchAllPosts(10, 1),
   refetchOnWindowFocus: true,
@@ -79,7 +79,7 @@ watch(
 );
 
 const filteredPosts = computed(() => {
-  return postsQuery.data.value?.data.filter((post) => post.author !== "");
+  return postsQuery.data.value?.data.posts.filter((post) => post.author !== "");
 });
 
 const postsForWhatOurReadersSay = computed(() => {

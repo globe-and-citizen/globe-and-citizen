@@ -70,7 +70,11 @@
           {{ post?.title }}
         </h4>
         <p class="text-black-80 mb-3 font-lato font-normal text-base">
-          {{ post?.description?.substring(0, 400) + "..." }}
+          {{
+            post?.description.length
+              ? post?.description?.substring(0, 400) + "..."
+              : "No description available."
+          }}
         </p>
         <div
           class="flex gap-3 mb-4 font-lato font-bold text-xs capitalize mt-auto"

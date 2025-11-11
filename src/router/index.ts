@@ -25,6 +25,7 @@ import UserOpinionsView from "@/views/UserProfile/UserOpinionsView.vue";
 import TopHeadlines from "@/views/TopHeadlines.vue";
 import CreateArticle from "@/views/UserProfile/CreateArticle.vue";
 import UserNewsView from "@/views/UserProfile/UserNewsView.vue";
+import AllNewsView from "@/views/AllNewsView.vue";
 const routes = [
   {
     path: "/",
@@ -37,6 +38,7 @@ const routes = [
       },
       { path: "about-us", component: AboutView },
       { path: "top-headlines", component: TopHeadlines },
+      { path: "all-news", component: AllNewsView },
       { path: "become-a-contributor", component: BecomeAContributorView },
       { path: "sign-in", component: SignInView },
       { path: "sign-up", component: SignUpView },
@@ -94,6 +96,7 @@ const routes = [
           { path: "my-comments", component: PublicView },
         ],
       },
+      { path: "all-news", component: AllNewsView, name: "AllNewsPage" },
     ],
   },
   {

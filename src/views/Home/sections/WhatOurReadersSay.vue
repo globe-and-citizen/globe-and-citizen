@@ -86,19 +86,21 @@
 <script setup lang="ts">
 import VerticalCard from "../../../components/VerticalCard.vue";
 import { fetchAllPosts, fetchPostById } from "@/api/posts.ts";
-import type { FetchPostsType, Post } from "@/models/Posts";
+import type { AllNewsResponseType, Post } from "@/models/Posts";
 import { useQuery } from "@tanstack/vue-query";
 import { computed } from "vue";
 import { RouterLink } from "vue-router";
 
-const { data: allPosts } = useQuery<FetchPostsType>({
+const { data: allPosts } = useQuery<AllNewsResponseType>({
   queryKey: ["allPosts"],
   queryFn: () => fetchAllPosts(10, 1),
   refetchOnWindowFocus: true,
 });
 
 const filteredPosts = computed(() => {
-  return allPosts.value?.data.filter((post) => post.author !== "").slice(0, 2);
+  return allPosts.value?.data.posts
+    .filter((post) => post.author !== "")
+    .slice(0, 2);
 });
 
 const { data: whatOurReadersSay1 } = useQuery<Post>({
