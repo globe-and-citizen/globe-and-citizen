@@ -14,10 +14,7 @@
     <!-- Left Image Section -->
     <div class="h-[160px] relative">
       <img
-        :src="
-          post?.url_to_image ||
-          'https://media.istockphoto.com/id/1409329028/vector/no-picture-available-placeholder-thumbnail-icon-illustration-design.jpg?s=612x612&w=0&k=20&c=_zOuJu755g2eEUioiOUdz_mHKJQJn-tDgIAhQzyeKUQ='
-        "
+        :src="post?.url_to_image || noImg"
         alt="American Flag"
         class="object-cover h-full w-full rounded-sm"
       />
@@ -99,6 +96,7 @@ import commentsIcon from "../assets/comment-icon.svg";
 import type { Post } from "@/models/Posts";
 import dayjs from "dayjs";
 import { getReadingTime } from "@/composables/utils";
+import noImg from "../assets/images/no-photo.jpg";
 
 withDefaults(
   defineProps<{
