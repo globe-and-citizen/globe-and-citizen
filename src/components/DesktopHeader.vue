@@ -360,14 +360,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  type ComputedRef,
-  onMounted,
-  ref,
-  watch,
-  watchEffect,
-} from "vue";
+import { computed, type ComputedRef, onMounted, ref, watch } from "vue";
 import { useAuthStore } from "@/store/authStore.ts";
 import logo from "../assets/logo.svg";
 import { useRoute, useRouter } from "vue-router";
