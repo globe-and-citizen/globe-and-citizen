@@ -134,6 +134,11 @@ const countries: CountryInfo[] = (allCountries as RawCountry[]).map((c) => ({
   country: c.country,
   coordinates: [c.coordinates[0] as number, c.coordinates[1] as number],
 }));
+countries.push({
+  code: "MOON",
+  country: "Moon",
+  coordinates: [0, 0],
+});
 
 // Refs
 const mapRef = ref<L.Map | null>(null);
@@ -144,6 +149,7 @@ const isStatsVisible = ref<boolean>(false);
 const normalizeCountryCode = (code: string): string => {
   const upper = (code || "").toUpperCase();
   if (upper === "UK") return "GB"; // alias
+  if (upper === "MOON") return "MOON";
   return upper;
 };
 
@@ -252,10 +258,10 @@ const updateTotalCountries = (): void => {
 };
 
 const getFlagEmoji = (countryCode: string): string => {
-  const codePoints = countryCode
-    .toUpperCase()
-    .split("")
-    .map((char) => 127397 + char.charCodeAt(0));
+  const upper = countryCode.toUpperCase();
+  if (upper === "MOON") return "🌕";
+
+  const codePoints = upper.split("").map((char) => 127397 + char.charCodeAt(0));
   return String.fromCodePoint(...codePoints);
 };
 
