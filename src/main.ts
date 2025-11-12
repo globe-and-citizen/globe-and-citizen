@@ -1,7 +1,7 @@
 import { createApp } from "vue";
 import "./style.css";
 import "vue-final-modal/style.css";
-import App from "./App.vue";
+import App from "@/App.vue";
 import { createPinia } from "pinia";
 import { VueQueryPlugin } from "@tanstack/vue-query";
 import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
@@ -15,7 +15,7 @@ import * as Sentry from "@sentry/vue";
 const app = createApp(App);
 const vfm = createVfm();
 const backend_url = import.meta.env.VITE_API_BASE_URL;
-
+const isDev = import.meta.env.VITE_API_BASE_URL.includes("localhost");
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
 app.use(Vue3Toastify, {
@@ -44,17 +44,18 @@ app.use(VueQueryPlugin, {
   enableDevtoolsV6Plugin: true,
 });
 app.config.globalProperties.$backend_url = backend_url;
-Sentry.init({
-  app,
-  dsn: "https://a39a7dc57b658f138b0ab53f45a20478@o4507662781382656.ingest.us.sentry.io/4510299777073152",
-  sendDefaultPii: true,
-  integrations: [
-    Sentry.feedbackIntegration({
-      colorScheme: "system",
-      showEmail: false,
-    }),
-  ],
-});
+if (!isDev)
+  Sentry.init({
+    app,
+    dsn: "https://a39a7dc57b658f138b0ab53f45a20478@o4507662781382656.ingest.us.sentry.io/4510299777073152",
+    sendDefaultPii: true,
+    integrations: [
+      Sentry.feedbackIntegration({
+        colorScheme: "system",
+        showEmail: false,
+      }),
+    ],
+  });
 app.use(router).mount("#app");
 const authStore = useAuthStore();
 authStore.initializeAuth();
