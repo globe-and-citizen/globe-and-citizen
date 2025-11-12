@@ -101,11 +101,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, watch, onUnmounted } from "vue";
+import { ref, onMounted, computed, watch, onUnmounted, nextTick } from "vue";
 import { useMutation, useQueryClient } from "@tanstack/vue-query";
 import type { SentenceReactionRequestPayload } from "@/models/Reactions/reactions.ts";
 import { postSentenceReaction } from "@/api/reactions.ts";
 
+import lightGallery from "lightgallery";
+import lgZoom from "lightgallery/plugins/zoom";
+import lgThumbnail from "lightgallery/plugins/thumbnail";
+import "lightgallery/css/lightgallery.css";
+import "lightgallery/css/lg-zoom.css";
+import "lightgallery/css/lg-thumbnail.css";
 interface SentenceOpinions {
   sentence_id: string;
   likes: number;
@@ -337,11 +343,103 @@ function updateAnnotatedHTML() {
     showAnnotations.value
   );
 }
-// Watch for changes in sentences and re-render when needed
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let lgInstances: any[] = [];
+
+function initLightGallery() {
+  if (!rootEl.value) return;
+
+  lgInstances.forEach((instance) => {
+    try {
+      instance.destroy(true);
+    } catch {
+      // ignore
+    }
+  });
+  lgInstances = [];
+
+  // Find post-content containers ONLY inside this component
+  const postContentEls = rootEl.value.querySelectorAll(".post-content");
+  if (!postContentEls.length) return;
+
+  // Collect images inside scoped post-content blocks
+  const allImgs: HTMLImageElement[] = [];
+  postContentEls.forEach((postContentEl) => {
+    const imgs = Array.from(
+      postContentEl.querySelectorAll("img")
+    ) as HTMLImageElement[];
+    allImgs.push(...imgs);
+  });
+
+  if (!allImgs.length) return;
+
+  // Wrap each image in <a> if not already (scoped)
+  allImgs.forEach((img) => {
+    const parent = img.parentElement;
+    if (!parent || parent.tagName.toLowerCase() !== "a") {
+      const wrapper = document.createElement("a");
+      wrapper.href = img.src;
+      wrapper.classList.add("lg-item");
+
+      if (img.complete && img.naturalWidth) {
+        wrapper.setAttribute(
+          "data-lg-size",
+          `${img.naturalWidth}-${img.naturalHeight}`
+        );
+      } else {
+        img.addEventListener("load", () => {
+          wrapper.setAttribute(
+            "data-lg-size",
+            `${img.naturalWidth}-${img.naturalHeight}`
+          );
+        });
+      }
+
+      wrapper.setAttribute("data-sub-html", img.alt || "");
+      img.parentNode?.insertBefore(wrapper, img);
+      wrapper.appendChild(img);
+    } else {
+      parent.classList.add("lg-item");
+      if (
+        img.complete &&
+        img.naturalWidth &&
+        !parent.getAttribute("data-lg-size")
+      ) {
+        parent.setAttribute(
+          "data-lg-size",
+          `${img.naturalWidth}-${img.naturalHeight}`
+        );
+      }
+    }
+  });
+
+  postContentEls.forEach((postContentEl) => {
+    const instance = lightGallery(postContentEl as HTMLElement, {
+      selector: ".lg-item",
+      plugins: [lgZoom, lgThumbnail],
+      speed: 400,
+      zoom: true,
+      download: false,
+    });
+    lgInstances.push(instance);
+  });
+}
+
 watch(
   () => props.sentences,
   () => {
     updateAnnotatedHTML();
+  },
+  { deep: true }
+);
+
+watch(
+  () => [props.sentences, props.showAnnotations],
+  async () => {
+    updateAnnotatedHTML();
+    await nextTick();
+    initLightGallery();
   },
   { deep: true }
 );
@@ -361,6 +459,34 @@ watch(
 
 onMounted(() => {
   updateAnnotatedHTML();
+
+  nextTick(() => {
+    if (!rootEl.value) return;
+    const allPostContentEls = rootEl.value.querySelectorAll(".post-content");
+    const allImgs: HTMLImageElement[] = [];
+    allPostContentEls.forEach((el) => {
+      const imgs = Array.from(el.querySelectorAll("img")) as HTMLImageElement[];
+      allImgs.push(...imgs);
+    });
+
+    if (allImgs.length) {
+      let loaded = 0;
+      allImgs.forEach((img) => {
+        if (img.complete) {
+          loaded++;
+          if (loaded === allImgs.length) initLightGallery();
+        } else {
+          img.addEventListener("load", () => {
+            loaded++;
+            if (loaded === allImgs.length) initLightGallery();
+          });
+        }
+      });
+    } else {
+      initLightGallery();
+    }
+  });
+
   handleClickOutside = (e: MouseEvent) => {
     const target = e.target as HTMLElement;
     const postContent = document.querySelectorAll(".post-content");
@@ -381,6 +507,14 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
+  lgInstances.forEach((instance) => {
+    try {
+      instance.destroy(true);
+    } catch {
+      // ignore
+    }
+  });
+  lgInstances = [];
 });
 </script>
 
@@ -554,5 +688,16 @@ onUnmounted(() => {
 
 .comment-box button:hover {
   background: #0056b3;
+}
+
+.post-content a {
+  display: inline-block;
+  cursor: zoom-in;
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+.post-content img {
+  pointer-events: none;
 }
 </style>
