@@ -6988,6 +6988,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lightgallery@npm:^2.9.0":
+  version: 2.9.0
+  resolution: "lightgallery@npm:2.9.0"
+  checksum: 10c0/4af068718f937128d517fb9eb637def578351297bd17cdb12b38f941c1a5b0b302e1b8ac4f3cff24ad4a81c00904db2648084dac7984bd38c05ea3bfab3ef248
+  languageName: node
+  linkType: hard
+
 "lightningcss-darwin-arm64@npm:1.30.1":
   version: 1.30.1
   resolution: "lightningcss-darwin-arm64@npm:1.30.1"
@@ -7668,6 +7675,7 @@ __metadata:
     globals: "npm:^16.1.0"
     layer8-interceptor-production: "npm:^0.3.1"
     leaflet: "npm:^1.9.4"
+    lightgallery: "npm:^2.9.0"
     pinia: "npm:^3.0.2"
     pinia-plugin-persistedstate: "npm:^4.3.0"
     postcss: "npm:^8.5.3"
