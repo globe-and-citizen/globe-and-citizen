@@ -55,7 +55,7 @@
     </div>
 
     <!-- Add Comment Form -->
-    <div class="mt-8 flex gap-1">
+    <div class="mt-8 flex gap-1 flex-col">
       <img
         v-if="user?.profile_picture_url"
         :src="user.profile_picture_url"
