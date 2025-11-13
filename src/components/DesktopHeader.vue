@@ -224,6 +224,13 @@
               >Top Headlines</RouterLink
             >
             <RouterLink
+              to="/all-news?category=all-news"
+              active-class="text-red-500"
+              class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
+              @click="closeMobileMenu"
+              >News feed</RouterLink
+            >
+            <RouterLink
               to="/about-us"
               active-class="text-red-500"
               class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"

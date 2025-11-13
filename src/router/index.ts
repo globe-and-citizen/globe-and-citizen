@@ -26,6 +26,7 @@ import TopHeadlines from "@/views/TopHeadlines.vue";
 import CreateArticle from "@/views/UserProfile/CreateArticle.vue";
 import UserNewsView from "@/views/UserProfile/UserNewsView.vue";
 import AllNewsView from "@/views/AllNewsView.vue";
+import ChangePasswordView from "@/views/UserProfile/ChangePasswordView.vue";
 const routes = [
   {
     path: "/",
@@ -86,7 +87,7 @@ const routes = [
           { path: ":id", component: PublicView },
           { path: "profile-menu", component: MobileProfileMenuView },
           { path: "profile-settings", component: ProfileSettingsView },
-          { path: "change-password", component: PublicView },
+          { path: "change-password", component: ChangePasswordView },
           { path: "saved-articles", component: PublicView },
           { path: "subscriptions", component: PublicView },
           { path: "notifications", component: PublicView },
