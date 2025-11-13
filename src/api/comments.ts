@@ -13,7 +13,7 @@ export async function createComment(
     type === "post"
       ? JSON.stringify({ post_id: postId, content, parent_id: parentId })
       : JSON.stringify({ entry_id: postId, content, parent_id: parentId });
-
+  console.log(body);
   if (authStore.isUserAuthenticated && authStore.token) {
     try {
       const response = await fetchWithAuth(`${API_BASE_URL}${COMMENTS_URL}`, {
@@ -54,10 +54,7 @@ export async function createComment(
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      post_id: postId,
-      content,
-    }),
+    body,
   });
 
   if (!response.ok) {
