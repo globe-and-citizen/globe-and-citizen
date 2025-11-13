@@ -1,6 +1,6 @@
 import userIcon from "@/assets/icons/user.svg";
 import settings from "@/assets/icons/settings.svg";
-// import password from "@/assets/icons/lock.svg";
+import password from "@/assets/icons/lock.svg";
 // import saved from "@/assets/icons/saved.svg";
 // import plus from "@/assets/icons/plus.svg";
 // import notification from "@/assets/icons/notifications.svg";
@@ -19,6 +19,12 @@ export const menuItems = [
     icon: settings,
     title: "Profile settings",
     url: "/profile-settings",
+  },
+  {
+    section: "Profile",
+    icon: password,
+    title: "Change password",
+    url: "/change-password",
   },
   // {
   //   section: "Profile",
