@@ -179,3 +179,26 @@ export const signUpApi = async (data: SignUpData) => {
 
   return response.json();
 };
+
+export const changePassword = async (
+  old_password: string,
+  new_password: string
+): Promise<void> => {
+  const response = await fetchWithAuth(
+    `${API_BASE_URL}/users/change-password`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ old_password, new_password }),
+    }
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(
+      errorData.data || errorData.error || "Change password failed"
+    );
+  }
+};
