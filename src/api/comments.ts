@@ -54,10 +54,7 @@ export async function createComment(
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      post_id: postId,
-      content,
-    }),
+    body,
   });
 
   if (!response.ok) {
