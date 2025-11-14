@@ -1,5 +1,5 @@
 import type { AllNewsResponseType, FetchPostsType } from "@/models/Posts";
-import { fetchWithAuth } from "./auth";
+import { fetchWithAuth, interceptorFetch } from "./auth";
 import { API_BASE_URL, ENTRIES_URL } from "./constants";
 import type { OpinionPatchPayload, OpinionPayload } from "@/models/Opinions";
 
@@ -107,7 +107,7 @@ export async function fetchAllOpinions(
   page: number
 ): Promise<AllNewsResponseType> {
   try {
-    const response = await fetchWithAuth(
+    const response = await interceptorFetch(
       `${API_BASE_URL}${ENTRIES_URL}?size=${size}&page=${page}`
     );
 

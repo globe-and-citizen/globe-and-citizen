@@ -17,10 +17,7 @@
       <!-- Left Image Section -->
       <div class="lg:max-w-[480px] lg:min-w-[480px] relative">
         <img
-          :src="
-            post?.url_to_image ||
-            'https://media.istockphoto.com/id/1409329028/vector/no-picture-available-placeholder-thumbnail-icon-illustration-design.jpg?s=612x612&w=0&k=20&c=_zOuJu755g2eEUioiOUdz_mHKJQJn-tDgIAhQzyeKUQ='
-          "
+          :src="post?.url_to_image || 'src/assets/images/no-photo.jpg'"
           alt="American Flag"
           class="object-cover h-full w-full rounded-sm max-h-[300px] lg:max-h-[400px]"
         />
@@ -43,8 +40,7 @@
         <div class="flex items-center gap-2 mb-4">
           <img
             :src="
-              post?.user.profile_picture_url ||
-              'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png'
+              post?.user.profile_picture_url || 'src/assets/images/no-photo.jpg'
             "
             alt="user image"
             class="w-8 h-8 rounded-full object-cover"
@@ -71,7 +67,7 @@
         </h4>
         <p class="text-black-80 mb-3 font-lato font-normal text-base">
           {{
-            post?.description.length
+            post?.description?.length
               ? post?.description?.substring(0, 400) + "..."
               : "No description available."
           }}
