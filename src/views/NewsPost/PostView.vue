@@ -33,10 +33,7 @@
           class="h-[200px] md:h-[320px] lg:h-[522px] w-full object-cover rounded-lg mb-6 md:mb-6"
         />
         <!-- Sticky Readers Insights + Stats (becomes fixed once scrolled past its original position) -->
-        <div
-          ref="insightsWrapper"
-          class="reader-insights-sticky p-4 lg:p-0.5 lg:pt-3"
-        >
+        <div ref="insightsWrapper" class="p-4 lg:p-0.5 lg:pt-3">
           <ReadersInsightsAndStats
             :sentences="post?.sentences"
             :model-value="showAnnotations"
@@ -219,8 +216,8 @@ const touchStartX = ref(0);
 const touchStartY = ref(0);
 const touchEndX = ref(0);
 const touchEndY = ref(0);
-const minSwipeDistance = 50;
-const maxVerticalDistance = 100;
+// const minSwipeDistance = 50;
+// const maxVerticalDistance = 100;
 const handleTouchStart = (event: TouchEvent) => {
   if (window.innerWidth >= 1024) return;
   const touch = event.touches[0];
@@ -236,38 +233,34 @@ const handleTouchMove = (event: TouchEvent) => {
 };
 
 const handleTouchEnd = () => {
-  if (window.innerWidth >= 1024) return;
-
-  const deltaX = touchEndX.value - touchStartX.value;
-  const deltaY = Math.abs(touchEndY.value - touchStartY.value);
-  const screenWidth = window.innerWidth;
-  const edgeThreshold = screenWidth;
-
-  const isFromLeftEdge = touchStartX.value <= edgeThreshold;
-  const isFromRightEdge = touchStartX.value >= screenWidth - edgeThreshold;
-  const isHorizontalSwipe = Math.abs(deltaX) >= minSwipeDistance;
-  const isNotTooVertical = deltaY <= maxVerticalDistance;
-
-  if (
-    (isFromLeftEdge || isFromRightEdge) &&
-    isHorizontalSwipe &&
-    isNotTooVertical
-  ) {
-    if (
-      (isFromRightEdge && deltaX < -minSwipeDistance) ||
-      (isFromLeftEdge && deltaX > minSwipeDistance)
-    ) {
-      showAnnotations.value = !showAnnotations.value;
-
-      if ("vibrate" in navigator) {
-        navigator.vibrate(50);
-      }
-    }
-  }
-  touchStartX.value = 0;
-  touchStartY.value = 0;
-  touchEndX.value = 0;
-  touchEndY.value = 0;
+  // if (window.innerWidth >= 1024) return;
+  // const deltaX = touchEndX.value - touchStartX.value;
+  // const deltaY = Math.abs(touchEndY.value - touchStartY.value);
+  // const screenWidth = window.innerWidth;
+  // const edgeThreshold = screenWidth;
+  // const isFromLeftEdge = touchStartX.value <= edgeThreshold;
+  // const isFromRightEdge = touchStartX.value >= screenWidth - edgeThreshold;
+  // const isHorizontalSwipe = Math.abs(deltaX) >= minSwipeDistance;
+  // const isNotTooVertical = deltaY <= maxVerticalDistance;
+  // if (
+  //   (isFromLeftEdge || isFromRightEdge) &&
+  //   isHorizontalSwipe &&
+  //   isNotTooVertical
+  // ) {
+  //   if (
+  //     (isFromRightEdge && deltaX < -minSwipeDistance) ||
+  //     (isFromLeftEdge && deltaX > minSwipeDistance)
+  //   ) {
+  //     showAnnotations.value = !showAnnotations.value;
+  //     if ("vibrate" in navigator) {
+  //       navigator.vibrate(50);
+  //     }
+  //   }
+  // }
+  // touchStartX.value = 0;
+  // touchStartY.value = 0;
+  // touchEndX.value = 0;
+  // touchEndY.value = 0;
 };
 
 const {

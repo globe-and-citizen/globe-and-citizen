@@ -45,7 +45,7 @@
 
                 <div
                   v-if="targetIsVisible"
-                  class="hidden md:flex flex-col items-center gap-3 fixed right-0 top-1/2 -translate-y-4 transform ml-0 rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit self-start"
+                  class="hidden flex-col items-center gap-3 fixed right-0 top-1/2 -translate-y-4 transform ml-0 rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit self-start"
                 >
                   <p
                     class="text-center font-lato font-semibold text-black-60 text-sm"
@@ -81,7 +81,7 @@
             </div>
             <div
               v-if="target2IsVisible"
-              class="flex flex-col items-center gap-3 fixed top-1/2 right-10 -translate-y-1/2 transform ml-6 rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit self-start"
+              class="hidden flex flex-col items-center gap-3 fixed top-1/2 right-10 -translate-y-1/2 transform ml-6 rounded-xl p-4 bg-white shadow-card-soft w-36 h-fit self-start"
             >
               <p
                 class="text-center font-lato font-semibold text-black-60 text-sm"
@@ -167,8 +167,8 @@ const touchStartX = ref(0);
 const touchStartY = ref(0);
 const touchEndX = ref(0);
 const touchEndY = ref(0);
-const minSwipeDistance = 50;
-const maxVerticalDistance = 100;
+// const minSwipeDistance = 50;
+// const maxVerticalDistance = 100;
 const handleTouchStart = (event: TouchEvent) => {
   if (window.innerWidth >= 1024) return;
   const touch = event.touches[0];
@@ -184,38 +184,34 @@ const handleTouchMove = (event: TouchEvent) => {
 };
 
 const handleTouchEnd = () => {
-  if (window.innerWidth >= 1024) return;
-
-  const deltaX = touchEndX.value - touchStartX.value;
-  const deltaY = Math.abs(touchEndY.value - touchStartY.value);
-  const screenWidth = window.innerWidth;
-  const edgeThreshold = screenWidth;
-
-  const isFromLeftEdge = touchStartX.value <= edgeThreshold;
-  const isFromRightEdge = touchStartX.value >= screenWidth - edgeThreshold;
-  const isHorizontalSwipe = Math.abs(deltaX) >= minSwipeDistance;
-  const isNotTooVertical = deltaY <= maxVerticalDistance;
-
-  if (
-    (isFromLeftEdge || isFromRightEdge) &&
-    isHorizontalSwipe &&
-    isNotTooVertical
-  ) {
-    if (
-      (isFromRightEdge && deltaX < -minSwipeDistance) ||
-      (isFromLeftEdge && deltaX > minSwipeDistance)
-    ) {
-      showAnnotations.value = !showAnnotations.value;
-
-      if ("vibrate" in navigator) {
-        navigator.vibrate(50);
-      }
-    }
-  }
-  touchStartX.value = 0;
-  touchStartY.value = 0;
-  touchEndX.value = 0;
-  touchEndY.value = 0;
+  // if (window.innerWidth >= 1024) return;
+  // const deltaX = touchEndX.value - touchStartX.value;
+  // const deltaY = Math.abs(touchEndY.value - touchStartY.value);
+  // const screenWidth = window.innerWidth;
+  // const edgeThreshold = screenWidth;
+  // const isFromLeftEdge = touchStartX.value <= edgeThreshold;
+  // const isFromRightEdge = touchStartX.value >= screenWidth - edgeThreshold;
+  // const isHorizontalSwipe = Math.abs(deltaX) >= minSwipeDistance;
+  // const isNotTooVertical = deltaY <= maxVerticalDistance;
+  // if (
+  //   (isFromLeftEdge || isFromRightEdge) &&
+  //   isHorizontalSwipe &&
+  //   isNotTooVertical
+  // ) {
+  //   if (
+  //     (isFromRightEdge && deltaX < -minSwipeDistance) ||
+  //     (isFromLeftEdge && deltaX > minSwipeDistance)
+  //   ) {
+  //     showAnnotations.value = !showAnnotations.value;
+  //     if ("vibrate" in navigator) {
+  //       navigator.vibrate(50);
+  //     }
+  //   }
+  // }
+  // touchStartX.value = 0;
+  // touchStartY.value = 0;
+  // touchEndX.value = 0;
+  // touchEndY.value = 0;
 };
 
 const {
