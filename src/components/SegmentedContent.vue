@@ -1,8 +1,8 @@
 <template>
   <!-- Simplified wrapper: sentence interactions removed; flip animation preserved -->
-  <div ref="rootEl" class="overflow-hidden relative pb-30">
+  <div ref="rootEl" class="overflow-hidden relative">
     <div
-      class="post-content flip-container relative max-w-[700px]"
+      class="post-content flip-container relative"
       :class="{ flipping: isFlipping }"
       v-html="displayHTML"
     ></div>

@@ -9,7 +9,7 @@
   >
     <!-- SEE READERS INSIGHT TOGGLE -->
 
-    <div
+    <!-- <div
       class="min-w-[260px] flex justify-between items-center"
       :class="{ hidden: showFullInsights }"
     >
@@ -29,11 +29,11 @@
         />
         <span class="toggle-slider"></span>
       </label>
-    </div>
+    </div> -->
 
     <!-- STATS SECTION -->
     <div
-      class="flex flex-col w-full xl:w-5/12"
+      class="flex flex-col w-full xl:w-5/12 ml-auto"
       :class="{ 'ml-auto': showFullInsights }"
     >
       <div class="flex justify-between gap-6">
