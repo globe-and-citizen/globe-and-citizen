@@ -19,7 +19,15 @@
         </div>
         <div class="grid gap-2">
           <Label for="slug">Slug</Label>
-          <Input id="slug" v-model="formData.slug" />
+          <Input
+            id="slug"
+            v-model="formData.slug"
+            :readonly="formData.slug !== undefined"
+            :class="{
+              'bg-muted cursor-not-allowed focus-visible:ring-0 focus-visible:text-gray-600 focus-visible:border-transparent':
+                formData.slug !== undefined,
+            }"
+          />
         </div>
         <div class="grid gap-2">
           <Label for="author">Author</Label>
@@ -30,7 +38,7 @@
             class="bg-muted cursor-not-allowed focus-visible:ring-0 focus-visible:text-gray-600 focus-visible:border-transparent"
           />
         </div>
-        <div class="grid gap-2">
+        <!-- <div class="grid gap-2">
           <Label for="description">Description</Label>
           <Textarea
             id="description"
@@ -38,7 +46,7 @@
             readonly
             class="bg-muted cursor-not-allowed focus-visible:ring-0 focus-visible:text-gray-600 focus-visible:border-transparent"
           />
-        </div>
+        </div> -->
         <div class="grid gap-2">
           <Label for="content">Content</Label>
           <QuillEditor
@@ -150,7 +158,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";

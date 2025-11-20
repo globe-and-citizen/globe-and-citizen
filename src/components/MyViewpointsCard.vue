@@ -7,11 +7,10 @@
     "
   >
     <div
-      class="relative group flex border border-transparent hover:border-black-20 rounded-md hover:shadow-card-hard"
+      class="relative group flex border border-transparent hover:border-black-20 rounded-md hover:shadow-card-hard min-h-[162px]"
     >
       <img
-        v-if="data?.url_to_image"
-        :src="data?.url_to_image"
+        :src="data?.url_to_image ? data?.url_to_image : noImg"
         alt="Article Image"
         class="h-[160px] max-w-[124px] object-cover rounded-md"
       />
@@ -20,17 +19,31 @@
         v-if="showDeleteButton !== false"
         class="absolute bottom-2 right-2 bg-primary-red text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
         @click="(e:MouseEvent) => {
-          openDeleteModal();
           e.preventDefault();
+          props.delete(data);
         }"
       >
         Delete
+      </button>
+      <button
+        v-if="showDeleteButton !== false"
+        class="absolute bottom-2 text-white bg-gray-400 text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+        :class="{
+          ' right-18': props.showDeleteButton,
+          'right-4': !props.showDeleteButton,
+        }"
+        @click="(e:MouseEvent) => {
+          e.preventDefault();
+          props.edit(data);
+        }"
+      >
+        Edit
       </button>
       <RouterLink
         :to="data.post_slug ? `/post/${data?.post_slug}` : `/post/${data.slug}`"
         class="absolute bottom-2 bg-secondary-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
         :class="{
-          ' right-18': props.showDeleteButton,
+          ' right-[122px]': props.showDeleteButton,
           'right-4': !props.showDeleteButton,
         }"
       >
@@ -58,75 +71,30 @@
         <div
           class="text-black-80 mb-3 font-lato font-normal text-xs flex-none"
           v-html="
-            data?.content?.substring(0, 200) + '...' || 'No content available'
+            data?.content?.substring(0, 60) + '...' || 'No content available'
           "
         />
       </div>
     </div>
   </RouterLink>
-
-  <ConfirmDeleteModal
-    v-model="isDeleteModalOpen"
-    :title="'Confirm Deletion'"
-    @confirm="() => confirmDelete(data?.slug ?? '')"
-    @cancel="closeDeleteModal"
-  >
-    Are you sure you want to delete
-    <b>"{{ data?.title || "this article" }}"</b>?
-  </ConfirmDeleteModal>
 </template>
 
 <script setup lang="ts">
-import { deleteOpinion } from "@/api/opinions.ts";
 import { useAuthStore } from "@/store/authStore.ts";
-import { useMutation, useQueryClient } from "@tanstack/vue-query";
-import { computed, defineProps, ref } from "vue";
+import { computed, defineProps } from "vue";
 import dayjs from "dayjs";
 import { RouterLink } from "vue-router";
-import ConfirmDeleteModal from "@/components/modals/ConfirmDeleteModal.vue";
 import type { Post } from "@/models/Posts";
+import noImg from "../assets/images/no-photo.jpg";
 
 interface PostType {
-  data: Partial<Post>;
+  data: Post;
   showDeleteButton: boolean;
+  edit: (opinion: Post) => void;
+  delete: (opinion: Post) => void;
 }
 const props = defineProps<PostType>();
 
-const queryClient = useQueryClient();
 const authStore = useAuthStore();
 const userName = computed(() => authStore.user?.username || "");
-const isDeleteModalOpen = ref(false);
-const openDeleteModal = () => {
-  isDeleteModalOpen.value = true;
-};
-
-const closeDeleteModal = () => {
-  isDeleteModalOpen.value = false;
-};
-
-const { mutate: deleteOpinionMutation } = useMutation({
-  mutationFn: async (opinionId: string) => {
-    await deleteOpinion(opinionId);
-  },
-  onSuccess: () => {
-    // Also invalidate all posts to ensure consistent data
-    queryClient.invalidateQueries({
-      queryKey: ["allPosts"],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["users-articles"],
-    });
-    queryClient.invalidateQueries({
-      queryKey: ["users-news-articles"],
-    });
-  },
-  onError: (error) => {
-    console.error("Failed to delete opinion:", error);
-  },
-});
-
-const confirmDelete = (slug: string) => {
-  deleteOpinionMutation(slug);
-  closeDeleteModal();
-};
 </script>
