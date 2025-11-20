@@ -1,6 +1,33 @@
 <template>
   <div class="px-4 md:px-8 lg:px-[120px]">
+    <div v-if="isLoading" class="animate-pulse">
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+      >
+        <div v-for="n in 8" :key="n" class="rounded-lg p-4 space-y-4">
+          <div class="bg-gray-300 h-40 w-full rounded-md"></div>
+          <div class="h-6 bg-gray-300 rounded w-3/4"></div>
+          <div class="h-4 bg-gray-300 rounded w-full"></div>
+          <div class="h-4 bg-gray-300 rounded w-full"></div>
+          <div class="h-4 bg-gray-300 rounded w-5/6"></div>
+        </div>
+      </div>
+    </div>
     <div class="gc-container">
+      <div
+        v-if="!isLoading && news.length === 0"
+        class="w-full py-20 flex flex-col items-center text-center"
+      >
+        <img
+          src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+          alt="No articles"
+          class="w-32 h-32 opacity-70 mb-4"
+        />
+        <h2 class="text-xl font-semibold text-gray-700">No articles found</h2>
+        <p class="text-gray-500 mt-1">
+          Try adjusting your filters or check again later.
+        </p>
+      </div>
       <!-- Articles Grid -->
       <div
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mx-auto mt-12"
@@ -66,7 +93,10 @@
       </div>
 
       <!-- Pagination -->
-      <div class="flex flex-col sm:flex-row items-center justify-between py-4">
+      <div
+        v-if="!isLoading && news.length > 0"
+        class="flex flex-col sm:flex-row items-center justify-between py-4"
+      >
         <div class="flex items-center space-x-2 mx-auto">
           <Button
             variant="outline"
