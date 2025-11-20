@@ -62,6 +62,26 @@
                   :pending="reactionPending"
                   @react="handleReaction"
                 />
+                <div v-if="opinionUserId === currentUserId" class="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    class="h-8 w-8 p-0"
+                    @click="() => handlePostEdit(post ?? emptyPost as Post)"
+                  >
+                    <span class="sr-only">Edit</span>
+                    <component :is="PencilIcon" class="size-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    class="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                    @click="() => handlePostDelete(post ?? emptyPost as Post)"
+                  >
+                    <span class="sr-only">Delete</span>
+                    <component :is="TrashBinIcon" class="size-4" />
+                  </Button>
+                </div>
               </div>
               <CommentsSection :post="post" type="post" />
             </div>
@@ -186,19 +206,40 @@
       </div>
     </div>
   </transition>
+  <DeleteDialog
+    :is-open="postDeleteDialogOpen"
+    item-type="Post"
+    @close="postDeleteDialogOpen = false"
+    @confirm="handleConfirmPostDelete"
+  />
+  <EditDialog
+    :is-open="postEditDialogOpen"
+    :post="selectedPost"
+    @close="postEditDialogOpen = false"
+    @save="handlePostEditAction"
+  />
 </template>
 
 <script setup lang="ts">
-import { useRoute, onBeforeRouteUpdate, RouterLink } from "vue-router";
+import {
+  useRoute,
+  onBeforeRouteUpdate,
+  RouterLink,
+  useRouter,
+} from "vue-router";
 import { computed, ref, onMounted } from "vue";
-import type { Post } from "@/models/Posts";
+import type { NewPostType, Post } from "@/models/Posts";
 import NewsPostHeadingSection from "@/views/NewsPost/sections/NewsPostHeadingSection.vue";
 import DOMPurify from "dompurify";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import "@/quill.css";
 import Segmented from "@/components/SegmentedContent.vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { fetchPostById } from "@/api/posts.ts";
+import {
+  deleteNewsArticle,
+  fetchPostById,
+  patchNewsArticle,
+} from "@/api/posts.ts";
 import CommentsSection from "@/components/CommentsSection.vue";
 import LikeDislikeButtons from "@/components/LikeDislikeButtons.vue";
 import { postReaction } from "@/api/reactions.ts";
@@ -206,11 +247,31 @@ import WhatDoYouThinkCTA from "@/components/WhatDoYouThinkCTA.vue";
 import ReadersInsightsAndStats from "@/components/ReadersInsightsAndStats.vue";
 import dayjs from "dayjs";
 import { generateUserIcon } from "@/composables/utils.ts";
+import PencilIcon from "@/assets/icons/pencil-icon.svg";
+import { Button } from "@/components/ui/button";
+import TrashBinIcon from "@/assets/icons/trash-bin-icon.svg";
+import { useAuthStore } from "@/store/authStore";
+import DeleteDialog from "@/components/AdminPanel/NewsTable/DeleteDialog.vue";
+import EditDialog from "@/components/AdminPanel/NewsTable/EditDialog.vue";
+
+import { toast } from "vue3-toastify";
 
 const route = useRoute();
 const postId = decodeURIComponent(route.params.id as string);
 const queryClient = useQueryClient();
 const showAnnotations = ref(false);
+const authStore = useAuthStore();
+const currentUserId = computed(() => authStore.user?.id || null);
+const selectedPost = ref<Post | null>(null);
+const postDeleteDialogOpen = ref(false);
+const postEditDialogOpen = ref(false);
+const router = useRouter();
+const emptyPost = {
+  title: "",
+  content: "",
+  description: "",
+  url_to_image: "",
+};
 
 const touchStartX = ref(0);
 const touchStartY = ref(0);
@@ -266,17 +327,18 @@ const handleTouchEnd = () => {
 const {
   value: { data: post, isLoading },
 } = computed(() =>
-  useQuery<Post | null, unknown, Post | null, string[]>({
+  useQuery<Post>({
     queryKey: ["post", postId],
     queryFn: async () => {
       const response = await fetchPostById(postId);
-      return response as Post | null;
+      return response as Post;
     },
     enabled: !!postId,
     staleTime: 0,
     refetchOnMount: true,
   })
 );
+const opinionUserId = computed(() => post.value?.user_id || null);
 
 // Optimistic Likes/Dislikes Mutation for Posts
 const publishMutation = useMutation({
@@ -364,6 +426,85 @@ const displayedEntries = computed(() => {
     ? post.value.entries
     : post.value.entries.slice(0, entriesLimit);
 });
+
+const { mutate: updatePost } = useMutation({
+  mutationFn: async ({
+    postId,
+    article,
+  }: {
+    postId: string;
+    article: Partial<NewPostType>;
+  }) => {
+    await patchNewsArticle(postId, article);
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["allPosts"] });
+    queryClient.invalidateQueries({ queryKey: ["post", postId] });
+    setTimeout(() => {
+      toast("News post updated", {
+        autoClose: 3000,
+        type: "success",
+      });
+    }, 300);
+  },
+  onError: (error) => {
+    console.error("Failed to update post:", error);
+    setTimeout(() => {
+      toast("Failed to update news post", {
+        autoClose: 3000,
+        type: "error",
+      });
+    }, 300);
+  },
+});
+
+const { mutate: deletePostMutation } = useMutation({
+  mutationFn: async (postId: string) => {
+    await deleteNewsArticle(postId);
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({
+      queryKey: ["allPosts"],
+    });
+    router.go(-1);
+  },
+  onError: (error) => {
+    console.error("Failed to delete post:", error);
+    setTimeout(() => {
+      toast.error("Failed to delete post.");
+    }, 300);
+  },
+});
+
+function handlePostDelete(post: Post) {
+  selectedPost.value = post;
+  postDeleteDialogOpen.value = true;
+}
+
+function handlePostEdit(post: Post) {
+  selectedPost.value = post;
+  postEditDialogOpen.value = true;
+}
+
+function handleConfirmPostDelete() {
+  if (selectedPost.value) {
+    deletePostMutation(selectedPost.value.slug);
+  }
+  postDeleteDialogOpen.value = false;
+}
+
+function handlePostEditAction(formData: Partial<Post>) {
+  updatePost({
+    postId: selectedPost.value?.slug || "",
+    article: {
+      title: formData.title || "",
+      url_to_image: formData.url_to_image || "",
+      content: formData.content || "",
+      description: formData.description || "",
+    },
+  });
+  postEditDialogOpen.value = false;
+}
 </script>
 
 <style scoped>

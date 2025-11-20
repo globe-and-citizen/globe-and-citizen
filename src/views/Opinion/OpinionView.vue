@@ -6,11 +6,11 @@
     alt="Opinion hero image"
     class="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[557px] xl:h-[557px] w-full object-cover"
   />
-  <div
+  <!-- <div
     v-if="opinion"
     ref="insightsWrapper"
     class="reader-insights-sticky shadow-card-soft mb-4 md:mb-6 lg:mb-8 sticky top-0 z-10 bg-white-100"
-  ></div>
+  ></div> -->
   <div class="mt-6 lg:mt-0 px-4 md:px-8 lg:px-[120px] lg:pb-10">
     <div class="gc-container">
       <div v-if="!opinion" class="flex justify-center items-center h-64">
@@ -107,6 +107,27 @@
               :pending="reactionPending"
               @react="handleReaction"
             />
+
+            <div v-if="opinionUserId === currentUserId" class="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                class="h-8 w-8 p-0"
+                @click="() => handleOpinionEdit(opinion ?? emptyOpinion as Post)"
+              >
+                <span class="sr-only">Edit</span>
+                <component :is="PencilIcon" class="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                @click="() => handleOpinionDelete(opinion ?? emptyOpinion as Post)"
+              >
+                <span class="sr-only">Delete</span>
+                <component :is="TrashBinIcon" class="size-4" />
+              </Button>
+            </div>
           </div>
 
           <CommentsSection v-if="opinion" :post="opinion" type="opinion" />
@@ -114,10 +135,26 @@
       </div>
     </div>
   </div>
+
+  <!-- Opinion Edit Dialog -->
+  <OpinionEditDialog
+    :is-open="opinionEditDialogOpen"
+    :opinion="selectedOpinion"
+    @close="opinionEditDialogOpen = false"
+    @save="handleSaveOpinionEdit"
+  />
+
+  <!-- Opinion Delete Dialog -->
+  <DeleteDialog
+    :is-open="opinionDeleteDialogOpen"
+    item-type="Opinion"
+    @close="opinionDeleteDialogOpen = false"
+    @confirm="handleConfirmOpinionDelete"
+  />
 </template>
 
 <script setup lang="ts">
-import { useRoute, onBeforeRouteUpdate } from "vue-router";
+import { useRoute, onBeforeRouteUpdate, useRouter } from "vue-router";
 import { computed, onMounted, ref, shallowRef, useTemplateRef } from "vue";
 import type { Post } from "@/models/Posts";
 import OpinionHeading from "@/views/Opinion/sections/OpinionHeading.vue";
@@ -131,8 +168,17 @@ import Segmented from "@/components/SegmentedContent.vue";
 import OpinionReadersInsights from "@/views/Opinion/sections/OpinionReadersInsights.vue";
 import LikeDislikeButtons from "@/components/LikeDislikeButtons.vue";
 import { opinionReaction } from "@/api/reactions";
+import PencilIcon from "@/assets/icons/pencil-icon.svg";
+import { Button } from "@/components/ui/button";
+import TrashBinIcon from "@/assets/icons/trash-bin-icon.svg";
+import OpinionEditDialog from "@/components/AdminPanel/NewsTable/OpinionEditDialog.vue";
+import DeleteDialog from "@/components/AdminPanel/NewsTable/DeleteDialog.vue";
 
 import { useIntersectionObserver } from "@vueuse/core";
+import { useAuthStore } from "@/store/authStore";
+import { deleteOpinion, patchOpinion } from "@/api/opinions";
+import { toast } from "vue3-toastify";
+import type { OpinionPatchPayload } from "@/models/Opinions";
 
 const route = useRoute();
 const opinionId = route.params.opinionId as string;
@@ -142,7 +188,18 @@ const target = useTemplateRef<HTMLDivElement>("target");
 const target2 = useTemplateRef<HTMLDivElement>("target2");
 const targetIsVisible = shallowRef(false);
 const target2IsVisible = shallowRef(false);
-
+const authStore = useAuthStore();
+const opinionEditDialogOpen = ref(false);
+const opinionDeleteDialogOpen = ref(false);
+const selectedOpinion = ref<Post | null>(null);
+const router = useRouter();
+const currentUserId = computed(() => authStore.user?.id || null);
+const emptyOpinion = {
+  title: "",
+  content: "",
+  description: "",
+  url_to_image: "",
+};
 useIntersectionObserver(
   target,
   ([entry]) => {
@@ -217,14 +274,15 @@ const handleTouchEnd = () => {
 const {
   value: { data: opinion },
 } = computed(() =>
-  useQuery<Post | null, unknown, Post | null, string[]>({
+  useQuery<Post>({
     queryKey: ["opinion", opinionId],
     queryFn: async () => {
       const response = await fetchOpinionById(opinionId);
-      return response as Post | null;
+      return response as Post;
     },
   })
 );
+const opinionUserId = computed(() => opinion.value?.user_id || null);
 
 const publishMutation = useMutation({
   mutationFn: opinionReaction,
@@ -285,6 +343,27 @@ const publishMutation = useMutation({
   },
 });
 
+const { mutate: deleteOpinionMutation } = useMutation({
+  mutationFn: async (opinionId: string) => {
+    await deleteOpinion(opinionId);
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({
+      queryKey: ["allPosts"],
+    });
+    router.go(-1);
+    setTimeout(() => {
+      toast.success("Opinion deleted successfully.");
+    }, 300);
+  },
+  onError: (error) => {
+    console.error("Failed to delete opinion:", error);
+    setTimeout(() => {
+      toast.error("Failed to delete opinion.");
+    }, 300);
+  },
+});
+
 const reactionPending = computed(
   () => publishMutation.status.value === "pending"
 );
@@ -306,6 +385,64 @@ onMounted(() => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
+function handleOpinionEdit(opinion: Post) {
+  selectedOpinion.value = opinion;
+  opinionEditDialogOpen.value = true;
+}
+
+function handleOpinionDelete(opinion: Post) {
+  selectedOpinion.value = opinion;
+  opinionDeleteDialogOpen.value = true;
+}
+
+function handleConfirmOpinionDelete() {
+  if (selectedOpinion.value) {
+    deleteOpinionMutation(selectedOpinion.value.slug);
+  }
+  opinionDeleteDialogOpen.value = false;
+}
+
+const { mutate: updateOpinion } = useMutation({
+  mutationFn: async (payload: OpinionPatchPayload) => {
+    await patchOpinion(payload);
+  },
+  onSuccess: () => {
+    queryClient.invalidateQueries({
+      queryKey: ["opinion", opinionId],
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ["allPosts"],
+    });
+    setTimeout(() => {
+      toast("Opinion updated", {
+        autoClose: 3000,
+        type: "success",
+      });
+    }, 300);
+  },
+  onError: (error) => {
+    console.error("Failed to update opinion:", error);
+    setTimeout(() => {
+      toast("Failed to update opinion", {
+        autoClose: 3000,
+        type: "error",
+      });
+    }, 300);
+  },
+});
+
+function handleSaveOpinionEdit(formData: Partial<Post>) {
+  updateOpinion({
+    opinionId: selectedOpinion.value?.slug || "",
+    opinion: {
+      title: formData.title || "",
+      url_to_image: formData.url_to_image || "",
+      content: formData.content || "",
+    },
+  });
+  opinionEditDialogOpen.value = false;
+}
 // The sanitized content to display
 const sanitizedContent = computed(() => {
   if (!opinion.value || !opinion.value.content) return "";

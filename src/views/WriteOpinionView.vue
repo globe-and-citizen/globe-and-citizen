@@ -390,6 +390,37 @@ function removeCoverImage() {
   formData.value.url_to_image = "";
 }
 
+function registerDropHandler() {
+  const quillEditor = quillRef.value?.getQuill();
+  if (!quillEditor) return;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const editorContainer = (quillEditor as any).container?.querySelector(
+    ".ql-editor"
+  );
+  if (!editorContainer) return;
+
+  editorContainer.addEventListener("drop", async (e: DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const file = e.dataTransfer?.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+
+    try {
+      const url = await uploadToCloudinary(file);
+      const range = quillEditor.getSelection();
+      if (range) {
+        quillEditor.insertEmbed(range.index, "image", url);
+        quillEditor.setSelection(range.index + 1);
+      }
+    } catch (error) {
+      console.error("Drop upload failed", error);
+      toast("Image upload failed", { type: "error" });
+    }
+  });
+}
+
 onBeforeRouteUpdate(async (to) => {
   const newPostId = to.params.id as string;
   if (newPostId !== postId) {
@@ -406,6 +437,10 @@ watch(
 );
 onMounted(() => {
   window.scrollTo({ top: 0, behavior: "smooth" });
+
+  setTimeout(() => {
+    registerDropHandler();
+  }, 300);
 });
 </script>
 

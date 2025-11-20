@@ -7,9 +7,9 @@
       class="max-h-[95vh] md:max-w-[80vw] overflow-y-auto no-scrollbar"
     >
       <DialogHeader>
-        <DialogTitle>Edit Article</DialogTitle>
+        <DialogTitle>Edit post</DialogTitle>
         <DialogDescription>
-          Make changes to the article. Click save when you're done.
+          Make changes to the post. Click save when you're done.
         </DialogDescription>
       </DialogHeader>
       <div class="grid gap-4 py-4">
@@ -19,11 +19,11 @@
         </div>
         <div class="grid gap-2">
           <Label for="slug">Slug</Label>
-          <Input id="slug" v-model="formData.slug" />
+          <Input id="slug" v-model="formData.slug" :disabled="!isAdmin" />
         </div>
         <div class="grid gap-2">
           <Label for="author">Author</Label>
-          <Input id="author" v-model="formData.author" />
+          <Input id="author" v-model="formData.author" :disabled="!isAdmin" />
         </div>
         <div class="grid gap-2">
           <Label for="description">Description</Label>
@@ -137,7 +137,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch, ref } from "vue";
+import { watch, ref, computed } from "vue";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -155,6 +155,7 @@ import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import type { Post } from "@/models/Posts";
 import LoaderIcon from "@/assets/icons/loader.svg";
 import { uploadToCloudinary } from "@/api/images.ts";
+import { useAuthStore } from "@/store/authStore";
 
 interface Props {
   isOpen: boolean;
@@ -173,6 +174,9 @@ const formData = ref<Partial<Post>>({});
 const hiddenImageInput = ref<HTMLInputElement | null>(null);
 const imageUploading = ref(false);
 const imageUploadError = ref("");
+const authStore = useAuthStore();
+
+const isAdmin = computed(() => authStore.user?.role.name === "admin");
 
 // Watch for post changes to update form data
 watch(
