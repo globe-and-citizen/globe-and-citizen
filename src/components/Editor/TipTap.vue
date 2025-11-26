@@ -254,10 +254,6 @@ const setTextAlign = (alignment: "left" | "center" | "right" | "justify") => {
   editor.value?.chain().focus().setTextAlign(alignment).run();
 };
 
-const setFontFamily = (fontFamily: string) => {
-  editor.value?.chain().focus().setFontFamily(fontFamily).run();
-};
-
 const setColor = (color: string) => {
   editor.value?.chain().focus().setColor(color).run();
 };
@@ -421,7 +417,7 @@ const deleteRow = () => {
           @change="(e: Event) => {
             const level = (e.target as HTMLSelectElement).value;
             if (level === 'p') {
-              editor.chain().focus().setParagraph().run();
+              editor?.chain().focus().setParagraph().run();
             } else {
               setHeading(Number(level) as 1 | 2 | 3 | 4 | 5 | 6);
             }
