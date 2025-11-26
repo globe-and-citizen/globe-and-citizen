@@ -165,21 +165,11 @@
                 <FormItem>
                   <FormLabel>Content</FormLabel>
                   <FormControl>
-                    <QuillEditor
-                      ref="quillRef"
-                      content-type="html"
-                      theme="snow"
-                      :options="{
-                        modules: {
-                          toolbar: {
-                            container: toolbarConfig,
-                            handlers: customHandlers,
-                          },
-                        },
-                      }"
-                      style="min-height: 200px"
-                      :content="componentField.modelValue || ''"
-                      @update:content="componentField.onChange"
+                    <TipTap
+                      :model-value="componentField.modelValue || ''"
+                      min-height="300px"
+                      placeholder="Start writing your article content..."
+                      @update:model-value="componentField.onChange"
                     />
                   </FormControl>
                   <FormMessage />
@@ -309,11 +299,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { toTypedSchema } from "@vee-validate/zod";
 import LoaderIcon from "@/assets/icons/loader.svg";
-import { computed, ref, watch, watchEffect, onMounted } from "vue";
-
+import { computed, ref, watch, onMounted } from "vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { QuillEditor } from "@vueup/vue-quill";
-import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import { Button } from "../../../components/ui/button";
 import {
   FormControl,
@@ -324,6 +311,7 @@ import {
 } from "../../../components/ui/form";
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
+import TipTap from "@/components/Editor/TipTap.vue";
 import type { NewsApiArticle } from "@/models/News";
 import type { NewPostType } from "@/models/Posts";
 import { useForm } from "vee-validate";
@@ -335,6 +323,7 @@ import { getPolymarketDataBySlug } from "@/api/polymarket";
 import { useRouter } from "vue-router";
 import ApproveAndPublish from "./ApproveAndPublish.vue";
 import { useGlobalStore } from "@/store/globalStore";
+
 const router = useRouter();
 const queryClient = useQueryClient();
 
@@ -344,22 +333,6 @@ const props = defineProps({
     default: false,
   },
 });
-
-// Type for QuillEditor instance
-export interface QuillEditorInstance {
-  getQuill(): {
-    getSelection(): { index: number; length: number } | null;
-    insertEmbed(index: number, type: string, value: string): void;
-    setSelection(index: number): void;
-    formatText(
-      index: number,
-      length: number,
-      format: string,
-      value: string
-    ): void;
-    format(format: string, value: boolean): void;
-  };
-}
 
 const stepIndex = ref<number>(1);
 const steps = [
@@ -377,7 +350,6 @@ const generatedSummary = ref<string>("");
 const polymarketSummary = ref<string>("");
 const rawTextForSummary = ref<string>("");
 
-const quillRef = ref<QuillEditorInstance | null>(null);
 const hiddenImageInput = ref<HTMLInputElement | null>(null);
 const imageUploading = ref(false);
 const imageUploadError = ref("");
@@ -439,53 +411,6 @@ const textSummaryMutation = useMutation({
   },
 });
 
-// Simple toolbar array to ensure buttons appear
-const toolbarConfig = [
-  ["bold", "italic", "underline", "strike"],
-  ["blockquote", "code-block"],
-  [{ header: 1 }, { header: 2 }],
-  [{ list: "ordered" }, { list: "bullet" }],
-  [{ script: "sub" }, { script: "super" }],
-  [{ indent: "-1" }, { indent: "+1" }],
-  [{ direction: "rtl" }],
-  [{ size: ["small", false, "large", "huge"] }],
-  [{ header: [1, 2, 3, 4, 5, 6, false] }],
-  [{ color: [] }, { background: [] }],
-  [{ font: [] }],
-  [{ align: [] }],
-  ["clean"],
-  ["link", "image"],
-];
-
-// Custom handlers
-const customHandlers = {
-  image: function () {
-    // File upload option
-    const input = document.createElement("input");
-    input.setAttribute("type", "file");
-    input.setAttribute("accept", "image/*");
-    input.click();
-
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (file) {
-        try {
-          const cloudinaryUrl = await uploadToCloudinary(file);
-          if (quillRef.value) {
-            const quill = quillRef.value.getQuill();
-            const range = quill.getSelection();
-            if (range) {
-              quill.insertEmbed(range.index, "image", cloudinaryUrl);
-              quill.setSelection(range.index + 1);
-            }
-          }
-        } catch (error) {
-          console.error("Upload failed:", error);
-        }
-      }
-    };
-  },
-};
 // Publish article mutation
 const publishMutation = useMutation({
   mutationFn: postNewsArticle,
@@ -550,10 +475,13 @@ const {
   enabled: false,
 });
 
-watchEffect(() => {
-  polymarketLoading.value = polymarketIsFetching.value;
-  polymarketError.value = polymarketQueryError.value?.message || "";
-});
+watch(
+  () => [polymarketIsFetching.value, polymarketQueryError.value],
+  () => {
+    polymarketLoading.value = polymarketIsFetching.value;
+    polymarketError.value = polymarketQueryError.value?.message || "";
+  }
+);
 
 const savedValues = ref(
   {} as {
@@ -566,6 +494,7 @@ const savedValues = ref(
     slug?: string | undefined;
   }
 );
+
 watch(
   () => polymarketData.value,
   async (data: any) => {
@@ -583,6 +512,7 @@ watch(
     polymarketSummary.value = data.description || "";
     setValues(formValues);
     savedValues.value = { ...formValues };
+    polymarketSuccess.value = true;
   }
 );
 
@@ -633,12 +563,9 @@ const isLastStep = computed(() => stepIndex.value === totalSteps.value);
 async function handleNext() {
   try {
     const result = await validate();
-    if (result) {
+    if (result.valid) {
       if (stepIndex.value < totalSteps.value) stepIndex.value += 1;
       savedValues.value = { ...result.values };
-    } else {
-      // validation failed - errors will be shown via FormMessage
-      // keep the user on current step
     }
   } catch (err) {
     console.error("Validation error:", err);
@@ -713,78 +640,6 @@ onMounted(() => {
 
 <style scoped>
 * {
-  font-family: "Times New Roman", serif;
-}
-
-/* Quill Editor Styles */
-:deep(.ql-editor) {
-  min-height: 200px;
-  font-family: "Times New Roman", serif;
-}
-
-:deep(.ql-toolbar) {
-  border-top: 1px solid #ccc;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-  border-radius: 0.375rem 0.375rem 0 0;
-}
-
-:deep(.ql-container) {
-  border-bottom: 1px solid #ccc;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-  border-radius: 0 0 0.375rem 0.375rem;
-}
-
-:deep(.ql-editor.ql-blank::before) {
-  font-style: italic;
-  color: #999;
-}
-
-/* Prose styles for content preview */
-.prose h1 {
-  font-size: 1.25rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-.prose h2 {
-  font-size: 1.125rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-.prose h3 {
-  font-size: 1rem;
-  font-weight: bold;
-  margin-bottom: 0.25rem;
-}
-.prose p {
-  margin-bottom: 0.5rem;
-}
-.prose ul {
-  list-style-type: disc;
-  list-style-position: inside;
-  margin-bottom: 0.5rem;
-}
-.prose ol {
-  list-style-type: decimal;
-  list-style-position: inside;
-  margin-bottom: 0.5rem;
-}
-.prose blockquote {
-  border-left: 4px solid #d1d5db;
-  padding-left: 1rem;
-  font-style: italic;
-  margin-bottom: 0.5rem;
-}
-.prose strong {
-  font-weight: bold;
-}
-.prose em {
-  font-style: italic;
-}
-.prose code {
-  background-color: #f3f4f6;
-  border-radius: 0.25rem;
-  padding: 0 0.25rem;
+  font-family: Lato, serif;
 }
 </style>

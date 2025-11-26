@@ -231,7 +231,6 @@ import { computed, ref, onMounted } from "vue";
 import type { NewPostType, Post } from "@/models/Posts";
 import NewsPostHeadingSection from "@/views/NewsPost/sections/NewsPostHeadingSection.vue";
 import DOMPurify from "dompurify";
-import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import "@/quill.css";
 import Segmented from "@/components/SegmentedContent.vue";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";

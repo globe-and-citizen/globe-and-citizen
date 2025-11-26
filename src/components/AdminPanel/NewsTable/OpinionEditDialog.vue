@@ -38,44 +38,12 @@
             class="bg-muted cursor-not-allowed focus-visible:ring-0 focus-visible:text-gray-600 focus-visible:border-transparent"
           />
         </div>
-        <!-- <div class="grid gap-2">
-          <Label for="description">Description</Label>
-          <Textarea
-            id="description"
-            v-model="formData.description"
-            readonly
-            class="bg-muted cursor-not-allowed focus-visible:ring-0 focus-visible:text-gray-600 focus-visible:border-transparent"
-          />
-        </div> -->
         <div class="grid gap-2">
           <Label for="content">Content</Label>
-          <QuillEditor
-            id="content"
-            content-type="html"
-            theme="snow"
-            style="min-height: 200px"
-            :content="formData.content || ''"
-            :options="{
-              modules: {
-                toolbar: [
-                  ['bold', 'italic', 'underline', 'strike'],
-                  ['blockquote', 'code-block'],
-                  [{ header: 1 }, { header: 2 }],
-                  [{ list: 'ordered' }, { list: 'bullet' }],
-                  [{ script: 'sub' }, { script: 'super' }],
-                  [{ indent: '-1' }, { indent: '+1' }],
-                  [{ direction: 'rtl' }],
-                  [{ size: ['small', false, 'large', 'huge'] }],
-                  [{ header: [1, 2, 3, 4, 5, 6, false] }],
-                  [{ color: [] }, { background: [] }],
-                  [{ font: [] }],
-                  [{ align: [] }],
-                  ['clean'],
-                  ['link', 'image'],
-                ],
-              },
-            }"
-            @update:content="(content: string) => (formData.content = content)"
+          <TipTap
+            v-model="formData.content"
+            placeholder="Write your opinion content..."
+            min-height="300px"
           />
         </div>
         <div class="grid gap-2">
@@ -159,8 +127,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { QuillEditor } from "@vueup/vue-quill";
-import "@vueup/vue-quill/dist/vue-quill.snow.css";
+import TipTap from "@/components/Editor/TipTap.vue";
 import type { Post } from "@/models/Posts";
 import LoaderIcon from "@/assets/icons/loader.svg";
 import { uploadToCloudinary } from "@/api/images.ts";

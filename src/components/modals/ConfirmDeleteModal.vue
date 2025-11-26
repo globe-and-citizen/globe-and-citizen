@@ -55,8 +55,4 @@ defineEmits<{
   max-width: 500px;
   width: 90%;
 }
-.dark .confirm-delete-modal-content {
-  background: #1f2937;
-  color: #e5e7eb;
-}
 </style>

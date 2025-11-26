@@ -24,7 +24,7 @@
           {{ reviewData.description }}
         </p>
         <div
-          class="ql-editor text-sm prose prose-sm max-w-none"
+          class="ql-editor max-w-none font-lato"
           v-html="reviewData.content"
         ></div>
       </CardContent>

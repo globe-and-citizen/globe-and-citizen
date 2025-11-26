@@ -37,6 +37,10 @@
   margin-bottom: 1em;
 }
 
+.ql-editor tbody tr td p {
+  margin-bottom: 0px;
+}
+
 .ql-editor strong {
   font-weight: bold;
 }

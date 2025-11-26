@@ -48,7 +48,4 @@ const emit = defineEmits<{
   border: 1px solid;
   border-radius: 0.5rem;
 }
-.dark .confirm-modal-content {
-  background: #000;
-}
 </style>
