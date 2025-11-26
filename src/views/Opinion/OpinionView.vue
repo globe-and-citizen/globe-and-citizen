@@ -159,7 +159,6 @@ import { computed, onMounted, ref, shallowRef, useTemplateRef } from "vue";
 import type { Post } from "@/models/Posts";
 import OpinionHeading from "@/views/Opinion/sections/OpinionHeading.vue";
 import DOMPurify from "dompurify";
-import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import "@/quill.css";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { fetchOpinionById } from "@/api/posts.ts";

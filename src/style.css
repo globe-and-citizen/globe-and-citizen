@@ -229,3 +229,268 @@ main {
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
 }
+
+.ql-editor table {
+  border-collapse: collapse;
+  width: 100% !important;
+  margin: 1.5em 0;
+  overflow-x: auto;
+  display: block;
+  min-width: unset;
+}
+
+.ql-editor table tbody {
+  display: table;
+  width: 100%;
+}
+
+.ql-editor table td,
+.ql-editor table th {
+  border: 1px solid #e5e7eb;
+  padding: 8px 1rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.ql-editor table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #111827;
+}
+
+.ql-editor table tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.ql-editor table tr:hover {
+  background-color: #f3f4f6;
+}
+
+@media (max-width: 768px) {
+  .ql-editor table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .ql-editor table td,
+  .ql-editor table th {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5em 0;
+}
+
+.prose table td,
+.prose table th {
+  border: 1px solid #e5e7eb;
+  padding: 8px 1rem;
+  text-align: left;
+}
+
+.prose table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.prose table tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.prose table tr:hover {
+  background-color: #f3f4f6;
+}
+
+:deep(.ProseMirror) {
+  outline: none;
+  min-height: v-bind(minHeight);
+  padding: 1rem;
+  background: white;
+}
+/* 
+:deep(.ProseMirror.dark) {
+  background: #111827;
+  color: #e5e7eb;
+} */
+
+:deep(.ProseMirror h1) {
+  font-size: 2rem;
+  font-weight: bold;
+  line-height: 1.25;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+:deep(.ProseMirror h2) {
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1.25;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+:deep(.ProseMirror h3) {
+  font-size: 1.25rem;
+  font-weight: bold;
+  line-height: 1.25;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+:deep(.ProseMirror h4) {
+  font-size: 1.125rem;
+  font-weight: bold;
+  line-height: 1.25;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+:deep(.ProseMirror h5) {
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 1.25;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+:deep(.ProseMirror h6) {
+  font-size: 0.875rem;
+  font-weight: bold;
+  line-height: 1.25;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+/* :deep(.ProseMirror p) {
+} */
+
+:deep(.ProseMirror ul, .ProseMirror ol) {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+:deep(.ProseMirror li) {
+  margin: 0.25rem 0;
+}
+
+:deep(.ProseMirror blockquote) {
+  border-left: 4px solid #d1d5db;
+  padding-left: 1rem;
+  margin: 1rem 0;
+  font-style: italic;
+  color: #6b7280;
+}
+
+:deep(.ProseMirror code) {
+  background-color: #f3f4f6;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-family: "Courier New", monospace;
+  font-size: 0.875rem;
+}
+
+:deep(.ProseMirror pre) {
+  background-color: #f3f4f6;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+:deep(.ProseMirror mark) {
+  background-color: #fef3c7;
+  padding: 0.125rem;
+  border-radius: 0.125rem;
+}
+
+:deep(.ProseMirror img) {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 0.5rem 0;
+}
+
+:deep(.ProseMirror a) {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+:deep(.ProseMirror table) {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+:deep(.ProseMirror table td, .ProseMirror table th) {
+  min-width: 1em;
+  border: 2px solid #ced4da;
+  padding: 3px 5px;
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+
+:deep(.ProseMirror table td.selectedCell, .ProseMirror table th.selectedCell) {
+  background: rgba(200, 200, 255, 0.4);
+}
+
+:deep(.ProseMirror table th) {
+  font-weight: bold;
+  text-align: left;
+  background-color: #f1f3f4;
+}
+
+:deep(.ProseMirror table .column-resize-handle) {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  z-index: 20;
+  background-color: #adf;
+  pointer-events: none;
+}
+
+:deep(.ProseMirror table .tableWrapper) {
+  overflow-x: auto;
+}
+
+/* Dark mode styles */
+/* .dark :deep(.ProseMirror) {
+  background: #111827;
+  color: #e5e7eb;
+}
+
+.dark :deep(.ProseMirror blockquote) {
+  border-left-color: #4b5563;
+  color: #9ca3af;
+}
+
+.dark :deep(.ProseMirror code) {
+  background-color: #374151;
+  color: #e5e7eb;
+}
+
+.dark :deep(.ProseMirror pre) {
+  background-color: #374151;
+}
+
+.dark :deep(.ProseMirror mark) {
+  background-color: #451a03;
+  color: #fbbf24;
+}
+
+.dark :deep(.ProseMirror table th) {
+  background-color: #374151;
+}
+
+.dark :deep(.ProseMirror table td, .dark .ProseMirror table th) {
+  border-color: #4b5563;
+} */

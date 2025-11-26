@@ -83,25 +83,13 @@
               class="border rounded-md overflow-hidden relative"
               :class="validationErrors.content ? 'border-red-500' : ''"
             >
-              <QuillEditor
-                v-bind="{ id: 'content' }"
-                ref="quillRef"
-                content-type="html"
-                theme="snow"
-                style="min-height: 300px"
-                :content="formData.content || ''"
-                :options="{
-                  modules: {
-                    toolbar: {
-                      container: toolbarConfig,
-                      handlers: customHandlers,
-                    },
-                  },
+              <TipTap
+                v-model="formData.content"
+                :min-height="'300px'"
+                @update:model-value="(content: string) => {
+                  formData.content = content;
+                  validationErrors.content = false;
                 }"
-                @update:content="(content: any) => {
-        formData.content = content;
-        validationErrors.content = false;
-      }"
               />
             </div>
             <div
@@ -212,7 +200,6 @@
 </template>
 
 <script setup lang="ts">
-import { QuillEditor } from "@vueup/vue-quill";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -223,16 +210,15 @@ import type { Post } from "@/models/Posts";
 import type { OpinionPayload } from "@/models/Opinions";
 import { generateSlug } from "@/composables/utils.ts";
 import { uploadToCloudinary } from "@/api/images.ts";
-import type { QuillEditorInstance } from "@/components/AdminPanel/NewsStepper/index.vue";
 import { toast } from "vue3-toastify";
 import { onBeforeRouteUpdate, useRoute, useRouter } from "vue-router";
 import { fetchPostById } from "@/api/posts";
+import TipTap from "@/components/Editor/TipTap.vue";
 
 const route = useRoute();
 const router = useRouter();
 const queryClient = useQueryClient();
 const formData = ref<Partial<Post>>({});
-const quillRef = ref<QuillEditorInstance | null>(null);
 const isUploadingCoverImage = ref(false);
 
 const postId = route.params.id as string;
@@ -274,55 +260,6 @@ const { mutate: postOpinion } = useMutation({
   },
 });
 
-const toolbarConfig = [
-  ["bold", "italic", "underline", "strike"],
-  ["blockquote", "code-block"],
-  [{ header: 1 }, { header: 2 }],
-  [{ list: "ordered" }, { list: "bullet" }],
-  [{ script: "sub" }, { script: "super" }],
-  [{ indent: "-1" }, { indent: "+1" }],
-  [{ direction: "rtl" }],
-  [{ size: ["small", false, "large", "huge"] }],
-  [{ header: [1, 2, 3, 4, 5, 6, false] }],
-  [{ color: [] }, { background: [] }],
-  [{ font: [] }],
-  [{ align: [] }],
-  ["clean"],
-  ["link", "image"],
-];
-
-const customHandlers = {
-  image: function () {
-    // File upload option
-    const input = document.createElement("input");
-    input.setAttribute("type", "file");
-    input.setAttribute("accept", "image/*");
-    input.click();
-
-    input.onchange = async () => {
-      const file = input.files?.[0];
-      if (file) {
-        try {
-          const cloudinaryUrl = await uploadToCloudinary(file);
-          if (quillRef.value) {
-            const quill = quillRef.value.getQuill();
-            const range = quill.getSelection();
-            if (range) {
-              quill.insertEmbed(range.index, "image", cloudinaryUrl);
-              quill.setSelection(range.index + 1);
-            }
-          }
-        } catch (error) {
-          console.error("Upload failed:", error);
-          toast("Image upload failed", {
-            autoClose: 3000,
-            type: "error",
-          });
-        }
-      }
-    };
-  },
-};
 const validationErrors = ref({
   title: false,
   content: false,
@@ -390,37 +327,6 @@ function removeCoverImage() {
   formData.value.url_to_image = "";
 }
 
-function registerDropHandler() {
-  const quillEditor = quillRef.value?.getQuill();
-  if (!quillEditor) return;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const editorContainer = (quillEditor as any).container?.querySelector(
-    ".ql-editor"
-  );
-  if (!editorContainer) return;
-
-  editorContainer.addEventListener("drop", async (e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const file = e.dataTransfer?.files?.[0];
-    if (!file || !file.type.startsWith("image/")) return;
-
-    try {
-      const url = await uploadToCloudinary(file);
-      const range = quillEditor.getSelection();
-      if (range) {
-        quillEditor.insertEmbed(range.index, "image", url);
-        quillEditor.setSelection(range.index + 1);
-      }
-    } catch (error) {
-      console.error("Drop upload failed", error);
-      toast("Image upload failed", { type: "error" });
-    }
-  });
-}
-
 onBeforeRouteUpdate(async (to) => {
   const newPostId = to.params.id as string;
   if (newPostId !== postId) {
@@ -437,44 +343,7 @@ watch(
 );
 onMounted(() => {
   window.scrollTo({ top: 0, behavior: "smooth" });
-
-  setTimeout(() => {
-    registerDropHandler();
-  }, 300);
 });
 </script>
 
-<style scoped>
-/* Custom styles for the Quill editor */
-:deep(.ql-editor) {
-  min-height: 300px;
-}
-
-:deep(.ql-toolbar) {
-  border-top: 1px solid #ccc;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-}
-
-:deep(.ql-container) {
-  border-bottom: 1px solid #ccc;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-}
-
-/* Dark mode support for Quill editor */
-.dark :deep(.ql-toolbar) {
-  border-color: #374151;
-  background-color: #374151;
-}
-
-.dark :deep(.ql-container) {
-  border-color: #374151;
-  background-color: #1f2937;
-  color: #e5e7eb;
-}
-
-.dark :deep(.ql-editor) {
-  color: #e5e7eb;
-}
-</style>
+<style scoped></style>

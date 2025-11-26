@@ -252,7 +252,6 @@ import {
   patchNewsArticle,
 } from "@/api/posts.ts";
 import type { NewPostType, Post, AllNewsResponseType } from "@/models/Posts";
-import "@/quill.css";
 
 import { useQueryClient } from "@tanstack/vue-query";
 import { deleteOpinion, patchOpinion } from "@/api/opinions";

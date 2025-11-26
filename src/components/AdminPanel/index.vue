@@ -81,8 +81,4 @@ const items = [
   </Sidebar>
 </template>
 
-<style scoped>
-* {
-  font-family: "Times New Roman", serif;
-}
-</style>
+<style scoped></style>

@@ -31,33 +31,11 @@
         </div>
         <div class="grid gap-2">
           <Label for="content">Content</Label>
-          <QuillEditor
+          <TipTap
             id="content"
-            content-type="html"
-            theme="snow"
-            style="min-height: 200px"
-            :content="formData.content || ''"
-            :options="{
-              modules: {
-                toolbar: [
-                  ['bold', 'italic', 'underline', 'strike'],
-                  ['blockquote', 'code-block'],
-                  [{ header: 1 }, { header: 2 }],
-                  [{ list: 'ordered' }, { list: 'bullet' }],
-                  [{ script: 'sub' }, { script: 'super' }],
-                  [{ indent: '-1' }, { indent: '+1' }],
-                  [{ direction: 'rtl' }],
-                  [{ size: ['small', false, 'large', 'huge'] }],
-                  [{ header: [1, 2, 3, 4, 5, 6, false] }],
-                  [{ color: [] }, { background: [] }],
-                  [{ font: [] }],
-                  [{ align: [] }],
-                  ['clean'],
-                  ['link', 'image'],
-                ],
-              },
-            }"
-            @update:content="(content: string) => (formData.content = content)"
+            v-model="formData.content"
+            placeholder="Write your post content..."
+            min-height="250px"
           />
         </div>
         <div class="grid gap-2">
@@ -150,8 +128,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { QuillEditor } from "@vueup/vue-quill";
-import "@vueup/vue-quill/dist/vue-quill.snow.css";
+import TipTap from "@/components/Editor/TipTap.vue";
 import type { Post } from "@/models/Posts";
 import LoaderIcon from "@/assets/icons/loader.svg";
 import { uploadToCloudinary } from "@/api/images.ts";
