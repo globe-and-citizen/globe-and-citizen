@@ -17,7 +17,7 @@
       <!-- Left Image Section -->
       <div class="lg:max-w-[480px] lg:min-w-[480px] relative">
         <img
-          :src="post?.url_to_image || 'src/assets/images/no-photo.jpg'"
+          :src="post?.url_to_image || noImg"
           alt="American Flag"
           class="object-cover h-full w-full rounded-sm max-h-[300px] lg:max-h-[400px]"
         />
@@ -39,9 +39,7 @@
         </div>
         <div class="flex items-center gap-2 mb-4">
           <img
-            :src="
-              post?.user.profile_picture_url || 'src/assets/images/no-photo.jpg'
-            "
+            :src="post?.user.profile_picture_url || noImg"
             alt="user image"
             class="w-8 h-8 rounded-full object-cover"
           />
@@ -106,6 +104,8 @@ import timeIcon from "../../../assets/clock-icon.svg";
 import commentsIcon from "../../../assets/comment-icon.svg";
 import type { Post } from "../../../models/Posts";
 import { getReadingTime } from "@/composables/utils";
+import noImg from "../assets/images/no-photo.jpg";
+
 withDefaults(
   defineProps<{
     post?: Post;
