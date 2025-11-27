@@ -11,7 +11,7 @@ import Superscript from "@tiptap/extension-superscript";
 import Link from "@tiptap/extension-link";
 import CodeBlock from "@tiptap/extension-code-block";
 import Heading from "@tiptap/extension-heading";
-import Image from "@tiptap/extension-image";
+import ResizableImage from "@/components/Editor/extensions/ResizableImage";
 import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
 import { TableHeader } from "@tiptap/extension-table-header";
@@ -47,6 +47,7 @@ import RowInsertTop from "@/components/Editor/icons/rowinserttop.svg";
 import DeleteTable from "@/components/Editor/icons/deletetable.svg";
 import UndoIcon from "@/components/Editor/icons/undo.svg";
 import RedoIcon from "@/components/Editor/icons/redo.svg";
+import { Dropcursor } from "@tiptap/extension-dropcursor";
 
 interface Props {
   modelValue?: string;
@@ -97,17 +98,14 @@ const editor = useEditor({
         class: "bg-gray-100 dark:bg-gray-800 p-4 rounded",
       },
     }),
-    Image.configure({
-      HTMLAttributes: {
-        class: "max-w-full h-auto",
-      },
-    }),
+    ResizableImage,
     Table.configure({
       resizable: true,
     }),
     TableRow,
     TableHeader,
     TableCell,
+    Dropcursor,
   ],
   editorProps: {
     attributes: {
@@ -899,6 +897,18 @@ svg {
 
 :deep(.ProseMirror table .tableWrapper) {
   overflow-x: auto;
+}
+
+.tiptap-image-resize-handle {
+  width: 10px;
+  height: 10px;
+  background: white;
+  border: 1px solid #999;
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  cursor: se-resize;
+  border-radius: 2px;
 }
 
 /* Dark mode styles */
