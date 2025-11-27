@@ -104,7 +104,7 @@ import timeIcon from "../../../assets/clock-icon.svg";
 import commentsIcon from "../../../assets/comment-icon.svg";
 import type { Post } from "../../../models/Posts";
 import { getReadingTime } from "@/composables/utils";
-import noImg from "../assets/images/no-photo.jpg";
+import noImg from "@/assets/images/no-photo.jpg";
 
 withDefaults(
   defineProps<{
