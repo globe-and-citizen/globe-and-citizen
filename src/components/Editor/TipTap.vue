@@ -158,18 +158,24 @@ const handleImageUpload = async (file: File) => {
   if (!editor.value) return;
 
   isUploading.value = true;
+
+  const toastId = toast.loading("Uploading image...");
   try {
     const url = await uploadToCloudinary(file);
     editor.value.chain().focus().setImage({ src: url }).run();
-    toast("Image uploaded successfully!", {
-      autoClose: 3000,
+    toast.update(toastId, {
+      render: "Image uploaded successfully!",
       type: "success",
+      autoClose: 3000,
+      isLoading: false,
     });
   } catch (error) {
     console.error("Image upload failed:", error);
-    toast("Image upload failed", {
-      autoClose: 3000,
+    toast.update(toastId, {
+      render: "Image upload failed",
       type: "error",
+      autoClose: 3000,
+      isLoading: false,
     });
   } finally {
     isUploading.value = false;
