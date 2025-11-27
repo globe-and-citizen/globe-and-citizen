@@ -132,12 +132,13 @@ import type { AllNewsResponseType } from "@/models/Posts";
 import { useQuery } from "@tanstack/vue-query";
 import { computed, ref, watch } from "vue";
 import VerticalCard from "@/components/VerticalCard.vue";
-import { RouterLink, useRoute } from "vue-router";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
-const currentPage = ref(1);
 const pageSize = ref(10);
+const router = useRouter();
 
+const currentPage = ref(Number(route.query.page) || 1);
 const category = computed(() => (route.query.category as string) || null);
 
 const fetchFn = async () => {
@@ -158,6 +159,23 @@ watch(category, () => {
   currentPage.value = 1;
   refetch();
 });
+
+watch(currentPage, (newPage) => {
+  router.replace({
+    query: {
+      ...route.query,
+      page: newPage,
+    },
+  });
+});
+
+watch(
+  () => route.query.page,
+  (newPage) => {
+    currentPage.value = Number(newPage) || 1;
+    refetch();
+  }
+);
 
 const news = computed(() => data.value?.data.posts ?? []);
 const totalCount = computed(() => data.value?.data.totalCount ?? 0);
