@@ -92,7 +92,7 @@
               <h3 class="text-lg md:text-xl font-bold mb-4">
                 Related Opinions
               </h3>
-              <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4">
+              <!-- <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4">
                 <router-link
                   v-for="opinion in displayedEntries"
                   :key="opinion.id"
@@ -116,7 +116,8 @@
                     </div>
                   </div>
                 </router-link>
-              </div>
+              </div> -->
+              <ExploreMore :posts="displayedEntries ? displayedEntries : []" />
             </div>
 
             <!-- Desktop: Show related opinions in sidebar -->
@@ -252,6 +253,7 @@ import TrashBinIcon from "@/assets/icons/trash-bin-icon.svg";
 import { useAuthStore } from "@/store/authStore";
 import DeleteDialog from "@/components/AdminPanel/NewsTable/DeleteDialog.vue";
 import EditDialog from "@/components/AdminPanel/NewsTable/EditDialog.vue";
+import ExploreMore from "@/views/Home/sections/ExploreMore.vue";
 
 import { toast } from "vue3-toastify";
 

@@ -86,6 +86,6 @@ const logOut = () => {
 <style scoped>
 .sidebar-menu {
   width: 100%;
-  min-width: 174px;
+  min-width: 190px;
 }
 </style>

@@ -15,3 +15,19 @@ export const getPolymarketDataBySlug = async (
 
   return res.data[0];
 };
+
+export const getPolymarketForPriceAlerts = async (url: string) => {
+  const response = await fetchWithAuth(`${API_BASE_URL}/profile/price-alert`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ url }),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to fetch Polymarket data");
+  }
+  const res = await response.json();
+
+  return res;
+};

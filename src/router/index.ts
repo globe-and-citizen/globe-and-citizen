@@ -27,6 +27,7 @@ import CreateArticle from "@/views/UserProfile/CreateArticle.vue";
 import UserNewsView from "@/views/UserProfile/UserNewsView.vue";
 import AllNewsView from "@/views/AllNewsView.vue";
 import ChangePasswordView from "@/views/UserProfile/ChangePasswordView.vue";
+import PolymarketPriceTracker from "@/views/PolymarketPriceTracker.vue";
 const routes = [
   {
     path: "/",
@@ -95,6 +96,10 @@ const routes = [
           { path: "articles", component: UserNewsView },
           { path: "create", component: CreateArticle },
           { path: "my-comments", component: PublicView },
+          {
+            path: "polymarket-price-tracker",
+            component: PolymarketPriceTracker,
+          },
         ],
       },
       { path: "all-news", component: AllNewsView, name: "AllNewsPage" },
