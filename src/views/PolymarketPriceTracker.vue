@@ -87,10 +87,10 @@
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
-                {{ tracker.current_metric ?? "—" }}
+                {{ tracker?.current_metric ?? "—" }}
               </td>
               <td class="px-4 py-3 text-center">
-                {{ tracker.total_trigger_count }}
+                {{ tracker?.total_trigger_count ?? "—" }}
               </td>
               <td class="px-4 py-3 text-gray-600">
                 {{ new Date(tracker.created_at || "").toLocaleDateString() }}
@@ -150,6 +150,8 @@ type Tracker = {
   target_price?: number;
   outcome_id?: string;
   outcome_name?: string;
+  current_metric?: number;
+  total_trigger_count?: number;
 
   // sum alert
   alert_type?: "sum";
@@ -174,9 +176,9 @@ const handleCreated = async () => {
   await fetchTrackers();
 };
 
-const editTracker = (tracker: Tracker) => {
-  console.log("Edit tracker requested:", tracker);
-};
+// const editTracker = (tracker: Tracker) => {
+//   console.log("Edit tracker requested:", tracker);
+// };
 
 const removeTracker = async (id?: number | string) => {
   if (id === undefined || id === null) return;
