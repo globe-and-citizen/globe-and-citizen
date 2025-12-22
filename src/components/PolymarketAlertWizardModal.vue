@@ -218,7 +218,9 @@
               </div>
             </div>
 
-            <div>Notify Discord: {{ notifyDiscord ? "Yes" : "No" }}</div>
+            <div class="break-words">
+              Notify Discord: {{ notifyDiscord ? "Yes" : "No" }}
+            </div>
             <div v-if="notifyDiscord && discordWebhook">
               Webhook: {{ discordWebhook }}
             </div>
