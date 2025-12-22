@@ -44,7 +44,11 @@
             class="w-8 h-8 rounded-full object-cover"
           />
           <p class="font-semibold font-lato text-black">
-            {{ post?.author.substring(0, 20) + "..." }}
+            {{
+              post?.author.length > 20
+                ? post?.author.substring(0, 20) + "..."
+                : post?.author
+            }}
           </p>
           <p class="font-medium text-black-60 font-lato text-xs">
             {{
