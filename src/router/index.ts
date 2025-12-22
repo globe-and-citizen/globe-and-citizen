@@ -99,6 +99,9 @@ const routes = [
           {
             path: "polymarket-price-tracker",
             component: PolymarketPriceTracker,
+            meta: {
+              requiresFeatureFlag: "price-tracker",
+            },
           },
         ],
       },
@@ -135,6 +138,13 @@ router.beforeEach((to, _, next) => {
   const isLoggedIn = authStore.isUserAuthenticated;
   const isAdmin = authStore.user?.role.name === "admin";
 
+  const featureFlag = to.meta.requiresFeatureFlag as string | undefined;
+  if (featureFlag) {
+    if (to.query[featureFlag] !== "true") {
+      return next({ path: "/profile" });
+    }
+  }
+
   if (isLoggedIn && (to.path === "/sign-in" || to.path === "/sign-up")) {
     next({ path: "/" });
   } else if (to.matched.some((record) => record.meta.requiresAdmin)) {
@@ -154,7 +164,7 @@ router.beforeEach((to, _, next) => {
     }
   } else if (
     (!isLoggedIn && to.path === "/profile") ||
-    (!isLoggedIn && to.path && to.path.startsWith("/profile/"))
+    (!isLoggedIn && to.path?.startsWith("/profile/"))
   ) {
     next({ path: "/sign-in" });
   } else {

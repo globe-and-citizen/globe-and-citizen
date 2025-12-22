@@ -4,34 +4,22 @@
     <div class="flex justify-between items-center">
       <h1 class="text-2xl font-bold text-gray-800">Polymarket Trackers</h1>
 
-      <button
-        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
-        @click="fetchTrackers"
-      >
-        Refresh
-      </button>
-    </div>
-
-    <!-- Add New Tracker -->
-    <section class="bg-gray-50 border border-gray-200 p-6 rounded-lg">
-      <h2 class="text-xl font-semibold mb-4 text-gray-800">Add New Tracker</h2>
-
-      <div class="flex gap-3 items-center">
-        <input
-          v-model="urlInput"
-          type="text"
-          placeholder="Enter Polymarket URL"
-          class="flex-1 p-3 border border-gray-300 rounded-lg"
-        />
+      <div class="flex gap-2">
+        <button
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
+          @click="openCreateModal"
+        >
+          Create Alert
+        </button>
 
         <button
-          class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg font-medium"
-          @click="startAddTracker"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium"
+          @click="fetchTrackers"
         >
-          Next
+          Refresh
         </button>
       </div>
-    </section>
+    </div>
 
     <!-- Trackers Table -->
     <section>
@@ -41,10 +29,12 @@
         <table class="min-w-full bg-white">
           <thead>
             <tr class="bg-gray-100 text-left border-b">
-              <th class="px-4 py-3 font-medium">Market</th>
-              <th class="px-4 py-3 font-medium">High</th>
-              <th class="px-4 py-3 font-medium">Low</th>
-              <th class="px-4 py-3 font-medium">Target</th>
+              <th class="px-4 py-3 font-medium">Type</th>
+              <!-- <th class="px-4 py-3 font-medium">Trigger</th> -->
+              <th class="px-4 py-3 font-medium">Legs</th>
+              <th class="px-4 py-3 font-medium text-center">Hold</th>
+              <th class="px-4 py-3 font-medium text-center">Current metric</th>
+              <th class="px-4 py-3 font-medium text-center">Triggered (n)</th>
               <th class="px-4 py-3 font-medium">Created</th>
               <th class="px-4 py-3 font-medium text-right">Actions</th>
             </tr>
@@ -56,29 +46,63 @@
               :key="tracker.id"
               class="border-b hover:bg-gray-50"
             >
-              <td class="px-4 py-3 max-w-xs truncate">{{ tracker.url }}</td>
-
-              <td class="px-4 py-3 text-green-600">
-                {{ tracker.highPrice ?? "—" }}
-              </td>
-              <td class="px-4 py-3 text-red-600">
-                {{ tracker.lowPrice ?? "—" }}
-              </td>
-
               <td class="px-4 py-3">
-                {{ tracker.targetOutcome }} / {{ tracker.targetSide }} @
-                {{ tracker.targetPrice }}
+                {{
+                  tracker.alert_type === "sum" || tracker.legs
+                    ? "Multi"
+                    : "Single"
+                }}
               </td>
 
-              <td class="px-4 py-3 text-gray-600">{{ tracker.createdAt }}</td>
+              <!-- <td class="px-4 py-3">
+                <span v-if="tracker.alert_type === 'sum' || tracker.legs">
+                  p1 + … + p{{ (tracker.legs?.length ?? 0) || '—' }}
+                  {{ tracker.operator ?? '—' }} {{ tracker.threshold ?? '—' }}
+                </span>
+                <span v-else>
+                  {{ tracker.outcome_name ?? '—' }} /
+                  {{ (tracker.direction ?? '—').toString().toUpperCase() }} @
+                  {{ tracker.target_price ?? '—' }}
+                </span>
+              </td> -->
+
+              <td class="px-4 py-3 max-w-xs truncate">
+                <span v-if="tracker.alert_type === 'sum' || tracker.legs">
+                  {{ formatLegs(tracker) }}
+                </span>
+                <span v-else>
+                  {{ tracker.market_url ?? "—" }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <span v-if="tracker.alert_type === 'sum' || tracker.legs">
+                  <span v-if="tracker.operator === 'lt'"> {{ "<" }} </span>
+                  <span v-if="tracker.operator === 'lte'"> {{ "<=" }} </span>
+                  <span v-if="tracker.operator === 'gt'"> {{ ">" }} </span>
+                  <span v-if="tracker.operator === 'gte'"> {{ ">=" }} </span>
+                  {{ tracker.threshold ?? "—" }}
+                </span>
+                <span v-else>
+                  {{ tracker.target_price ?? "—" }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-center">
+                {{ tracker.current_metric ?? "—" }}
+              </td>
+              <td class="px-4 py-3 text-center">
+                {{ tracker.total_trigger_count }}
+              </td>
+              <td class="px-4 py-3 text-gray-600">
+                {{ new Date(tracker.created_at || "").toLocaleDateString() }}
+              </td>
 
               <td class="px-4 py-3 text-right space-x-3">
-                <button
+                <!-- <button
                   class="text-blue-600 hover:text-blue-800"
                   @click="editTracker(tracker)"
                 >
                   Edit
-                </button>
+                </button> -->
 
                 <button
                   class="text-red-600 hover:text-red-800"
@@ -102,222 +126,85 @@
       </div>
     </section>
 
-    <!-- Modal -->
-    <div
-      v-if="modalOpen"
-      class="fixed inset-0 bg-[#000000a1] flex items-center justify-center"
-    >
-      <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-xl space-y-4">
-        <h2 class="text-xl font-semibold">
-          {{ editingTracker ? "Edit Tracker" : "Configure Tracker" }}
-        </h2>
-        <h3 class="text-lg font-bold">{{ modalData.title }}</h3>
-        <div v-if="modalData.marketOptions.length > 1">
-          <label class="block font-medium">Select Market</label>
-          <select
-            v-model="modalData.selectedMarketId"
-            class="w-full p-3 border rounded"
-          >
-            <option
-              v-for="m in modalData.marketOptions"
-              :key="m.id"
-              :value="m.id"
-            >
-              {{ m.title }}
-            </option>
-          </select>
-        </div>
-        <!-- Outcome -->
-        <label class="block font-medium">Select Outcome</label>
-        <select
-          v-model="modalData.targetOutcome"
-          class="w-full p-3 border rounded"
-        >
-          <option v-for="o in modalData.availableOutcomes" :key="o" :value="o">
-            {{ o }}
-          </option>
-        </select>
-
-        <!-- Side -->
-        <label class="block font-medium">Side</label>
-        <select
-          v-model="modalData.targetSide"
-          class="w-full p-3 border rounded"
-        >
-          <option value="BUY">BUY</option>
-          <option value="SELL">SELL</option>
-        </select>
-
-        <!-- Price -->
-        <label class="block font-medium">Target Price</label>
-        <input
-          v-model.number="modalData.targetPrice"
-          type="number"
-          class="w-full p-3 border rounded"
-          placeholder="0.50"
-          step="0.01"
-        />
-
-        <div class="flex justify-end gap-3 pt-4">
-          <button class="px-4 py-2" @click="closeModal">Cancel</button>
-          <button
-            class="bg-green-600 text-white px-4 py-2 rounded-lg"
-            @click="saveModal"
-          >
-            Save
-          </button>
-        </div>
-      </div>
-    </div>
+    <PolymarketAlertWizardModal
+      :is-open="isCreateModalOpen"
+      @close="isCreateModalOpen = false"
+      @created="handleCreated"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { getPolymarketForPriceAlerts } from "@/api/polymarket";
-import { ref } from "vue";
+import { deleteAlert, fetchAlerts } from "@/api/polymarket";
+import { onMounted, ref } from "vue";
+import PolymarketAlertWizardModal from "@/components/PolymarketAlertWizardModal.vue";
 
-const urlInput = ref("");
+type Tracker = {
+  id?: number | string;
+  created_at?: string;
 
-const trackers = ref<
-  Array<{
-    id: number;
-    url: string;
-    marketId: string;
-    createdAt: string;
-    highPrice: number | null;
-    lowPrice: number | null;
-    targetOutcome: string;
-    targetSide: "BUY" | "SELL";
-    targetPrice: number | null;
-  }>
->([]);
+  // classic single
+  market_url?: string;
+  market_id?: string;
+  direction?: "buy" | "sell";
+  target_price?: number;
+  outcome_id?: string;
+  outcome_name?: string;
 
-// --- Modal State ---
-const modalOpen = ref(false);
-const editingTracker = ref<null | {
-  id: number;
-  url: string;
-  marketId: string;
-  createdAt: string;
-  highPrice: number | null;
-  lowPrice: number | null;
-  targetOutcome: string;
-  targetSide: "BUY" | "SELL";
-  targetPrice: number | null;
-}>(null);
+  // sum alert
+  alert_type?: "sum";
+  operator?: string;
+  threshold?: number;
+  legs?: Array<{
+    market_url?: string;
+    outcome_id?: string;
+    outcome_name?: string;
+  }>;
+};
 
-const modalData = ref({
-  url: "",
-  marketOptions: [] as Array<{ id: string; title: string }>,
-  title: "",
-  selectedMarketId: "",
-  availableOutcomes: ["YES", "NO"],
-  targetOutcome: "YES",
-  targetSide: "BUY" as "BUY" | "SELL",
-  marketId: "",
-  targetPrice: null as number | null,
-});
+const trackers = ref<Tracker[]>([]);
 
-// Removed unused mutation setup to satisfy lint rules
+const isCreateModalOpen = ref(false);
 
-const startAddTracker = async () => {
-  const url = urlInput.value.trim();
-  if (!url) return;
+const openCreateModal = () => {
+  isCreateModalOpen.value = true;
+};
 
+const handleCreated = async () => {
+  await fetchTrackers();
+};
+
+const editTracker = (tracker: Tracker) => {
+  console.log("Edit tracker requested:", tracker);
+};
+
+const removeTracker = async (id?: number | string) => {
+  if (id === undefined || id === null) return;
   try {
-    const response = await getPolymarketForPriceAlerts(url);
-    console.log(response);
-    const market: Array<{ id: string; groupItemTitle: string }> =
-      response.data.markets;
-
-    modalData.value = {
-      url,
-      marketOptions: market.map((m) => ({
-        id: m.id,
-        title: m.groupItemTitle,
-      })),
-      selectedMarketId: market[0].id,
-      availableOutcomes: ["YES", "NO"],
-      targetOutcome: "YES",
-      targetSide: "BUY",
-      marketId: market[0].id,
-      targetPrice: null,
-      title: response.data.title,
-    };
-
-    modalOpen.value = true;
+    await deleteAlert(id);
+    await fetchTrackers();
   } catch (err) {
-    console.error("Failed to load Polymarket:", err);
-    alert("Could not load market data.");
+    console.error("Failed to delete tracker:", err);
+    alert("Could not delete tracker.");
   }
 };
-// (optional) If needed, add helpers here
 
-const saveModal = () => {
-  if (editingTracker.value) {
-    Object.assign(editingTracker.value, {
-      marketId: modalData.value.selectedMarketId,
-      targetOutcome: modalData.value.targetOutcome,
-      targetSide: modalData.value.targetSide,
-      targetPrice: modalData.value.targetPrice,
-    });
+const formatLegs = (tracker: Tracker) => {
+  if (!tracker.legs || tracker.legs.length === 0) return "—";
+  return tracker.legs.map((l) => `${l.outcome_name ?? "—"}`).join(" + ");
+};
 
-    editingTracker.value = null;
-  } else {
-    trackers.value.push({
-      id: Date.now(),
-      url: modalData.value.url,
-      marketId: modalData.value.selectedMarketId,
-      createdAt: new Date().toISOString(),
-      highPrice: null,
-      lowPrice: null,
-      targetOutcome: modalData.value.targetOutcome,
-      targetSide: modalData.value.targetSide,
-      targetPrice: modalData.value.targetPrice,
-    });
+const fetchTrackers = async () => {
+  try {
+    const response = await fetchAlerts();
+    trackers.value = response.data || [];
+  } catch (err) {
+    console.error("Failed to fetch trackers:", err);
+    alert("Could not load trackers.");
   }
-
-  closeModal();
 };
 
-const editTracker = (tracker: {
-  id: number;
-  url: string;
-  marketId: string;
-  createdAt: string;
-  highPrice: number | null;
-  lowPrice: number | null;
-  targetOutcome: string;
-  targetSide: "BUY" | "SELL";
-  targetPrice: number | null;
-}) => {
-  editingTracker.value = tracker;
-
-  modalData.value = {
-    url: tracker.url,
-    marketOptions: modalData.value.marketOptions, // ideally refetch
-    selectedMarketId: tracker.marketId,
-    availableOutcomes: ["YES", "NO"],
-    targetOutcome: tracker.targetOutcome,
-    targetSide: tracker.targetSide,
-    marketId: tracker.marketId,
-    targetPrice: tracker.targetPrice,
-    title: modalData.value.title,
-  };
-
-  modalOpen.value = true;
-};
-
-const closeModal = () => {
-  modalOpen.value = false;
-  editingTracker.value = null;
-};
-
-const removeTracker = (id: number) => {
-  trackers.value = trackers.value.filter((t) => t.id !== id);
-};
-
-const fetchTrackers = () => {
-  console.log("Refresh...");
-};
+onMounted(() => {
+  fetchTrackers();
+});
 </script>
