@@ -74,4 +74,11 @@ export const menuItems = [
   //   title: "My Comments",
   //   url: "/my-comments",
   // },
+
+  {
+    section: "Services",
+    // icon: password,
+    title: "Polymarket price tracker",
+    url: "/polymarket-price-tracker",
+  },
 ];

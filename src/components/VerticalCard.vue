@@ -40,8 +40,10 @@
         <p class="font-medium font-lato w-full text-black-80 text-xs">
           {{
             post?.author
-              ? post?.author?.substring(0, 13) + "..."
-              : post.user.username.substring(0, 20) || "Unknown Author"
+              ? post?.author.length > 20
+                ? post?.author.substring(0, 20) + "..."
+                : post?.author
+              : "Unknown Author"
           }}
         </p>
         <p class="font-medium text-black-60 font-lato text-xs ml-auto">
