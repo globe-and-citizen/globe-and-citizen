@@ -44,7 +44,13 @@
             <tr
               v-for="tracker in trackers"
               :key="tracker.id"
-              class="border-b hover:bg-gray-50"
+              class="border-b"
+              :class="
+                tracker?.current_metric === null ||
+                tracker?.current_metric === undefined
+                  ? 'bg-red-50 hover:bg-red-100'
+                  : 'hover:bg-gray-50'
+              "
             >
               <td class="px-4 py-3">
                 {{
