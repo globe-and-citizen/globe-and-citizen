@@ -1,6 +1,5 @@
 import { API_BASE_URL } from "@/api/constants.ts";
 import type { NewsApiResponse } from "@/models/News";
-import { fetchWithAuth } from "@/api/auth.ts";
 
 export async function fetchNewsApi({
   page = 1,
@@ -19,7 +18,7 @@ export async function fetchNewsApi({
     } else if (category) {
       params.set("category", category);
     }
-    const response = await fetchWithAuth(
+    const response = await fetch(
       `${API_BASE_URL}/news-api?${params.toString()}`
     );
     if (!response) {
@@ -50,7 +49,7 @@ export type FetchNewsApiSourcesResponse = {
 
 export async function fetchNewsApiSources(): Promise<FetchNewsApiSourcesResponse> {
   try {
-    const response = await fetchWithAuth(`${API_BASE_URL}/sources`);
+    const response = await fetch(`${API_BASE_URL}/sources`);
     if (!response) {
       throw new Error(`Error fetching news sources`);
     }

@@ -20,6 +20,7 @@ export type CreateSumAlertPayload = {
   alert_type: "sum";
   operator: AlertOperator;
   threshold: number;
+  direction: "buy" | "sell";
   legs: SumAlertLeg[];
   notify_discord: boolean;
   discord_webhook?: string;
@@ -32,8 +33,10 @@ export type CreateSingleAlertPayload = {
   outcome_id: string;
   outcome_name: string;
   direction: "buy" | "sell";
+  operator: AlertOperator;
   target_price: number;
   notify_discord: boolean;
+  threshold: number;
   discord_webhook?: string;
   repeat: boolean;
 };
@@ -41,6 +44,18 @@ export type CreateSingleAlertPayload = {
 export type CreateAlertPayload =
   | CreateSingleAlertPayload
   | CreateSumAlertPayload;
+
+export type UpdateSumAlertPayload = CreateSumAlertPayload & {
+  // Keep the shape open for backend compatibility.
+};
+
+export type UpdateSingleAlertPayload = CreateSingleAlertPayload & {
+  alert_type?: "single";
+};
+
+export type UpdateAlertPayload =
+  | UpdateSingleAlertPayload
+  | UpdateSumAlertPayload;
 
 export const getPolymarketDataBySlug = async (
   type: "events" | "markets",
@@ -108,5 +123,29 @@ export const deleteAlert = async (alertId: string | number) => {
     throw new Error("Failed to delete alert");
   }
   const res = await response.json().catch(() => ({}));
+  return res;
+};
+
+export const updateAlert = async (
+  alertId: string | number,
+  payload: UpdateAlertPayload
+) => {
+  if (alertId === undefined || alertId === null || alertId === "") {
+    throw new Error("Invalid alert id");
+  }
+
+  const response = await fetchWithAuth(`${API_V1_BASE_URL}/alerts/${alertId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update alert");
+  }
+
+  const res = await response.json();
   return res;
 };
