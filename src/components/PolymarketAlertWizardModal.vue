@@ -5,9 +5,17 @@
   >
     <DialogContent class="w-[90vw] max-w-[750px] max-h-[85vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>Create Polymarket Alert</DialogTitle>
+        <DialogTitle>
+          {{
+            isEditMode ? "Update Polymarket Alert" : "Create Polymarket Alert"
+          }}
+        </DialogTitle>
         <DialogDescription>
-          Create a single-outcome alert or a 2/3-market sum alert.
+          {{
+            isEditMode
+              ? "Update an existing single-outcome alert or a 2/3-market sum alert."
+              : "Create a single-outcome alert or a 2/3-market sum alert."
+          }}
         </DialogDescription>
       </DialogHeader>
 
@@ -33,37 +41,56 @@
             </Select>
           </div>
 
-          <div v-if="isSum" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="grid gap-2">
-              <Label>Operator</Label>
-              <Select v-model="operator">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select operator" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="lt">&lt;</SelectItem>
-                    <SelectItem value="lte">&le;</SelectItem>
-                    <SelectItem value="gt">&gt;</SelectItem>
-                    <SelectItem value="gte">&ge;</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+          <div v-if="isSum" class="grid gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid gap-2">
+                <Label>Operator</Label>
+                <Select v-model="operator">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select operator" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="lt">&lt;</SelectItem>
+                      <SelectItem value="lte">&le;</SelectItem>
+                      <SelectItem value="gt">&gt;</SelectItem>
+                      <SelectItem value="gte">&ge;</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div class="grid gap-2">
+                <Label>Hold</Label>
+                <Input
+                  v-model.number="threshold"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.95"
+                />
+              </div>
             </div>
 
-            <div class="grid gap-2">
-              <Label>Hold</Label>
-              <Input
-                v-model.number="threshold"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.95"
-              />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid gap-2">
+                <Label>Direction</Label>
+                <Select v-model="direction">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select direction" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="buy">Buy</SelectItem>
+                      <SelectItem value="sell">Sell</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="grid gap-2">
               <Label>Direction</Label>
               <Select v-model="direction">
@@ -74,6 +101,24 @@
                   <SelectGroup>
                     <SelectItem value="buy">Buy</SelectItem>
                     <SelectItem value="sell">Sell</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div class="grid gap-2">
+              <Label>Operator</Label>
+              <Select v-model="singleOperator">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select operator" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="lt">&lt;</SelectItem>
+                    <SelectItem value="lte">&le;</SelectItem>
+                    <SelectItem value="gt">&gt;</SelectItem>
+                    <SelectItem value="gte">&ge;</SelectItem>
+                    <SelectItem value="eq">=</SelectItem>
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -152,7 +197,7 @@
                 <Label>Market</Label>
                 <Select
                   v-model="leg.selectedMarketId"
-                  :disabled="leg.marketOptions.length === 0"
+                  :disabled="getMarketSelectOptions(leg).length === 0"
                   @update:model-value="() => onMarketChange(idx)"
                 >
                   <SelectTrigger>
@@ -161,7 +206,7 @@
                   <SelectContent>
                     <SelectGroup>
                       <SelectItem
-                        v-for="m in leg.marketOptions"
+                        v-for="m in getMarketSelectOptions(leg)"
                         :key="m.id"
                         :value="m.id"
                       >
@@ -176,7 +221,7 @@
                 <Label>Outcome</Label>
                 <Select
                   v-model="leg.selectedOutcomeId"
-                  :disabled="leg.outcomeOptions.length === 0"
+                  :disabled="getOutcomeSelectOptions(leg).length === 0"
                   @update:model-value="() => onOutcomeChange(idx)"
                 >
                   <SelectTrigger>
@@ -185,7 +230,7 @@
                   <SelectContent>
                     <SelectGroup>
                       <SelectItem
-                        v-for="o in leg.outcomeOptions"
+                        v-for="o in getOutcomeSelectOptions(leg)"
                         :key="o.id"
                         :value="o.id"
                       >
@@ -206,6 +251,7 @@
 
             <div v-if="isSum">
               <div>Type: Sum ({{ legsCount }} legs)</div>
+              <div>Direction: {{ direction.toUpperCase() }}</div>
               <div>
                 Trigger: p1 + … + p{{ legsCount }} {{ operator }}
                 {{ threshold }}
@@ -214,14 +260,16 @@
             <div v-else>
               <div>Type: Single</div>
               <div>
-                Trigger: {{ direction.toUpperCase() }} @ {{ targetPrice }}
+                Trigger: {{ direction.toUpperCase() }}
+                {{ operatorSymbol(singleOperator) }}
+                {{ targetPrice }}
               </div>
             </div>
 
-            <div class="break-words">
+            <div class="break-all">
               Notify Discord: {{ notifyDiscord ? "Yes" : "No" }}
             </div>
-            <div v-if="notifyDiscord && discordWebhook">
+            <div v-if="notifyDiscord && discordWebhook" class="break-all">
               Webhook: {{ discordWebhook }}
             </div>
             <div>Repeat: {{ repeat ? "Yes" : "No" }}</div>
@@ -261,8 +309,10 @@
           :disabled="!canSubmit || isSubmitting"
           @click="handleSubmit"
         >
-          <span v-if="isSubmitting">Creating…</span>
-          <span v-else>Create Alert</span>
+          <span v-if="isSubmitting">{{
+            isEditMode ? "Updating…" : "Creating…"
+          }}</span>
+          <span v-else>{{ isEditMode ? "Update Alert" : "Create Alert" }}</span>
         </Button>
       </DialogFooter>
     </DialogContent>
@@ -295,6 +345,7 @@ import {
   createAlert,
   getPolymarketDataBySlug,
   type AlertOperator,
+  updateAlert,
 } from "@/api/polymarket";
 
 type OutcomeOption = { id: string; name: string };
@@ -325,17 +376,52 @@ type LegState = {
 
 interface Props {
   isOpen: boolean;
+  mode?: "create" | "edit";
+  initialAlert?: ExistingAlert | null;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<{
   (e: "close"): void;
   (e: "created"): void;
+  (e: "updated"): void;
 }>();
+
+type ExistingAlertLeg = {
+  market_url?: string;
+  outcome_id?: string;
+  outcome_name?: string;
+};
+
+type ExistingAlert = {
+  id: string | number;
+
+  // single
+  market_url?: string;
+  market_id?: string;
+  outcome_id?: string;
+  outcome_name?: string;
+  direction?: "buy" | "sell";
+  target_price?: number;
+
+  // sum
+  alert_type?: "sum";
+  operator?: AlertOperator;
+  threshold?: number;
+  legs?: ExistingAlertLeg[];
+
+  // notifications
+  notify_discord?: boolean;
+  discord_webhook?: string;
+  repeat?: boolean;
+};
+
+const isEditMode = computed(() => props.mode === "edit");
 
 const step = ref<1 | 2 | 3>(1);
 const legsCount = ref<1 | 2 | 3>(1);
 const operator = ref<AlertOperator>("lt");
+const singleOperator = ref<AlertOperator>("gte");
 const threshold = ref<number>(0.95);
 const direction = ref<"buy" | "sell">("buy");
 const targetPrice = ref<number>(0.95);
@@ -396,33 +482,96 @@ watch(
 
 watch(
   () => props.isOpen,
-  (open) => {
+  async (open) => {
     if (!open) return;
+
+    const resetToDefaults = () => {
+      step.value = 1;
+      legsCount.value = 1;
+      operator.value = "lt";
+      singleOperator.value = "gte";
+      threshold.value = 0.95;
+      direction.value = "buy";
+      targetPrice.value = 0.95;
+      notifyDiscord.value = true;
+      discordWebhook.value = "";
+      repeat.value = true;
+      legs.value = [
+        {
+          marketUrl: "",
+          loading: false,
+          error: null,
+          title: "",
+          marketOptions: [],
+          selectedMarketId: "",
+          outcomeOptions: [],
+          selectedOutcomeId: "",
+          selectedOutcomeName: "",
+        },
+      ];
+
+      submitError.value = "";
+      isSubmitting.value = false;
+    };
+
+    if (!isEditMode.value || !props.initialAlert) {
+      resetToDefaults();
+      return;
+    }
+
+    const alert = props.initialAlert;
+
     step.value = 1;
-    legsCount.value = 1;
-    operator.value = "lt";
-    threshold.value = 0.95;
-    direction.value = "buy";
-    targetPrice.value = 0.95;
-    notifyDiscord.value = true;
-    discordWebhook.value = "";
-    repeat.value = true;
-    legs.value = [
-      {
-        marketUrl: "",
+    submitError.value = "";
+    isSubmitting.value = false;
+
+    notifyDiscord.value = alert.notify_discord ?? true;
+    discordWebhook.value = alert.discord_webhook ?? "";
+    repeat.value = alert.repeat ?? true;
+
+    const isSumExisting =
+      alert.alert_type === "sum" || (alert.legs?.length ?? 0) > 0;
+
+    if (isSumExisting) {
+      const count = (alert.legs?.length ?? 2) === 3 ? 3 : 2;
+      legsCount.value = count;
+      operator.value = (alert.operator ?? "lt") as AlertOperator;
+      threshold.value =
+        typeof alert.threshold === "number" ? alert.threshold : 0.95;
+      direction.value = (alert.direction ?? "buy") as "buy" | "sell";
+
+      legs.value = (alert.legs ?? []).slice(0, count).map((l) => ({
+        marketUrl: l.market_url ?? "",
         loading: false,
         error: null,
         title: "",
         marketOptions: [],
         selectedMarketId: "",
         outcomeOptions: [],
-        selectedOutcomeId: "",
-        selectedOutcomeName: "",
-      },
-    ];
+        selectedOutcomeId: l.outcome_id ?? "",
+        selectedOutcomeName: l.outcome_name ?? "",
+      }));
+    } else {
+      legsCount.value = 1;
+      direction.value = (alert.direction ?? "buy") as "buy" | "sell";
+      singleOperator.value = (alert.operator ?? "gte") as AlertOperator;
+      targetPrice.value =
+        typeof alert.target_price === "number" ? alert.target_price : 0.95;
 
-    submitError.value = "";
-    isSubmitting.value = false;
+      legs.value = [
+        {
+          marketUrl: alert.market_url ?? "",
+          loading: false,
+          error: null,
+          title: "",
+          marketOptions: [],
+          selectedMarketId: alert.market_id ?? "",
+          outcomeOptions: [],
+          selectedOutcomeId: alert.outcome_id ?? "",
+          selectedOutcomeName: alert.outcome_name ?? "",
+        },
+      ];
+    }
   }
 );
 
@@ -452,6 +601,23 @@ function parsePolymarketUrl(input: string): {
 function safeString(value: unknown): string {
   if (value === null || value === undefined) return "";
   return String(value);
+}
+
+function operatorSymbol(op: AlertOperator): string {
+  switch (op) {
+    case "lt":
+      return "<";
+    case "lte":
+      return "≤";
+    case "gt":
+      return ">";
+    case "gte":
+      return "≥";
+    case "eq":
+      return "=";
+    default:
+      return String(op);
+  }
 }
 
 function parseClobTokenIds(clobTokenIds: unknown): OutcomeOption[] {
@@ -521,6 +687,25 @@ function normalizePolymarketToMarketOptions(data: unknown): MarketOption[] {
   return single ? [single] : [];
 }
 
+function getMarketSelectOptions(leg: LegState): MarketOption[] {
+  if (leg.marketOptions.length > 0) return leg.marketOptions;
+
+  if (!isEditMode.value) return [];
+  if (!leg.selectedMarketId) return [];
+
+  const title = `Market ${leg.selectedMarketId}`;
+  const outcomes = getOutcomeSelectOptions(leg);
+  return [{ id: leg.selectedMarketId, title, outcomes }];
+}
+
+function getOutcomeSelectOptions(leg: LegState): OutcomeOption[] {
+  if (leg.outcomeOptions.length > 0) return leg.outcomeOptions;
+
+  if (!isEditMode.value) return [];
+  if (!leg.selectedOutcomeId || !leg.selectedOutcomeName) return [];
+  return [{ id: leg.selectedOutcomeId, name: leg.selectedOutcomeName }];
+}
+
 async function loadLeg(index: number) {
   const leg = legs.value[index];
   if (!leg) return;
@@ -528,14 +713,22 @@ async function loadLeg(index: number) {
   const url = leg.marketUrl.trim();
   if (!url) return;
 
+  const preserveSelection = isEditMode.value;
+  const prevSelectedMarketId = leg.selectedMarketId;
+  const prevSelectedOutcomeId = leg.selectedOutcomeId;
+  const prevSelectedOutcomeName = leg.selectedOutcomeName;
+
   leg.loading = true;
   leg.error = null;
   leg.title = "";
   leg.marketOptions = [];
-  leg.selectedMarketId = "";
   leg.outcomeOptions = [];
-  leg.selectedOutcomeId = "";
-  leg.selectedOutcomeName = "";
+
+  if (!preserveSelection) {
+    leg.selectedMarketId = "";
+    leg.selectedOutcomeId = "";
+    leg.selectedOutcomeName = "";
+  }
 
   try {
     const { type, slug } = parsePolymarketUrl(url);
@@ -547,8 +740,57 @@ async function loadLeg(index: number) {
     const options = normalizePolymarketToMarketOptions(data);
     leg.marketOptions = options;
 
+    const applySelectionFromOptions = (
+      desiredMarketId: string,
+      desiredOutcomeId: string
+    ) => {
+      let market: MarketOption | undefined;
+      if (desiredMarketId) {
+        market = options.find((m) => m.id === desiredMarketId);
+      }
+      if (!market && desiredOutcomeId) {
+        market = options.find((m) =>
+          m.outcomes.some((o) => o.id === desiredOutcomeId)
+        );
+      }
+      if (!market) return false;
+
+      leg.selectedMarketId = market.id;
+      leg.outcomeOptions = market.outcomes;
+
+      if (desiredOutcomeId) {
+        const outcome = market.outcomes.find((o) => o.id === desiredOutcomeId);
+        if (outcome) {
+          leg.selectedOutcomeId = outcome.id;
+          leg.selectedOutcomeName = outcome.name;
+          return true;
+        }
+      }
+
+      const firstOutcome = market.outcomes[0];
+      if (firstOutcome) {
+        leg.selectedOutcomeId = firstOutcome.id;
+        leg.selectedOutcomeName = firstOutcome.name;
+      }
+      return true;
+    };
+
     const firstMarket = options[0];
-    if (firstMarket) {
+    if (preserveSelection && (prevSelectedMarketId || prevSelectedOutcomeId)) {
+      const applied = applySelectionFromOptions(
+        prevSelectedMarketId,
+        prevSelectedOutcomeId
+      );
+      if (!applied && firstMarket) {
+        leg.selectedMarketId = firstMarket.id;
+        leg.outcomeOptions = firstMarket.outcomes;
+        const firstOutcome = firstMarket.outcomes[0];
+        if (firstOutcome) {
+          leg.selectedOutcomeId = firstOutcome.id;
+          leg.selectedOutcomeName = firstOutcome.name;
+        }
+      }
+    } else if (firstMarket) {
       leg.selectedMarketId = firstMarket.id;
       leg.outcomeOptions = firstMarket.outcomes;
       const firstOutcome = firstMarket.outcomes[0];
@@ -556,6 +798,14 @@ async function loadLeg(index: number) {
         leg.selectedOutcomeId = firstOutcome.id;
         leg.selectedOutcomeName = firstOutcome.name;
       }
+    }
+
+    if (
+      preserveSelection &&
+      !leg.selectedOutcomeName &&
+      prevSelectedOutcomeName
+    ) {
+      leg.selectedOutcomeName = prevSelectedOutcomeName;
     }
 
     if (leg.marketOptions.length === 0) {
@@ -574,6 +824,10 @@ function onMarketChange(index: number) {
   const leg = legs.value[index];
   if (!leg) return;
 
+  // In edit mode we may render fallback options (no fetched markets yet).
+  // Avoid wiping a preselected outcome until real options are loaded.
+  if (leg.marketOptions.length === 0) return;
+
   const selected = leg.marketOptions.find((m) => m.id === leg.selectedMarketId);
   leg.outcomeOptions = selected?.outcomes ?? [];
   const firstOutcome = leg.outcomeOptions[0];
@@ -584,10 +838,12 @@ function onMarketChange(index: number) {
 function onOutcomeChange(index: number) {
   const leg = legs.value[index];
   if (!leg) return;
-  const selected = leg.outcomeOptions.find(
-    (o) => o.id === leg.selectedOutcomeId
-  );
-  leg.selectedOutcomeName = selected?.name ?? "";
+
+  const options = getOutcomeSelectOptions(leg);
+  const selected = options.find((o) => o.id === leg.selectedOutcomeId);
+  if (selected) {
+    leg.selectedOutcomeName = selected.name;
+  }
 }
 
 const canProceed = computed(() => {
@@ -637,11 +893,56 @@ async function handleSubmit() {
   try {
     isSubmitting.value = true;
 
+    if (isEditMode.value) {
+      const alertId = props.initialAlert?.id;
+      if (alertId === undefined || alertId === null || alertId === "") {
+        throw new Error("Missing alert id");
+      }
+
+      if (isSum.value) {
+        await updateAlert(alertId, {
+          alert_type: "sum",
+          operator: operator.value,
+          threshold: threshold.value,
+          direction: direction.value,
+          legs: legs.value.map((l) => ({
+            market_url: l.marketUrl.trim(),
+            outcome_id: l.selectedOutcomeId,
+            outcome_name: l.selectedOutcomeName,
+          })),
+          notify_discord: notifyDiscord.value,
+          discord_webhook: discordWebhook.value || undefined,
+          repeat: repeat.value,
+        });
+      } else {
+        const l = legs.value[0];
+        await updateAlert(alertId, {
+          alert_type: "single",
+          market_url: l.marketUrl.trim(),
+          market_id: l.selectedMarketId || undefined,
+          outcome_id: l.selectedOutcomeId,
+          outcome_name: l.selectedOutcomeName,
+          direction: direction.value,
+          operator: singleOperator.value,
+          threshold: targetPrice.value,
+          target_price: targetPrice.value,
+          notify_discord: notifyDiscord.value,
+          discord_webhook: discordWebhook.value || undefined,
+          repeat: repeat.value,
+        });
+      }
+
+      emit("updated");
+      emit("close");
+      return;
+    }
+
     if (isSum.value) {
       await createAlert({
         alert_type: "sum",
         operator: operator.value,
         threshold: threshold.value,
+        direction: direction.value,
         legs: legs.value.map((l) => ({
           market_url: l.marketUrl.trim(),
           outcome_id: l.selectedOutcomeId,
@@ -659,8 +960,10 @@ async function handleSubmit() {
         outcome_id: l.selectedOutcomeId,
         outcome_name: l.selectedOutcomeName,
         direction: direction.value,
+        operator: singleOperator.value,
         target_price: targetPrice.value,
         notify_discord: notifyDiscord.value,
+        threshold: targetPrice.value,
         discord_webhook: discordWebhook.value || undefined,
         repeat: repeat.value,
       });
@@ -671,7 +974,11 @@ async function handleSubmit() {
   } catch (err) {
     console.error("Failed to create alert:", err);
     submitError.value =
-      err instanceof Error ? err.message : "Failed to create alert.";
+      err instanceof Error
+        ? err.message
+        : isEditMode.value
+        ? "Failed to update alert."
+        : "Failed to create alert.";
   } finally {
     isSubmitting.value = false;
   }

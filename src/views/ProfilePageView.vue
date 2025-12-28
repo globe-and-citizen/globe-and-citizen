@@ -6,7 +6,7 @@
       </div>
       <div
         :class="[
-          'w-full  pl-0 md:pl-8',
+          'flex-1 min-w-0 pl-0 md:pl-8',
           { 'border-l-0 md:border-l': !isProfileByIdView },
         ]"
       >

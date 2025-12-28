@@ -45,35 +45,21 @@ import { useQuery } from "@tanstack/vue-query";
 import { useAuthStore } from "@/store/authStore.ts";
 import { getUser } from "@/api/user.ts";
 import type { UserType } from "@/models/Auth";
-import { RouterLink, useRoute, useRouter } from "vue-router";
+import { RouterLink, useRouter } from "vue-router";
 import logout from "@/assets/icons/logout.svg";
 
 const authStore = useAuthStore();
 const router = useRouter();
-const route = useRoute();
-
-const isPriceTrackerEnabled = computed(() => {
-  return route.query["price-tracker"] === "true";
-});
-
 
 const groupedMenu = computed(() => {
-  return menuItems
-    .filter((item) => {
-      if (item.url === "/polymarket-price-tracker") {
-        return isPriceTrackerEnabled.value;
-      }
-      return true;
-    })
-    .reduce((acc: Record<string, typeof menuItems>, item) => {
-      if (!acc[item.section]) {
-        acc[item.section] = [];
-      }
-      acc[item.section].push(item);
-      return acc;
-    }, {});
+  return menuItems.reduce((acc: Record<string, typeof menuItems>, item) => {
+    if (!acc[item.section]) {
+      acc[item.section] = [];
+    }
+    acc[item.section].push(item);
+    return acc;
+  }, {});
 });
-
 
 const { data: userData } = useQuery({
   queryKey: ["user", authStore.user?.username],
