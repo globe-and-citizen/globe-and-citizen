@@ -99,9 +99,6 @@ const routes = [
           {
             path: "polymarket-price-tracker",
             component: PolymarketPriceTracker,
-            meta: {
-              requiresFeatureFlag: "price-tracker",
-            },
           },
         ],
       },
