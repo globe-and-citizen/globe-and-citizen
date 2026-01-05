@@ -3,7 +3,9 @@
     :open="isOpen"
     @update:open="(open: boolean) => !open && emit('close')"
   >
-    <DialogContent class="w-[90vw] max-w-[750px] max-h-[85vh] overflow-y-auto">
+    <DialogContent
+      class="w-[90vw] max-w-[750px] max-h-[85vh] overflow-y-auto border-0"
+    >
       <DialogHeader>
         <DialogTitle>
           {{
@@ -21,7 +23,7 @@
 
       <div class="grid gap-6 py-4">
         <!-- Step indicator -->
-        <div class="text-sm text-muted-foreground">Step {{ step }} of 3</div>
+        <!-- <div class="text-sm text-muted-foreground">Step {{ step }} of 3</div> -->
 
         <!-- Step 1: Configure -->
         <div v-if="step === 1" class="grid gap-4">
@@ -42,11 +44,21 @@
           </div>
 
           <div v-if="isSum" class="grid gap-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="grid gap-2">
+                <Label>Hold</Label>
+                <Input
+                  v-model.number="threshold"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.95"
+                />
+              </div>
               <div class="grid gap-2">
                 <Label>Operator</Label>
                 <Select v-model="operator">
-                  <SelectTrigger>
+                  <SelectTrigger class="w-full">
                     <SelectValue placeholder="Select operator" />
                   </SelectTrigger>
                   <SelectContent>
@@ -59,24 +71,10 @@
                   </SelectContent>
                 </Select>
               </div>
-
-              <div class="grid gap-2">
-                <Label>Hold</Label>
-                <Input
-                  v-model.number="threshold"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.95"
-                />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="grid gap-2">
                 <Label>Direction</Label>
                 <Select v-model="direction">
-                  <SelectTrigger>
+                  <SelectTrigger class="w-full">
                     <SelectValue placeholder="Select direction" />
                   </SelectTrigger>
                   <SelectContent>
@@ -92,24 +90,21 @@
 
           <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div class="grid gap-2">
-              <Label>Direction</Label>
-              <Select v-model="direction">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select direction" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="buy">Buy</SelectItem>
-                    <SelectItem value="sell">Sell</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+              <Label>Target Price</Label>
+              <Input
+                v-model.number="targetPrice"
+                type="number"
+                min="0"
+                max="1"
+                step="0.01"
+                placeholder="0.95"
+              />
             </div>
 
             <div class="grid gap-2">
               <Label>Operator</Label>
               <Select v-model="singleOperator">
-                <SelectTrigger>
+                <SelectTrigger class="w-full">
                   <SelectValue placeholder="Select operator" />
                 </SelectTrigger>
                 <SelectContent>
@@ -125,21 +120,24 @@
             </div>
 
             <div class="grid gap-2">
-              <Label>Target Price</Label>
-              <Input
-                v-model.number="targetPrice"
-                type="number"
-                min="0"
-                max="1"
-                step="0.01"
-                placeholder="0.95"
-              />
+              <Label>Direction</Label>
+              <Select v-model="direction">
+                <SelectTrigger class="w-full">
+                  <SelectValue placeholder="Select direction" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="buy">Buy</SelectItem>
+                    <SelectItem value="sell">Sell</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div class="grid gap-3">
             <div class="flex items-center gap-2">
-              <Checkbox id="notify_discord" v-model:checked="notifyDiscord" />
+              <Checkbox id="notify_discord" v-model="notifyDiscord" />
               <Label for="notify_discord">Notify Discord</Label>
             </div>
 
@@ -153,7 +151,7 @@
             </div>
 
             <div class="flex items-center gap-2">
-              <Checkbox id="repeat" v-model:checked="repeat" />
+              <Checkbox id="repeat" v-model="repeat" />
               <Label for="repeat">Repeat</Label>
             </div>
           </div>
@@ -289,7 +287,7 @@
         </div>
       </div>
 
-      <DialogFooter class="flex-col-reverse sm:flex-row gap-2 sm:gap-0">
+      <DialogFooter class="flex-col-reverse sm:flex-row gap-2">
         <Button
           variant="outline"
           :disabled="isSubmitting"
@@ -360,6 +358,20 @@ function asRecord(value: unknown): UnknownRecord | null {
 
 function asArray(value: unknown): unknown[] {
   return Array.isArray(value) ? value : [];
+}
+
+function coerceBoolean(value: unknown, fallback: boolean): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") {
+    if (value === 1) return true;
+    if (value === 0) return false;
+  }
+  if (typeof value === "string") {
+    const v = value.trim().toLowerCase();
+    if (v === "true" || v === "1" || v === "yes" || v === "y") return true;
+    if (v === "false" || v === "0" || v === "no" || v === "n") return false;
+  }
+  return fallback;
 }
 
 type LegState = {
@@ -514,64 +526,78 @@ watch(
       isSubmitting.value = false;
     };
 
+    const applyInitialAlert = (alert: ExistingAlert) => {
+      step.value = 1;
+      submitError.value = "";
+      isSubmitting.value = false;
+
+      notifyDiscord.value = coerceBoolean(alert.notify_discord, true);
+      discordWebhook.value = alert.discord_webhook ?? "";
+      repeat.value = coerceBoolean(alert.repeat, true);
+
+      const isSumExisting =
+        alert.alert_type === "sum" || (alert.legs?.length ?? 0) > 0;
+
+      if (isSumExisting) {
+        const count = (alert.legs?.length ?? 2) === 3 ? 3 : 2;
+        legsCount.value = count;
+        operator.value = (alert.operator ?? "lt") as AlertOperator;
+        threshold.value =
+          typeof alert.threshold === "number" ? alert.threshold : 0.95;
+        direction.value = (alert.direction ?? "buy") as "buy" | "sell";
+
+        legs.value = (alert.legs ?? []).slice(0, count).map((l) => ({
+          marketUrl: l.market_url ?? "",
+          loading: false,
+          error: null,
+          title: "",
+          marketOptions: [],
+          selectedMarketId: "",
+          outcomeOptions: [],
+          selectedOutcomeId: l.outcome_id ?? "",
+          selectedOutcomeName: l.outcome_name ?? "",
+        }));
+      } else {
+        legsCount.value = 1;
+        direction.value = (alert.direction ?? "buy") as "buy" | "sell";
+        singleOperator.value = (alert.operator ?? "gte") as AlertOperator;
+        targetPrice.value =
+          typeof alert.target_price === "number" ? alert.target_price : 0.95;
+
+        legs.value = [
+          {
+            marketUrl: alert.market_url ?? "",
+            loading: false,
+            error: null,
+            title: "",
+            marketOptions: [],
+            selectedMarketId: alert.market_id ?? "",
+            outcomeOptions: [],
+            selectedOutcomeId: alert.outcome_id ?? "",
+            selectedOutcomeName: alert.outcome_name ?? "",
+          },
+        ];
+      }
+    };
+
     if (!isEditMode.value || !props.initialAlert) {
       resetToDefaults();
       return;
     }
 
-    const alert = props.initialAlert;
+    applyInitialAlert(props.initialAlert);
+  }
+);
 
-    step.value = 1;
-    submitError.value = "";
-    isSubmitting.value = false;
+watch(
+  () => props.initialAlert,
+  (alert) => {
+    if (!props.isOpen) return;
+    if (!isEditMode.value) return;
+    if (!alert) return;
 
-    notifyDiscord.value = alert.notify_discord ?? true;
-    discordWebhook.value = alert.discord_webhook ?? "";
-    repeat.value = alert.repeat ?? true;
-
-    const isSumExisting =
-      alert.alert_type === "sum" || (alert.legs?.length ?? 0) > 0;
-
-    if (isSumExisting) {
-      const count = (alert.legs?.length ?? 2) === 3 ? 3 : 2;
-      legsCount.value = count;
-      operator.value = (alert.operator ?? "lt") as AlertOperator;
-      threshold.value =
-        typeof alert.threshold === "number" ? alert.threshold : 0.95;
-      direction.value = (alert.direction ?? "buy") as "buy" | "sell";
-
-      legs.value = (alert.legs ?? []).slice(0, count).map((l) => ({
-        marketUrl: l.market_url ?? "",
-        loading: false,
-        error: null,
-        title: "",
-        marketOptions: [],
-        selectedMarketId: "",
-        outcomeOptions: [],
-        selectedOutcomeId: l.outcome_id ?? "",
-        selectedOutcomeName: l.outcome_name ?? "",
-      }));
-    } else {
-      legsCount.value = 1;
-      direction.value = (alert.direction ?? "buy") as "buy" | "sell";
-      singleOperator.value = (alert.operator ?? "gte") as AlertOperator;
-      targetPrice.value =
-        typeof alert.target_price === "number" ? alert.target_price : 0.95;
-
-      legs.value = [
-        {
-          marketUrl: alert.market_url ?? "",
-          loading: false,
-          error: null,
-          title: "",
-          marketOptions: [],
-          selectedMarketId: alert.market_id ?? "",
-          outcomeOptions: [],
-          selectedOutcomeId: alert.outcome_id ?? "",
-          selectedOutcomeName: alert.outcome_name ?? "",
-        },
-      ];
-    }
+    notifyDiscord.value = coerceBoolean(alert.notify_discord, true);
+    repeat.value = coerceBoolean(alert.repeat, true);
   }
 );
 
@@ -869,6 +895,36 @@ const canProceed = computed(() => {
 
 const canSubmit = computed(() => canProceed.value);
 
+function stripPolymarketEventUrl(input: string): string {
+  const raw = (input ?? "").trim();
+  if (!raw) return "";
+
+  const toAbsolute = (value: string) => {
+    if (value.startsWith("/")) return `https://polymarket.com${value}`;
+    if (value.startsWith("http://") || value.startsWith("https://"))
+      return value;
+    if (value.startsWith("polymarket.com/")) return `https://${value}`;
+    return value;
+  };
+
+  const absolute = toAbsolute(raw);
+
+  try {
+    const url = new URL(absolute);
+    if (!/polymarket\.com$/i.test(url.hostname)) return raw;
+
+    // Desired canonical form: https://polymarket.com/event/<event-slug>/
+    const parts = url.pathname.split("/").filter(Boolean);
+    const eventIdx = parts.indexOf("event");
+    if (eventIdx === -1 || !parts[eventIdx + 1]) return raw;
+
+    const eventSlug = parts[eventIdx + 1];
+    return `https://polymarket.com/event/${eventSlug}`;
+  } catch {
+    return raw;
+  }
+}
+
 function handleBackOrClose() {
   if (step.value === 1) {
     emit("close");
@@ -900,13 +956,30 @@ async function handleSubmit() {
       }
 
       if (isSum.value) {
+        const firstLeg = legs.value[0];
+        const existing = props.initialAlert;
+
+        const topMarketUrl = stripPolymarketEventUrl(
+          existing?.market_url?.trim() || firstLeg?.marketUrl?.trim() || ""
+        );
+        const topMarketId = existing?.market_id || "sum";
+        const topOutcomeId =
+          existing?.outcome_id || firstLeg?.selectedOutcomeId || "";
+        const topOutcomeName =
+          existing?.outcome_name || firstLeg?.selectedOutcomeName || "";
+
         await updateAlert(alertId, {
           alert_type: "sum",
           operator: operator.value,
           threshold: threshold.value,
           direction: direction.value,
+          market_url: topMarketUrl,
+          market_id: topMarketId,
+          outcome_id: topOutcomeId,
+          outcome_name: topOutcomeName,
+          target_price: threshold.value,
           legs: legs.value.map((l) => ({
-            market_url: l.marketUrl.trim(),
+            market_url: stripPolymarketEventUrl(l.marketUrl.trim()),
             outcome_id: l.selectedOutcomeId,
             outcome_name: l.selectedOutcomeName,
           })),
@@ -918,7 +991,7 @@ async function handleSubmit() {
         const l = legs.value[0];
         await updateAlert(alertId, {
           alert_type: "single",
-          market_url: l.marketUrl.trim(),
+          market_url: stripPolymarketEventUrl(l.marketUrl.trim()),
           market_id: l.selectedMarketId || undefined,
           outcome_id: l.selectedOutcomeId,
           outcome_name: l.selectedOutcomeName,
@@ -944,7 +1017,7 @@ async function handleSubmit() {
         threshold: threshold.value,
         direction: direction.value,
         legs: legs.value.map((l) => ({
-          market_url: l.marketUrl.trim(),
+          market_url: stripPolymarketEventUrl(l.marketUrl.trim()),
           outcome_id: l.selectedOutcomeId,
           outcome_name: l.selectedOutcomeName,
         })),
@@ -955,7 +1028,7 @@ async function handleSubmit() {
     } else {
       const l = legs.value[0];
       await createAlert({
-        market_url: l.marketUrl.trim(),
+        market_url: stripPolymarketEventUrl(l.marketUrl.trim()),
         market_id: l.selectedMarketId || undefined,
         outcome_id: l.selectedOutcomeId,
         outcome_name: l.selectedOutcomeName,

@@ -10,6 +10,14 @@ const API_V1_BASE_URL = (() => {
 
 export type AlertOperator = "lt" | "lte" | "gt" | "gte" | "eq";
 
+export type AlertMarketFields = {
+  market_url?: string;
+  market_id?: string;
+  outcome_id?: string;
+  outcome_name?: string;
+  target_price?: number;
+};
+
 export type SumAlertLeg = {
   market_url: string;
   outcome_id: string;
@@ -25,7 +33,7 @@ export type CreateSumAlertPayload = {
   notify_discord: boolean;
   discord_webhook?: string;
   repeat: boolean;
-};
+} & AlertMarketFields;
 
 export type CreateSingleAlertPayload = {
   market_url: string;
@@ -135,7 +143,7 @@ export const updateAlert = async (
   }
 
   const response = await fetchWithAuth(`${API_V1_BASE_URL}/alerts/${alertId}`, {
-    method: "PUT",
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
     },

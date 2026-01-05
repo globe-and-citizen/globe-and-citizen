@@ -35,7 +35,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
       <slot>
         <component
           :is="CheckIcon"
-          class="h-4 w-4 text-current transition-none"
+          class="h-4 w-4 text-current transition-none [&>path]:stroke-white"
         />
       </slot>
     </CheckboxIndicator>
