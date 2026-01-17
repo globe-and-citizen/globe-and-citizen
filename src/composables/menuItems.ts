@@ -81,4 +81,10 @@ export const menuItems = [
     title: "Polymarket price tracker",
     url: "/polymarket-price-tracker",
   },
+  {
+    section: "Services",
+    // icon: password,
+    title: "Polymarket analytics",
+    url: "/polymarket-analytics",
+  },
 ];
