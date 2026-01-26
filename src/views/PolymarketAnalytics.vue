@@ -22,7 +22,7 @@
       </div>
 
       <div class="flex items-center gap-4">
-        <label
+        <!-- <label
           class="flex items-center gap-2 text-sm text-gray-700 select-none"
         >
           <input
@@ -31,7 +31,7 @@
             class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
           />
           Include closed markets
-        </label>
+        </label> -->
 
         <button
           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
@@ -428,7 +428,7 @@ const computeChance = (market: PolymarketGammaSearchMarket) => {
     market.bestBid,
     market.bestAsk,
   ].filter(
-    (v) => Number.isFinite(v) && (v as number) >= 0 && (v as number) <= 1
+    (v) => Number.isFinite(v) && (v as number) >= 0 && (v as number) <= 1,
   ) as number[];
 
   const preferred =
@@ -442,7 +442,7 @@ const computeChance = (market: PolymarketGammaSearchMarket) => {
     .filter((p) => Number.isFinite(p) && p >= 0 && p <= 1);
 
   const outcomes = (outcomesRaw ?? []).filter(
-    (o) => typeof o === "string"
+    (o) => typeof o === "string",
   ) as string[];
 
   const yesIdx = outcomes.findIndex((o) => o.trim().toLowerCase() === "yes");
@@ -541,7 +541,7 @@ const clearCompareSelection = () => {
 
 const removeCompareMarket = (marketId: string) => {
   selectedCompareMarkets.value = selectedCompareMarkets.value.filter(
-    (m) => m.marketId !== marketId
+    (m) => m.marketId !== marketId,
   );
 };
 
@@ -559,7 +559,7 @@ const toggleMarketSelection = (market: PolymarketGammaSearchMarket) => {
 
   if (selectedCompareMarkets.value.some((m) => m.marketId === id)) {
     selectedCompareMarkets.value = selectedCompareMarkets.value.filter(
-      (m) => m.marketId !== id
+      (m) => m.marketId !== id,
     );
     return;
   }
@@ -615,7 +615,7 @@ const doSearch = async () => {
 
 const mergeEvents = (
   existing: PolymarketGammaSearchEvent[],
-  incoming: PolymarketGammaSearchEvent[]
+  incoming: PolymarketGammaSearchEvent[],
 ) => {
   const seen = new Set(existing.map((e) => e.id));
   const merged = [...existing];
@@ -692,7 +692,7 @@ watch(
       doSearch();
     }, 350);
   },
-  { immediate: false }
+  { immediate: false },
 );
 
 const runSearchNow = async () => {
