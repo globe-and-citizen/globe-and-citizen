@@ -105,6 +105,11 @@ const routes = [
             path: "polymarket-analytics",
             component: PolymarketAnalytics,
           },
+          {
+            path: "notebooks",
+            name: "ProfileNotebooksView",
+            component: () => import("@/views/NotebooksView.vue"),
+          },
         ],
       },
       { path: "all-news", component: AllNewsView, name: "AllNewsPage" },

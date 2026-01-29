@@ -5,6 +5,7 @@ import password from "@/assets/icons/lock.svg";
 // import plus from "@/assets/icons/plus.svg";
 // import notification from "@/assets/icons/notifications.svg";
 import articles from "@/assets/icons/articles.svg";
+import journals from "@/assets/icons/journals.svg";
 // import comments from "@/assets/icons/comments.svg";
 
 export const menuItems = [
@@ -86,5 +87,11 @@ export const menuItems = [
     // icon: password,
     title: "Polymarket analytics",
     url: "/polymarket-analytics",
+  },
+  {
+    section: "Services",
+    icon: journals,
+    title: "Notebooks",
+    url: "/notebooks",
   },
 ];
