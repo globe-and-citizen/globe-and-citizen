@@ -389,7 +389,7 @@ const showFilterBar = computed(() => {
   return route.path === "/all-news";
 });
 const storeUsername = computed(() =>
-  authStore.user?.username ? authStore.user.username : ""
+  authStore.user?.username ? authStore.user.username : "",
 );
 
 const { data: userData } = useQuery({
@@ -409,7 +409,7 @@ const profilePictureUrl = computed(() => {
 });
 
 const currentCategory = computed(
-  () => route.query.category as string | undefined
+  () => route.query.category as string | undefined,
 );
 
 const isMobileMenuOpen = ref(false);
@@ -427,7 +427,7 @@ watch(
   () => router.currentRoute.value.path,
   () => {
     closeMobileMenu();
-  }
+  },
 );
 
 const postView = computed(() => {
