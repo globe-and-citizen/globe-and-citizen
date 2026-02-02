@@ -6776,6 +6776,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"idb@npm:^8.0.3":
+  version: 8.0.3
+  resolution: "idb@npm:8.0.3"
+  checksum: 10c0/421cd9a3281b7564528857031cc33fd9e95753f8191e483054cb25d1ceea7303a0d1462f4f69f5b41606f0f066156999e067478abf2460dfcf9cab80dae2a2b2
+  languageName: node
+  linkType: hard
+
 "ieee754@npm:^1.2.1":
   version: 1.2.1
   resolution: "ieee754@npm:1.2.1"
@@ -8045,6 +8052,7 @@ __metadata:
     eslint-config-prettier: "npm:^10.1.5"
     eslint-plugin-vue: "npm:^10.1.0"
     globals: "npm:^16.1.0"
+    idb: "npm:^8.0.3"
     layer8-interceptor-production: "npm:^0.3.1"
     leaflet: "npm:^1.9.4"
     lightgallery: "npm:^2.9.0"
