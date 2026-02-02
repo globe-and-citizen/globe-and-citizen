@@ -1,0 +1,29 @@
+{
+  "content": [
+    {
+      "content": null,
+      "created": "2026-01-31T14:55:44.236947Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2026-01-16T14:12:35.160811Z",
+      "mimetype": "text/csv",
+      "name": "polymarket-price-history_2026-01-16T14-12-35-156Z.csv",
+      "path": "data/polymarket-price-history_2026-01-16T14-12-35-156Z.csv",
+      "size": 1139,
+      "type": "file",
+      "writable": true
+    }
+  ],
+  "created": "2026-01-31T14:55:44.236668Z",
+  "format": "json",
+  "hash": null,
+  "hash_algorithm": null,
+  "last_modified": "2026-01-31T14:55:44.236668Z",
+  "mimetype": null,
+  "name": "data",
+  "path": "data",
+  "size": null,
+  "type": "directory",
+  "writable": true
+}
