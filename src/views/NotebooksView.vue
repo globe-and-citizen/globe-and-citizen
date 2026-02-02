@@ -1,6 +1,6 @@
 <template>
-  <div class="w-full bg-white">
-    <div class="max-w-7xl mx-auto py-10 px-6 space-y-6">
+  <div class="w-full">
+    <div class="w-full mx-auto space-y-6">
       <div
         class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
       >
@@ -38,6 +38,7 @@
           loading="lazy"
           referrerpolicy="no-referrer"
           sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals allow-popups"
+          @load="handleIframeLoad"
         />
       </div>
     </div>
@@ -45,7 +46,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, onBeforeUnmount, ref } from "vue";
+import { syncQueuedNotebookFilesToJupyterLite } from "@/composables/jupyterLiteStorage";
 
 type Mode = "lab" | "repl";
 
@@ -53,17 +55,51 @@ const mode = ref<Mode>("lab");
 
 const baseUrl =
   (import.meta.env.VITE_JUPYTERLITE_BASE_URL as string | undefined) ??
-  "https://jupyterlite.github.io/demo";
+  "/jupyterlite";
+
+const iframeReloadNonce = ref(0);
 
 const iframeSrc = computed(() => {
   const normalized = baseUrl.replace(/\/$/, "");
   if (mode.value === "repl") {
-    return `${normalized}/repl/index.html?kernel=python&toolbar=1`;
+    return `${normalized}/repl/index.html?kernel=python&toolbar=1&sync=${iframeReloadNonce.value}`;
   }
 
-  // JupyterLab
-  return `${normalized}/lab/index.html`;
+  return `${normalized}/lab/index.html?sync=${iframeReloadNonce.value}`;
 });
 
-const iframeHeight = "75vh";
+const iframeHeight = "96vh";
+
+let syncTimer: number | null = null;
+
+async function attemptSyncOnce() {
+  try {
+    const res = await syncQueuedNotebookFilesToJupyterLite(baseUrl);
+    if (res.synced > 0) {
+      iframeReloadNonce.value += 1;
+      if (syncTimer !== null) window.clearInterval(syncTimer);
+      syncTimer = null;
+    }
+  } catch (err) {
+    console.debug("Notebook sync attempt failed:", err);
+  }
+}
+
+async function handleIframeLoad() {
+  let tries = 0;
+  if (syncTimer !== null) window.clearInterval(syncTimer);
+  syncTimer = window.setInterval(() => {
+    tries += 1;
+    void attemptSyncOnce();
+    if (tries >= 5) {
+      if (syncTimer !== null) window.clearInterval(syncTimer);
+      syncTimer = null;
+    }
+  }, 1500);
+}
+
+onBeforeUnmount(() => {
+  if (syncTimer !== null) window.clearInterval(syncTimer);
+  syncTimer = null;
+});
 </script>

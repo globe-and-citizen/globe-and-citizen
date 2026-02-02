@@ -12,8 +12,8 @@
             isInsightsMode
               ? "Polymarket Market Insights"
               : isEditMode
-              ? "Update Polymarket Alert"
-              : "Create Polymarket Alert"
+                ? "Update Polymarket Alert"
+                : "Create Polymarket Alert"
           }}
         </DialogTitle>
         <DialogDescription>
@@ -21,8 +21,8 @@
             isInsightsMode
               ? "Export data and generate charts for a market."
               : isEditMode
-              ? "Update an existing single-outcome alert or a 2/3-market sum alert."
-              : "Create a single-outcome alert or a 2/3-market sum alert."
+                ? "Update an existing single-outcome alert or a 2/3-market sum alert."
+                : "Create a single-outcome alert or a 2/3-market sum alert."
           }}
         </DialogDescription>
       </DialogHeader>
@@ -206,15 +206,77 @@
             </div>
 
             <div class="grid gap-2">
-              <Button
-                :disabled="isCombinedCompareChartDisabled"
-                @click="handleViewCombinedCompareChart"
-              >
-                <span v-if="compareChartLoading">Loading…</span>
-                <span v-else>Generate Combined Chart</span>
-              </Button>
+              <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <Button
+                  :disabled="isCombinedCompareChartDisabled"
+                  @click="handleViewCombinedCompareChart"
+                >
+                  <span v-if="compareChartLoading">Loading…</span>
+                  <span v-else>Generate Combined Data</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  :disabled="
+                    compareChartLoading ||
+                    compareChartData.length === 0 ||
+                    compareSaveLoading
+                  "
+                  @click="handleSendCombinedCompareChartToNotebooks"
+                >
+                  <span v-if="compareSaveLoading">Sending…</span>
+                  <span v-else>Save to Jupyter</span>
+                </Button>
+              </div>
+
+              <Dialog v-model:open="compareFilenameDialogOpen">
+                <DialogContent class="sm:max-w-[520px]">
+                  <DialogHeader>
+                    <DialogTitle>Save to Jupyter</DialogTitle>
+                    <DialogDescription>
+                      Choose a filename for the exported data.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div class="grid gap-2">
+                    <Label>Filename</Label>
+                    <Input
+                      v-model="compareFilenameInput"
+                      type="text"
+                      placeholder="polymarket-compare-YYYY-MM-DD.json"
+                      :disabled="compareSaveLoading"
+                    />
+                    <p v-if="compareFilenameError" class="text-sm text-red-600">
+                      {{ compareFilenameError }}
+                    </p>
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      :disabled="compareSaveLoading"
+                      @click="compareFilenameDialogOpen = false"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      :disabled="compareSaveLoading"
+                      @click="handleConfirmSendCombinedCompareChartToNotebooks"
+                    >
+                      <span v-if="compareSaveLoading">Sending…</span>
+                      <span v-else>Send</span>
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               <p v-if="compareChartError" class="text-sm text-red-600">
                 {{ compareChartError }}
+              </p>
+              <p v-if="compareSaveError" class="text-sm text-red-600">
+                {{ compareSaveError }}
+              </p>
+              <p v-if="compareSaveSuccessPath" class="text-sm text-green-700">
+                Saved to JupyterLite: {{ compareSaveSuccessPath }}
               </p>
             </div>
 
@@ -648,6 +710,11 @@ import PriceScatterChart, {
   type ScatterSeries,
   type PriceDataPoint,
 } from "@/components/Charts/PriceScatterChart.vue";
+import {
+  buildSafeJsonFilename,
+  queueTextFileForNotebooks,
+  syncQueuedNotebookFilesToJupyterLite,
+} from "@/composables/jupyterLiteStorage";
 
 type OutcomeOption = { id: string; name: string };
 type MarketOption = {
@@ -778,12 +845,20 @@ const compareChartData = ref<ScatterSeries[]>([]);
 const compareChartLoading = ref<boolean>(false);
 const compareChartError = ref<string | null>(null);
 
+const compareSaveLoading = ref<boolean>(false);
+const compareSaveError = ref<string | null>(null);
+const compareSaveSuccessPath = ref<string>("");
+
+const compareFilenameDialogOpen = ref<boolean>(false);
+const compareFilenameInput = ref<string>("");
+const compareFilenameError = ref<string | null>(null);
+
 const isCombinedCompareChartDisabled = computed(() => {
   if (compareChartLoading.value) return true;
   if (!isCompareInsightsMode.value) return true;
   // Disable if any selected event/market is still loading or hasn't loaded yet.
   return legs.value.some(
-    (leg) => leg.loading || (leg.marketOptions?.length ?? 0) === 0
+    (leg) => leg.loading || (leg.marketOptions?.length ?? 0) === 0,
   );
 });
 
@@ -932,7 +1007,7 @@ watch(
       compareToDate.value = min;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 function buildCompareSeriesName(leg: LegState): string {
@@ -952,6 +1027,8 @@ async function handleViewCombinedCompareChart() {
 
   compareChartError.value = null;
   compareChartData.value = [];
+  compareSaveError.value = null;
+  compareSaveSuccessPath.value = "";
 
   if (!isCompareInsightsMode.value) return;
 
@@ -972,7 +1049,7 @@ async function handleViewCombinedCompareChart() {
   const prepared = legs.value
     .map((leg) => {
       const market = leg.marketOptions.find(
-        (m) => m.id === leg.selectedMarketId
+        (m) => m.id === leg.selectedMarketId,
       );
       if (!market) return null;
       const outcomeId = (leg.selectedOutcomeId ?? "").trim();
@@ -999,7 +1076,7 @@ async function handleViewCombinedCompareChart() {
           startTs: fromTs,
         });
         return res.history ?? [];
-      })
+      }),
     );
 
     let failedCount = 0;
@@ -1052,6 +1129,119 @@ async function handleViewCombinedCompareChart() {
   }
 }
 
+function buildCombinedCompareExportJson(): string {
+  const payload = {
+    type: "polymarket_combined_compare",
+    generated_at: new Date().toISOString(),
+    range: {
+      from_date: compareFromDate.value || null,
+      to_date: compareToDate.value || null,
+      frequency: compareFrequency.value || "daily",
+    },
+    // Store in a notebook-friendly shape.
+    // Each series becomes `{ name, points: [{t,p}] }`.
+    series: compareChartData.value.map((s) => ({
+      name: s.name,
+      points: (s.data ?? []).map((pt) => ({
+        t: pt.timestamp,
+        p: pt.price,
+      })),
+    })),
+  };
+
+  return JSON.stringify(payload, null, 2);
+}
+
+function defaultCombinedCompareNotebookFilename(): string {
+  const base = `polymarket-compare-${new Date().toISOString().slice(0, 10)}`;
+  return buildSafeJsonFilename(base);
+}
+
+function normalizeJsonFilename(
+  input: string,
+  fallbackFilename: string,
+): string {
+  const raw = (input ?? "").trim();
+  const candidate = raw || fallbackFilename;
+
+  // Disallow directories; keep only the last path segment.
+  const justName = candidate.split(/[/\\]/).pop() ?? "";
+  const noExt = justName.replace(/\.json$/i, "").trim();
+  if (!noExt) throw new Error("Filename cannot be empty.");
+  return buildSafeJsonFilename(noExt);
+}
+
+async function performSendCombinedCompareChartToNotebooks(
+  filenameInput: string,
+) {
+  if (compareSaveLoading.value) return;
+
+  compareSaveError.value = null;
+  compareSaveSuccessPath.value = "";
+
+  if (compareChartData.value.length === 0) {
+    compareSaveError.value = "Generate the combined chart first.";
+    return;
+  }
+
+  const fallback = defaultCombinedCompareNotebookFilename();
+  let filename: string;
+  try {
+    filename = normalizeJsonFilename(filenameInput, fallback);
+  } catch (err) {
+    compareFilenameError.value =
+      err instanceof Error ? err.message : "Invalid filename.";
+    return;
+  }
+
+  compareSaveLoading.value = true;
+  try {
+    const path = `data/${filename}`;
+
+    await queueTextFileForNotebooks({
+      path,
+      content: buildCombinedCompareExportJson(),
+      mimetype: "application/json",
+    });
+
+    // Best-effort: if JupyterLite already initialized, sync immediately.
+    // Otherwise it stays queued until the Notebooks view initializes JupyterLite.
+    const sync = await syncQueuedNotebookFilesToJupyterLite();
+    compareSaveSuccessPath.value = sync.skippedBecauseNotInitialized
+      ? `${path} (queued)`
+      : `${path}`;
+
+    compareFilenameDialogOpen.value = false;
+  } catch (err) {
+    console.error("Failed to save to JupyterLite IndexedDB:", err);
+    compareSaveError.value =
+      err instanceof Error ? err.message : "Failed to save to notebooks.";
+  } finally {
+    compareSaveLoading.value = false;
+  }
+}
+
+function handleSendCombinedCompareChartToNotebooks() {
+  if (compareSaveLoading.value) return;
+
+  compareSaveError.value = null;
+  compareSaveSuccessPath.value = "";
+
+  if (compareChartData.value.length === 0) {
+    compareSaveError.value = "Generate the combined chart first.";
+    return;
+  }
+
+  compareFilenameError.value = null;
+  compareFilenameInput.value = defaultCombinedCompareNotebookFilename();
+  compareFilenameDialogOpen.value = true;
+}
+
+async function handleConfirmSendCombinedCompareChartToNotebooks() {
+  compareFilenameError.value = null;
+  await performSendCombinedCompareChartToNotebooks(compareFilenameInput.value);
+}
+
 const isSum = computed(() => legsCount.value !== 1);
 
 const legsCountString = computed({
@@ -1092,12 +1282,12 @@ watch(
           outcomeOptions: [],
           selectedOutcomeId: "",
           selectedOutcomeName: "",
-        }
+        },
       );
     }
     legs.value = nextLegs;
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 watch(
@@ -1262,7 +1452,7 @@ watch(
     }
 
     applyInitialAlert(props.initialAlert);
-  }
+  },
 );
 
 watch(
@@ -1274,7 +1464,7 @@ watch(
 
     notifyDiscord.value = coerceBoolean(alert.notify_discord, true);
     repeat.value = coerceBoolean(alert.repeat, true);
-  }
+  },
 );
 
 watch(
@@ -1285,7 +1475,7 @@ watch(
     // If the selected markets arrive after the modal opens (prop timing), auto-load.
     void loadCompareLegs();
   },
-  { deep: true }
+  { deep: true },
 );
 
 function parsePolymarketUrl(input: string): {
@@ -1301,8 +1491,8 @@ function parsePolymarketUrl(input: string): {
     typeFromUrl === "event"
       ? "events"
       : typeFromUrl === "market"
-      ? "markets"
-      : null;
+        ? "markets"
+        : null;
 
   if (!type || !slug) {
     throw new Error("Invalid Polymarket URL.");
@@ -1434,7 +1624,7 @@ function normalizeMarket(market: unknown): MarketOption | null {
       .map((outcome) => {
         const o = asRecord(outcome);
         const outcomeId = safeString(
-          o?.clobTokenId ?? o?.tokenId ?? o?.outcome_id ?? o?.id
+          o?.clobTokenId ?? o?.tokenId ?? o?.outcome_id ?? o?.id,
         );
         const outcomeName = safeString(o?.name ?? o?.title ?? o?.outcome_name);
         if (!outcomeId || !outcomeName) return null;
@@ -1452,7 +1642,7 @@ function normalizeMarket(market: unknown): MarketOption | null {
   const defaultOutcome = (() => {
     if (outcomes.length === 0) return null;
     const yes = outcomes.find(
-      (o) => (o.name ?? "").trim().toLowerCase() === "yes"
+      (o) => (o.name ?? "").trim().toLowerCase() === "yes",
     );
     return yes ?? outcomes[0];
   })();
@@ -1572,7 +1762,7 @@ async function loadLeg(index: number) {
 
     const applySelectionFromOptions = (
       desiredMarketId: string,
-      desiredOutcomeId: string
+      desiredOutcomeId: string,
     ) => {
       let market: MarketOption | undefined;
       if (desiredMarketId) {
@@ -1580,7 +1770,7 @@ async function loadLeg(index: number) {
       }
       if (!market && desiredOutcomeId) {
         market = options.find((m) =>
-          m.outcomes.some((o) => o.id === desiredOutcomeId)
+          m.outcomes.some((o) => o.id === desiredOutcomeId),
         );
       }
       if (!market) return false;
@@ -1617,7 +1807,7 @@ async function loadLeg(index: number) {
     if (preserveSelection && (prevSelectedMarketId || prevSelectedOutcomeId)) {
       const applied = applySelectionFromOptions(
         prevSelectedMarketId,
-        prevSelectedOutcomeId
+        prevSelectedOutcomeId,
       );
       if (!applied && firstMarket) {
         leg.selectedMarketId = firstMarket.id;
@@ -1714,7 +1904,7 @@ const canProceed = computed(() => {
 
   if (step.value === 2) {
     return legs.value.every(
-      (l) => l.marketUrl.trim() && l.selectedMarketId && l.selectedOutcomeId
+      (l) => l.marketUrl.trim() && l.selectedMarketId && l.selectedOutcomeId,
     );
   }
 
@@ -1729,14 +1919,14 @@ function isAllSelected(leg: LegState): boolean {
   if (leg.marketOptions.length === 0) return false;
   // Check if every market option is selected
   return leg.marketOptions.every((m) =>
-    leg.exportSelectedMarkets.includes(m.id)
+    leg.exportSelectedMarkets.includes(m.id),
   );
 }
 
 function isSomeSelected(leg: LegState): boolean {
   if (leg.marketOptions.length === 0) return false;
   return leg.marketOptions.some((m) =>
-    leg.exportSelectedMarkets.includes(m.id)
+    leg.exportSelectedMarkets.includes(m.id),
   );
 }
 
@@ -1759,7 +1949,7 @@ function toggleAllExportMarkets(leg: LegState, checked: CheckboxModelValue) {
 function toggleExportMarket(
   leg: LegState,
   id: string,
-  checked: CheckboxModelValue
+  checked: CheckboxModelValue,
 ) {
   if (checked === true || checked === "indeterminate") {
     if (!leg.exportSelectedMarkets.includes(id)) {
@@ -1767,7 +1957,7 @@ function toggleExportMarket(
     }
   } else {
     leg.exportSelectedMarkets = leg.exportSelectedMarkets.filter(
-      (mid) => mid !== id
+      (mid) => mid !== id,
     );
   }
 }
@@ -1818,7 +2008,7 @@ function downloadCsv(filename: string, csvText: string) {
 
 function bucketBySeconds(
   points: PolymarketPriceHistoryPoint[],
-  bucketSeconds: number
+  bucketSeconds: number,
 ): PolymarketPriceHistoryPoint[] {
   const lastByBucket = new Map<number, PolymarketPriceHistoryPoint>();
   for (const pt of points) {
@@ -1836,7 +2026,7 @@ function bucketBySeconds(
 
 function downsampleHistory(
   history: PolymarketPriceHistoryPoint[],
-  frequency: ExportFrequency
+  frequency: ExportFrequency,
 ): PolymarketPriceHistoryPoint[] {
   const points = [...history].sort((a, b) => a.t - b.t);
   if (points.length === 0) return points;
@@ -1855,7 +2045,7 @@ function downsampleHistory(
     const d = new Date(pt.t * 1000);
     const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(
       2,
-      "0"
+      "0",
     )}`;
     lastByMonth.set(key, {
       year: d.getUTCFullYear(),
@@ -1880,7 +2070,7 @@ function selectExportOutcomeForMarket(
   market: MarketOption,
   desiredOutcomeName: string,
   desiredOutcomeIdForActiveMarket: string,
-  isActiveMarket: boolean
+  isActiveMarket: boolean,
 ): OutcomeOption | null {
   const outcomes = market.outcomes ?? [];
   if (outcomes.length === 0) return null;
@@ -1893,7 +2083,7 @@ function selectExportOutcomeForMarket(
   const desiredName = normalizeOutcomeNameForMatch(desiredOutcomeName);
   if (desiredName) {
     const byName = outcomes.find(
-      (o) => normalizeOutcomeNameForMatch(o.name) === desiredName
+      (o) => normalizeOutcomeNameForMatch(o.name) === desiredName,
     );
     if (byName) return byName;
   }
@@ -1907,7 +2097,7 @@ function selectOutcomeForLegAndMarket(
   market: MarketOption,
   desiredOutcomeName: string,
   desiredOutcomeIdForActiveMarket: string,
-  isActiveMarket: boolean
+  isActiveMarket: boolean,
 ): OutcomeOption | null {
   if (leg.usePerMarketDefaultOutcome) {
     const outcomes = market.outcomes ?? [];
@@ -1918,7 +2108,7 @@ function selectOutcomeForLegAndMarket(
     }
     // fallback
     const yes = outcomes.find(
-      (o) => (o.name ?? "").trim().toLowerCase() === "yes"
+      (o) => (o.name ?? "").trim().toLowerCase() === "yes",
     );
     return yes ?? outcomes[0];
   }
@@ -1927,7 +2117,7 @@ function selectOutcomeForLegAndMarket(
     market,
     desiredOutcomeName,
     desiredOutcomeIdForActiveMarket,
-    isActiveMarket
+    isActiveMarket,
   );
 }
 
@@ -1981,7 +2171,7 @@ async function handleDownloadExport(leg: LegState) {
           market,
           desiredOutcomeName,
           desiredOutcomeIdForActiveMarket,
-          isActiveMarket
+          isActiveMarket,
         );
         if (!outcome) return null;
 
@@ -2016,7 +2206,7 @@ async function handleDownloadExport(leg: LegState) {
     // Build Polymarket-style pivot export:
     // Date (UTC), Timestamp (UTC), <Market Title 1>, <Market Title 2>, ...
     const titleByMarketId = new Map(
-      leg.marketOptions.map((m) => [m.id, m.title] as const)
+      leg.marketOptions.map((m) => [m.id, m.title] as const),
     );
 
     const desiredTitles: string[] = [];
@@ -2097,7 +2287,7 @@ async function handleDownloadExport(leg: LegState) {
       // Convert YYYY-MM-DD HH:mm -> MM-DD-YYYY HH:mm
       const mmddyyyy = `${dateStr.slice(5, 7)}-${dateStr.slice(
         8,
-        10
+        10,
       )}-${dateStr.slice(0, 4)} ${dateStr.slice(11, 16)}`;
 
       const values = desiredTitles.map((title) => {
@@ -2110,7 +2300,7 @@ async function handleDownloadExport(leg: LegState) {
           csvQuote(mmddyyyy),
           csvQuote(String(ts)),
           ...values.map(csvQuote),
-        ].join(",")
+        ].join(","),
       );
     }
 
@@ -2126,7 +2316,7 @@ async function handleDownloadExport(leg: LegState) {
         parts.push(
           `${skippedCount} market(s) skipped (no matching outcome: ${
             desiredOutcomeName || "selected"
-          })`
+          })`,
         );
       leg.exportError = `Downloaded CSV, but ${parts.join("; ")}.`;
     }
@@ -2190,7 +2380,7 @@ async function handleViewChart(leg: LegState) {
           market,
           desiredOutcomeName,
           desiredOutcomeIdForActiveMarket,
-          isActiveMarket
+          isActiveMarket,
         );
         if (!outcome) return null;
 
@@ -2222,7 +2412,7 @@ async function handleViewChart(leg: LegState) {
     const results = await Promise.allSettled(tasks.map((t) => t()));
 
     const titleByMarketId = new Map(
-      leg.marketOptions.map((m) => [m.id, m.title] as const)
+      leg.marketOptions.map((m) => [m.id, m.title] as const),
     );
 
     const desiredTitles: string[] = [];
@@ -2292,7 +2482,7 @@ async function handleViewChart(leg: LegState) {
         parts.push(
           `${skippedCount} market(s) skipped (no matching outcome: ${
             desiredOutcomeName || "selected"
-          })`
+          })`,
         );
       leg.chartError = `Chart displayed, but ${parts.join("; ")}.`;
     }
@@ -2348,7 +2538,7 @@ async function handleSubmit() {
   submitError.value = "";
 
   const legsReady = legs.value.every(
-    (l) => l.marketUrl.trim() && l.selectedOutcomeId && l.selectedOutcomeName
+    (l) => l.marketUrl.trim() && l.selectedOutcomeId && l.selectedOutcomeName,
   );
 
   if (!legsReady) {
@@ -2370,7 +2560,7 @@ async function handleSubmit() {
         const existing = props.initialAlert;
 
         const topMarketUrl = stripPolymarketEventUrl(
-          existing?.market_url?.trim() || firstLeg?.marketUrl?.trim() || ""
+          existing?.market_url?.trim() || firstLeg?.marketUrl?.trim() || "",
         );
         const topMarketId = existing?.market_id || "sum";
         const topOutcomeId =
@@ -2460,8 +2650,8 @@ async function handleSubmit() {
       err instanceof Error
         ? err.message
         : isEditMode.value
-        ? "Failed to update alert."
-        : "Failed to create alert.";
+          ? "Failed to update alert."
+          : "Failed to create alert.";
   } finally {
     isSubmitting.value = false;
   }
