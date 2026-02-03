@@ -64,7 +64,7 @@
         <span>{{
           metadataUpdated
             ? dayjs(userData?.metadata_updated_at).format(
-                "MMMM D, YYYY, h:mm A"
+                "MMMM D, YYYY, h:mm A",
               )
             : "Not updated yet"
         }}</span>
@@ -183,7 +183,7 @@ const openExternalLink = (url: string) => {
   const listener = (event: MessageEvent) => {
     console.log("event origin", event.origin);
     if (event.origin !== layer8BaseUrl) return;
-    if (event.data?.redr) {
+    if (event.data?.redirect_uri) {
       window.removeEventListener("message", listener);
       mutate(event.data.code);
       if (popupWindow && !popupWindow.closed) {
@@ -196,7 +196,7 @@ const openExternalLink = (url: string) => {
 
 const profileCompleteness = computed(() => {
   const completed = profileDetails.value.filter(
-    (detail) => detail.completed
+    (detail) => detail.completed,
   ).length;
   const total = profileDetails.value.length;
   const percentage = Math.round((completed / total) * 100);
