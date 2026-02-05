@@ -184,6 +184,7 @@ const openExternalLink = (url: string) => {
     console.log("event origin", event.origin);
     if (event.origin !== layer8BaseUrl) return;
     if (event.data?.redirect_uri) {
+      console.log(event.data);
       window.removeEventListener("message", listener);
       mutate(event.data.code);
       if (popupWindow && !popupWindow.closed) {
