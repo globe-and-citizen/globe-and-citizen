@@ -1,5 +1,6 @@
 import { fetchWithAuth, interceptorFetch } from "./auth";
 import { API_BASE_URL } from "./constants";
+import { toast } from "vue3-toastify";
 
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, "");
 
@@ -67,10 +68,10 @@ export type UpdateAlertPayload =
 
 export const getPolymarketDataBySlug = async (
   type: "events" | "markets",
-  slug: string
+  slug: string,
 ) => {
   const response = await fetchWithAuth(
-    `${API_V1_BASE_URL}/users/polymarket-data/${type}/${slug}`
+    `${API_V1_BASE_URL}/users/polymarket-data/${type}/${slug}`,
   );
   if (!response.ok) {
     throw new Error("Failed to fetch Polymarket data");
@@ -89,7 +90,7 @@ export const getPolymarketForPriceAlerts = async (url: string) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ url }),
-    }
+    },
   );
   if (!response.ok) {
     throw new Error("Failed to fetch Polymarket data");
@@ -111,6 +112,11 @@ export const createAlert = async (payload: CreateAlertPayload) => {
     throw new Error("Failed to create alert");
   }
   const res = await response.json();
+  toast("Alert created successfully!", {
+    autoClose: 3000,
+    type: "success",
+    position: "top-right",
+  });
   return res;
 };
 
@@ -136,7 +142,7 @@ export const deleteAlert = async (alertId: string | number) => {
 
 export const updateAlert = async (
   alertId: string | number,
-  payload: UpdateAlertPayload
+  payload: UpdateAlertPayload,
 ) => {
   if (alertId === undefined || alertId === null || alertId === "") {
     throw new Error("Invalid alert id");
@@ -154,6 +160,11 @@ export const updateAlert = async (
     throw new Error("Failed to update alert");
   }
 
+  toast("Alert updated successfully!", {
+    autoClose: 3000,
+    type: "success",
+    position: "top-right",
+  });
   const res = await response.json();
   return res;
 };
