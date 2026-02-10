@@ -111,7 +111,7 @@
 
                 <button
                   class="text-red-600 hover:text-red-800 cursor-pointer"
-                  @click.stop="removeTracker(tracker.id)"
+                  @click.stop="tracker.id ? openDeleteModal(tracker.id) : null"
                 >
                   Remove
                 </button>
@@ -146,6 +146,13 @@
       @updated="handleUpdated"
     />
 
+    <ConfirmDeleteModal
+      :is-open="removingTrackerId !== null"
+      item-type="Tracker"
+      :payload="removingTrackerId"
+      @close="closeDeleteModal"
+      @confirm="handleConfirmDelete"
+    />
     <Dialog
       :open="isPreviewOpen"
       @update:open="(open: boolean) => !open && closePreview()"
@@ -300,7 +307,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
+import ConfirmDeleteModal from "@/views/ConfirmDeleteModal.vue";
+import { toast } from "vue3-toastify";
 type Tracker = {
   id?: number | string;
   created_at?: string;
@@ -363,6 +371,7 @@ const trackers = ref<Tracker[]>([]);
 const isCreateModalOpen = ref(false);
 const isEditModalOpen = ref(false);
 const editingTracker = ref<ExistingAlertLike | null>(null);
+const removingTrackerId = ref<number | string | null>(null);
 
 const isPreviewOpen = ref(false);
 const previewTracker = ref<Tracker | null>(null);
@@ -427,6 +436,18 @@ const closeEditModal = () => {
   editingTracker.value = null;
 };
 
+const openDeleteModal = (id: number | string) => {
+  removingTrackerId.value = id;
+};
+
+const closeDeleteModal = () => {
+  removingTrackerId.value = null;
+};
+
+const handleConfirmDelete = (payload: string | number | null) => {
+  if (payload === null) return;
+  removeTracker(payload);
+};
 const handleUpdated = async () => {
   closeEditModal();
   await fetchTrackers();
@@ -474,6 +495,11 @@ const normalizeMarketUrl = (url?: string | null) => {
 const fetchTrackers = async () => {
   try {
     const response = await fetchAlerts();
+    toast("Trackers up to date!", {
+      autoClose: 3000,
+      type: "success",
+      position: "top-right",
+    });
     trackers.value = response.data || [];
   } catch (err) {
     console.error("Failed to fetch trackers:", err);
