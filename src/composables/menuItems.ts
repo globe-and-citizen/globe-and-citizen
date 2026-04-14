@@ -90,6 +90,11 @@ export const menuItems = [
   },
   {
     section: "Services",
+    title: "Polymarket correlation graph",
+    url: "/correlation-graph",
+  },
+  {
+    section: "Services",
     icon: journals,
     title: "Notebooks",
     url: "/notebooks",

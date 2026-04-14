@@ -19,7 +19,7 @@
         <DialogDescription>
           {{
             isInsightsMode
-              ? "Export data and generate charts for a market."
+              ? "Export data and generate charts for one or more markets."
               : isEditMode
                 ? "Update an existing single-outcome alert or a 2/3-market sum alert."
                 : "Create a single-outcome alert or a 2/3-market sum alert."
@@ -372,217 +372,159 @@
               </div>
             </div>
 
-            <div
-              v-if="leg.marketOptions.length > 0"
-              class="flex justify-end gap-2"
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                @click="leg.showChart = !leg.showChart"
-              >
-                {{ leg.showChart ? "Hide Chart" : "View Chart" }}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                @click="leg.showExport = !leg.showExport"
-              >
-                {{ leg.showExport ? "Hide Data Export" : "Data Export" }}
-              </Button>
-            </div>
-
-            <div
-              v-if="leg.showChart"
-              class="border rounded p-3 bg-muted/20 grid gap-3"
-            >
-              <div class="font-semibold">View Price History Chart</div>
-              <div class="grid grid-cols-2 gap-3">
-                <div class="grid gap-1">
-                  <Label>From date</Label>
-                  <Input
-                    v-model="leg.exportFromDate"
-                    type="date"
-                    :min="leg.minDate || undefined"
-                  />
-                </div>
-                <div class="grid gap-1">
-                  <Label>To date</Label>
-                  <Input
-                    v-model="leg.exportToDate"
-                    type="date"
-                    :min="leg.minDate || undefined"
-                  />
-                </div>
+            <div v-if="leg.marketOptions.length > 0" class="grid gap-3">
+              <div class="inline-flex w-full rounded-lg border bg-muted/20 p-1">
+                <button
+                  type="button"
+                  class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                  :class="
+                    isLegInsightsTabActive(leg, 'chart')
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  "
+                  @click="setLegInsightsTab(leg, 'chart')"
+                >
+                  View Chart
+                </button>
+                <button
+                  type="button"
+                  class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                  :class="
+                    isLegInsightsTabActive(leg, 'export')
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  "
+                  @click="setLegInsightsTab(leg, 'export')"
+                >
+                  Data Export
+                </button>
               </div>
 
-              <div class="grid gap-1">
-                <Label>Frequency</Label>
-                <Select v-model="leg.exportFrequency">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="minutely">Minutely</SelectItem>
-                    <SelectItem value="hourly">Hourly</SelectItem>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div class="grid gap-2">
-                <Label>Markets to display</Label>
-                <div class="flex items-center gap-2">
-                  <Checkbox
-                    :id="`chart-select-all-${idx}`"
-                    :model-value="exportSelectAllState(leg)"
-                    @update:model-value="(v) => toggleAllExportMarkets(leg, v)"
-                  />
-                  <Label
-                    :for="`chart-select-all-${idx}`"
-                    class="text-sm cursor-pointer"
-                    >Select All</Label
-                  >
+              <div class="border rounded p-3 bg-muted/20 grid gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div class="grid gap-1">
+                    <Label>From date</Label>
+                    <Input
+                      v-model="leg.exportFromDate"
+                      type="date"
+                      :min="leg.minDate || undefined"
+                    />
+                  </div>
+                  <div class="grid gap-1">
+                    <Label>To date</Label>
+                    <Input
+                      v-model="leg.exportToDate"
+                      type="date"
+                      :min="leg.minDate || undefined"
+                    />
+                  </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2 pl-2">
-                  <div
-                    v-for="(market, marketIdx) in leg.marketOptions"
-                    :key="market.id"
-                    class="flex items-center gap-2"
-                  >
+
+                <div class="grid gap-1">
+                  <Label>Frequency</Label>
+                  <Select v-model="leg.exportFrequency">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="minutely">Minutely</SelectItem>
+                      <SelectItem value="hourly">Hourly</SelectItem>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div class="grid gap-2">
+                  <Label>Markets</Label>
+                  <div class="flex items-center gap-2">
                     <Checkbox
-                      :id="`chart-market-${idx}-${marketIdx}`"
-                      :model-value="
-                        leg.exportSelectedMarkets.includes(market.id)
-                      "
+                      :id="`insights-select-all-${idx}`"
+                      :model-value="exportSelectAllState(leg)"
                       @update:model-value="
-                        (v) => toggleExportMarket(leg, market.id, v)
+                        (v) => toggleAllExportMarkets(leg, v)
                       "
                     />
                     <Label
-                      :for="`chart-market-${idx}-${marketIdx}`"
+                      :for="`insights-select-all-${idx}`"
                       class="text-sm cursor-pointer"
-                      >{{ market.title }}</Label
+                      >Select All</Label
                     >
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2">
+                    <div
+                      v-for="(market, marketIdx) in leg.marketOptions"
+                      :key="market.id"
+                      class="flex items-center gap-2"
+                    >
+                      <Checkbox
+                        :id="`insights-market-${idx}-${marketIdx}`"
+                        :model-value="
+                          leg.exportSelectedMarkets.includes(market.id)
+                        "
+                        @update:model-value="
+                          (v) => toggleExportMarket(leg, market.id, v)
+                        "
+                      />
+                      <Label
+                        :for="`insights-market-${idx}-${marketIdx}`"
+                        class="text-sm cursor-pointer"
+                        >{{ market.title }}</Label
+                      >
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div class="grid gap-2">
-                <Button
-                  :disabled="leg.chartLoading"
-                  @click="handleViewChart(leg)"
-                >
-                  <span v-if="leg.chartLoading">Loading…</span>
-                  <span v-else>Generate Chart</span>
-                </Button>
+              <div
+                v-if="isLegInsightsTabActive(leg, 'chart')"
+                class="border rounded p-3 bg-muted/20 grid gap-3"
+              >
+                <div class="font-semibold">View Price History Chart</div>
 
-                <p v-if="leg.chartError" class="text-sm text-red-600">
-                  {{ leg.chartError }}
-                </p>
-              </div>
-
-              <div v-if="leg.chartData.length > 0" class="mt-4">
-                <PriceScatterChart
-                  :series="leg.chartData"
-                  :title="`${leg.title || 'Market'} - Price History`"
-                  height="500px"
-                />
-              </div>
-            </div>
-
-            <div
-              v-if="leg.showExport"
-              class="border rounded p-3 bg-muted/20 grid gap-3"
-            >
-              <div class="font-semibold">Download Price History</div>
-              <div class="grid grid-cols-2 gap-3">
-                <div class="grid gap-1">
-                  <Label>From date</Label>
-                  <Input
-                    v-model="leg.exportFromDate"
-                    type="date"
-                    :min="leg.minDate || undefined"
-                  />
-                </div>
-                <div class="grid gap-1">
-                  <Label>To date</Label>
-                  <Input
-                    v-model="leg.exportToDate"
-                    type="date"
-                    :min="leg.minDate || undefined"
-                  />
-                </div>
-              </div>
-
-              <div class="grid gap-1">
-                <Label>Frequency</Label>
-                <Select v-model="leg.exportFrequency">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="minutely">Minutely</SelectItem>
-                    <SelectItem value="hourly">Hourly</SelectItem>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div class="grid gap-2">
-                <Label>Options</Label>
-                <div class="flex items-center gap-2">
-                  <Checkbox
-                    :id="`select-all-${idx}`"
-                    :model-value="exportSelectAllState(leg)"
-                    @update:model-value="(v) => toggleAllExportMarkets(leg, v)"
-                  />
-                  <Label
-                    :for="`select-all-${idx}`"
-                    class="text-sm cursor-pointer"
-                    >Select All</Label
+                <div class="grid gap-2">
+                  <Button
+                    :disabled="leg.chartLoading"
+                    @click="handleViewChart(leg)"
                   >
+                    <span v-if="leg.chartLoading">Loading…</span>
+                    <span v-else>Generate Chart</span>
+                  </Button>
+
+                  <p v-if="leg.chartError" class="text-sm text-red-600">
+                    {{ leg.chartError }}
+                  </p>
                 </div>
-                <div class="grid grid-cols-2 gap-2 pl-2">
-                  <div
-                    v-for="(market, marketIdx) in leg.marketOptions"
-                    :key="market.id"
-                    class="flex items-center gap-2"
-                  >
-                    <Checkbox
-                      :id="`market-${idx}-${marketIdx}`"
-                      :model-value="
-                        leg.exportSelectedMarkets.includes(market.id)
-                      "
-                      @update:model-value="
-                        (v) => toggleExportMarket(leg, market.id, v)
-                      "
-                    />
-                    <Label
-                      :for="`market-${idx}-${marketIdx}`"
-                      class="text-sm cursor-pointer"
-                      >{{ market.title }}</Label
-                    >
-                  </div>
+
+                <div v-if="leg.chartData.length > 0" class="mt-4">
+                  <PriceScatterChart
+                    :series="leg.chartData"
+                    :title="`${leg.title || 'Market'} - Price History`"
+                    height="500px"
+                  />
                 </div>
               </div>
 
-              <div class="grid gap-2">
-                <Button
-                  :disabled="leg.exportLoading"
-                  @click="handleDownloadExport(leg)"
-                >
-                  <span v-if="leg.exportLoading">Downloading…</span>
-                  <span v-else>Download (.csv)</span>
-                </Button>
+              <div
+                v-else-if="isLegInsightsTabActive(leg, 'export')"
+                class="border rounded p-3 bg-muted/20 grid gap-3"
+              >
+                <div class="font-semibold">Download Price History</div>
 
-                <p v-if="leg.exportError" class="text-sm text-red-600">
-                  {{ leg.exportError }}
-                </p>
+                <div class="grid gap-2">
+                  <Button
+                    :disabled="leg.exportLoading"
+                    @click="handleDownloadExport(leg)"
+                  >
+                    <span v-if="leg.exportLoading">Downloading…</span>
+                    <span v-else>Download (.csv)</span>
+                  </Button>
+
+                  <p v-if="leg.exportError" class="text-sm text-red-600">
+                    {{ leg.exportError }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -785,6 +727,10 @@ type LegState = {
   chartError: string | null;
 };
 
+type LegInsightsTab = "chart" | "export";
+
+const MAX_COMPARE_INSIGHTS_MARKETS = 10;
+
 interface Props {
   isOpen: boolean;
   mode?: "create" | "edit";
@@ -901,7 +847,7 @@ function normalizeCompareInputs(): CompareMarketInput[] {
       label: String(m?.label ?? "").trim() || undefined,
     }))
     .filter((m) => Boolean(m.marketUrl) && Boolean(m.marketId))
-    .slice(0, 3);
+    .slice(0, MAX_COMPARE_INSIGHTS_MARKETS);
 }
 
 async function loadCompareLegs() {
@@ -909,10 +855,7 @@ async function loadCompareLegs() {
   if (items.length === 0) return;
 
   // Build one leg per selected market.
-  legsCount.value = (items.length === 3 ? 3 : items.length === 2 ? 2 : 1) as
-    | 1
-    | 2
-    | 3;
+  legsCount.value = items.length;
   step.value = 2;
 
   legs.value = items.map((item) => {
@@ -923,9 +866,9 @@ async function loadCompareLegs() {
     leg.selectedMarketId = item.marketId;
     // Preselect the checkbox in chart/export panels.
     leg.exportSelectedMarkets = [item.marketId];
-    // Convenience: open the chart/export panels immediately.
+    // Default compare insights to the chart tab.
     leg.showChart = true;
-    leg.showExport = true;
+    leg.showExport = false;
     return leg;
   });
 
@@ -934,7 +877,7 @@ async function loadCompareLegs() {
 }
 
 const step = ref<1 | 2 | 3>(1);
-const legsCount = ref<1 | 2 | 3>(1);
+const legsCount = ref<number>(1);
 const operator = ref<AlertOperator>("lt");
 const singleOperator = ref<AlertOperator>("gte");
 const threshold = ref<number>(0.95);
@@ -1700,12 +1643,14 @@ async function loadLeg(index: number) {
   const prevSelectedMarketId = leg.selectedMarketId;
   const prevSelectedOutcomeId = leg.selectedOutcomeId;
   const prevSelectedOutcomeName = leg.selectedOutcomeName;
+  const prevInsightsTab = getLegInsightsTab(leg);
 
   const initialSelectedIds =
     isInsightsMode.value && index === 0
       ? (props.initialSelectedMarketIds ?? [])
           .map((v) => String(v))
           .filter(Boolean)
+          .slice(0, MAX_COMPARE_INSIGHTS_MARKETS)
       : [];
 
   leg.loading = true;
@@ -1854,6 +1799,8 @@ async function loadLeg(index: number) {
 
     if (leg.marketOptions.length === 0) {
       leg.error = "No markets found for this URL.";
+    } else if (isInsightsMode.value) {
+      setLegInsightsTab(leg, prevInsightsTab ?? "chart");
     }
   } catch (err) {
     console.error("Failed to load Polymarket leg:", err);
@@ -1888,6 +1835,21 @@ function onOutcomeChange(index: number) {
   if (selected) {
     leg.selectedOutcomeName = selected.name;
   }
+}
+
+function getLegInsightsTab(leg: LegState): LegInsightsTab | null {
+  if (leg.showExport) return "export";
+  if (leg.showChart) return "chart";
+  return null;
+}
+
+function isLegInsightsTabActive(leg: LegState, tab: LegInsightsTab): boolean {
+  return getLegInsightsTab(leg) === tab;
+}
+
+function setLegInsightsTab(leg: LegState, tab: LegInsightsTab) {
+  leg.showChart = tab === "chart";
+  leg.showExport = tab === "export";
 }
 
 const canProceed = computed(() => {
