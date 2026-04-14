@@ -64,7 +64,7 @@
           <div class="text-sm font-semibold text-gray-900">
             Selected for comparison
             <span class="text-gray-500">
-              ({{ selectedCompareMarkets.length }}/3)
+              ({{ selectedCompareMarkets.length }}/{{ MAX_COMPARE_MARKETS }})
             </span>
           </div>
           <p class="mt-1 text-xs text-gray-500">
@@ -212,9 +212,9 @@
         <div class="mt-4">
           <div class="flex items-center justify-between gap-3">
             <div class="text-sm text-gray-600">
-              Select up to 3 markets to compare.
+              Select up to {{ MAX_COMPARE_MARKETS }} markets to compare.
               <span class="font-semibold">
-                ({{ selectedCompareMarkets.length }}/3)
+                ({{ selectedCompareMarkets.length }}/{{ MAX_COMPARE_MARKETS }})
               </span>
             </div>
             <div class="flex items-center gap-2">
@@ -231,7 +231,9 @@
                 :disabled="selectedCompareMarkets.length === 0"
                 @click="openCompareInsights"
               >
-                Compare ({{ selectedCompareMarkets.length }}/3)
+                Compare ({{ selectedCompareMarkets.length }}/{{
+                  MAX_COMPARE_MARKETS
+                }})
               </Button>
             </div>
           </div>
@@ -365,6 +367,8 @@ import PolymarketAlertWizardModal from "@/components/PolymarketAlertWizardModal.
 
 const DEFAULT_FALLBACK_IMAGE =
   "https://polymarket-upload.s3.us-east-2.amazonaws.com/polymarket_logo.png";
+
+const MAX_COMPARE_MARKETS = 10;
 
 const query = ref("");
 const includeClosed = ref(false);
@@ -564,8 +568,8 @@ const toggleMarketSelection = (market: PolymarketGammaSearchMarket) => {
     return;
   }
 
-  if (selectedCompareMarkets.value.length >= 3) {
-    compareSelectError.value = "You can compare at most 3 markets.";
+  if (selectedCompareMarkets.value.length >= MAX_COMPARE_MARKETS) {
+    compareSelectError.value = `You can compare at most ${MAX_COMPARE_MARKETS} markets.`;
     return;
   }
 
