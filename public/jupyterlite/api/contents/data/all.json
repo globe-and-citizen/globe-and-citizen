@@ -13,6 +13,20 @@
       "size": 1139,
       "type": "file",
       "writable": true
+    },
+    {
+      "content": null,
+      "created": "2026-04-14T09:15:47.000000Z",
+      "format": null,
+      "hash": null,
+      "hash_algorithm": null,
+      "last_modified": "2026-04-14T09:15:47.000000Z",
+      "mimetype": null,
+      "name": "CorrelationMatrix.ipynb",
+      "path": "data/CorrelationMatrix.ipynb",
+      "size": 2930215,
+      "type": "notebook",
+      "writable": true
     }
   ],
   "created": "2026-01-31T14:55:44.236668Z",
