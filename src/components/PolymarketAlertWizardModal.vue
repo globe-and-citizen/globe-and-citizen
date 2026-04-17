@@ -464,35 +464,6 @@
                   v-if="activeLeg.marketOptions.length > 0"
                   class="grid gap-3"
                 >
-                  <div
-                    class="inline-flex w-full rounded-lg border bg-muted/20 p-1"
-                  >
-                    <button
-                      type="button"
-                      class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-                      :class="
-                        isLegInsightsTabActive(activeLeg, 'chart')
-                          ? 'bg-background text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      "
-                      @click="setLegInsightsTab(activeLeg, 'chart')"
-                    >
-                      View Chart
-                    </button>
-                    <button
-                      type="button"
-                      class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-                      :class="
-                        isLegInsightsTabActive(activeLeg, 'export')
-                          ? 'bg-background text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:text-foreground'
-                      "
-                      @click="setLegInsightsTab(activeLeg, 'export')"
-                    >
-                      Data Export
-                    </button>
-                  </div>
-
                   <div class="border rounded-lg p-3 bg-muted/20 grid gap-3">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div class="grid gap-1">
@@ -602,11 +573,8 @@
                     </div>
                   </div>
 
-                  <div
-                    v-if="isLegInsightsTabActive(activeLeg, 'chart')"
-                    class="border rounded-lg p-3 bg-muted/20 grid gap-3"
-                  >
-                    <div class="font-semibold">View Price History Chart</div>
+                  <div class="border rounded-lg p-3 bg-muted/20 grid gap-3">
+                    <div class="font-semibold">Price Insights Actions</div>
 
                     <div class="grid gap-2">
                       <div class="flex flex-col sm:flex-row gap-2">
@@ -627,6 +595,15 @@
                         >
                           Preview Generated Chart
                         </Button>
+                        <Button
+                          :disabled="activeLeg.exportLoading"
+                          @click="handleDownloadExport(activeLeg)"
+                        >
+                          <span v-if="activeLeg.exportLoading"
+                            >Downloading…</span
+                          >
+                          <span v-else>Download (.csv)</span>
+                        </Button>
                       </div>
 
                       <p
@@ -635,23 +612,6 @@
                       >
                         {{ activeLeg.chartError }}
                       </p>
-                    </div>
-                  </div>
-
-                  <div
-                    v-else-if="isLegInsightsTabActive(activeLeg, 'export')"
-                    class="border rounded-lg p-3 bg-muted/20 grid gap-3"
-                  >
-                    <div class="font-semibold">Download Price History</div>
-
-                    <div class="grid gap-2">
-                      <Button
-                        :disabled="activeLeg.exportLoading"
-                        @click="handleDownloadExport(activeLeg)"
-                      >
-                        <span v-if="activeLeg.exportLoading">Downloading…</span>
-                        <span v-else>Download (.csv)</span>
-                      </Button>
 
                       <p
                         v-if="activeLeg.exportError"
@@ -1540,35 +1500,6 @@
                     v-if="activeLeg.marketOptions.length > 0"
                     class="grid gap-3"
                   >
-                    <div
-                      class="inline-flex w-full rounded-lg border bg-muted/20 p-1"
-                    >
-                      <button
-                        type="button"
-                        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-                        :class="
-                          isLegInsightsTabActive(activeLeg, 'chart')
-                            ? 'bg-background text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground'
-                        "
-                        @click="setLegInsightsTab(activeLeg, 'chart')"
-                      >
-                        View Chart
-                      </button>
-                      <button
-                        type="button"
-                        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-                        :class="
-                          isLegInsightsTabActive(activeLeg, 'export')
-                            ? 'bg-background text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground'
-                        "
-                        @click="setLegInsightsTab(activeLeg, 'export')"
-                      >
-                        Data Export
-                      </button>
-                    </div>
-
                     <div class="border rounded-lg p-3 bg-muted/20 grid gap-3">
                       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <div class="grid gap-1">
@@ -1680,11 +1611,8 @@
                       </div>
                     </div>
 
-                    <div
-                      v-if="isLegInsightsTabActive(activeLeg, 'chart')"
-                      class="border rounded-lg p-3 bg-muted/20 grid gap-3"
-                    >
-                      <div class="font-semibold">View Price History Chart</div>
+                    <div class="border rounded-lg p-3 bg-muted/20 grid gap-3">
+                      <div class="font-semibold">Price Insights Actions</div>
 
                       <div class="grid gap-2">
                         <div class="flex flex-col sm:flex-row gap-2">
@@ -1705,6 +1633,15 @@
                           >
                             Preview Generated Chart
                           </Button>
+                          <Button
+                            :disabled="activeLeg.exportLoading"
+                            @click="handleDownloadExport(activeLeg)"
+                          >
+                            <span v-if="activeLeg.exportLoading"
+                              >Downloading…</span
+                            >
+                            <span v-else>Download (.csv)</span>
+                          </Button>
                         </div>
 
                         <p
@@ -1713,25 +1650,6 @@
                         >
                           {{ activeLeg.chartError }}
                         </p>
-                      </div>
-                    </div>
-
-                    <div
-                      v-else-if="isLegInsightsTabActive(activeLeg, 'export')"
-                      class="border rounded-lg p-3 bg-muted/20 grid gap-3"
-                    >
-                      <div class="font-semibold">Download Price History</div>
-
-                      <div class="grid gap-2">
-                        <Button
-                          :disabled="activeLeg.exportLoading"
-                          @click="handleDownloadExport(activeLeg)"
-                        >
-                          <span v-if="activeLeg.exportLoading"
-                            >Downloading…</span
-                          >
-                          <span v-else>Download (.csv)</span>
-                        </Button>
 
                         <p
                           v-if="activeLeg.exportError"
@@ -3967,10 +3885,6 @@ function getLegInsightsTab(leg: LegState): LegInsightsTab | null {
   if (leg.showExport) return "export";
   if (leg.showChart) return "chart";
   return null;
-}
-
-function isLegInsightsTabActive(leg: LegState, tab: LegInsightsTab): boolean {
-  return getLegInsightsTab(leg) === tab;
 }
 
 function setLegInsightsTab(leg: LegState, tab: LegInsightsTab) {
