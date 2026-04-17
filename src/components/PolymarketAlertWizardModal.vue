@@ -1,5 +1,1045 @@
 <template>
+  <div v-if="embedded" class="grid gap-6">
+    <div class="grid gap-6 py-1">
+      <!-- Step indicator -->
+      <!-- <div class="text-sm text-muted-foreground">Step {{ step }} of 3</div> -->
+
+      <!-- Step 1: Configure -->
+      <div v-if="!isInsightsMode && step === 1" class="grid gap-4">
+        <div class="grid gap-2">
+          <Label>Alert Type</Label>
+          <Select v-model="legsCountString">
+            <SelectTrigger>
+              <SelectValue placeholder="Select alert type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem value="1">Single market</SelectItem>
+                <SelectItem value="2">Sum of 2 markets (dyad)</SelectItem>
+                <SelectItem value="3">Sum of 3 markets (triad)</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div v-if="isSum" class="grid gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid gap-2">
+              <Label>Hold</Label>
+              <Input
+                v-model.number="threshold"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.95"
+              />
+            </div>
+            <div class="grid gap-2">
+              <Label>Operator</Label>
+              <Select v-model="operator">
+                <SelectTrigger class="w-full">
+                  <SelectValue placeholder="Select operator" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="lt">&lt;</SelectItem>
+                    <SelectItem value="lte">&le;</SelectItem>
+                    <SelectItem value="gt">&gt;</SelectItem>
+                    <SelectItem value="gte">&ge;</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+            <div class="grid gap-2">
+              <Label>Direction</Label>
+              <Select v-model="direction">
+                <SelectTrigger class="w-full">
+                  <SelectValue placeholder="Select direction" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem value="buy">Buy</SelectItem>
+                    <SelectItem value="sell">Sell</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="grid gap-2">
+            <Label>Target Price</Label>
+            <Input
+              v-model.number="targetPrice"
+              type="number"
+              min="0"
+              max="1"
+              step="0.01"
+              placeholder="0.95"
+            />
+          </div>
+
+          <div class="grid gap-2">
+            <Label>Operator</Label>
+            <Select v-model="singleOperator">
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="Select operator" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="lt">&lt;</SelectItem>
+                  <SelectItem value="lte">&le;</SelectItem>
+                  <SelectItem value="gt">&gt;</SelectItem>
+                  <SelectItem value="gte">&ge;</SelectItem>
+                  <SelectItem value="eq">=</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="grid gap-2">
+            <Label>Direction</Label>
+            <Select v-model="direction">
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="Select direction" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="buy">Buy</SelectItem>
+                  <SelectItem value="sell">Sell</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div class="grid gap-3">
+          <div class="flex items-center gap-2">
+            <Checkbox id="notify_discord" v-model="notifyDiscord" />
+            <Label for="notify_discord">Notify Discord</Label>
+          </div>
+
+          <div v-if="notifyDiscord" class="grid gap-2">
+            <Label>Discord Webhook (optional)</Label>
+            <Input
+              v-model="discordWebhook"
+              type="url"
+              placeholder="https://discord.com/api/webhooks/..."
+            />
+          </div>
+
+          <div class="flex items-center gap-2">
+            <Checkbox id="repeat" v-model="repeat" />
+            <Label for="repeat">Repeat</Label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Select legs -->
+      <div v-else-if="step === 2">
+        <div v-if="isInsightsMode" class="grid gap-5">
+          <div
+            v-if="hasInsightsChartActions"
+            class="border rounded-xl p-4 bg-muted/10 grid gap-3"
+          >
+            <div class="font-semibold">{{ insightsChartPanelTitle }}</div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div class="grid gap-1">
+                <Label>From date</Label>
+                <Input
+                  v-model="compareFromDate"
+                  type="date"
+                  :min="compareMinDate || undefined"
+                />
+              </div>
+              <div class="grid gap-1">
+                <Label>To date</Label>
+                <Input
+                  v-model="compareToDate"
+                  type="date"
+                  :min="compareMinDate || undefined"
+                />
+              </div>
+              <div class="grid gap-1">
+                <Label>Frequency</Label>
+                <Select v-model="compareFrequency">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="minutely">Minutely</SelectItem>
+                    <SelectItem value="hourly">Hourly</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div class="grid gap-2">
+              <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                <Button
+                  :disabled="isCombinedCompareChartDisabled"
+                  @click="handleViewCombinedCompareChart"
+                >
+                  <span v-if="compareChartLoading">Loading…</span>
+                  <span v-else>{{ insightsGenerateChartLabel }}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  :disabled="
+                    compareChartLoading || compareChartData.length === 0
+                  "
+                  @click="openCombinedCompareChartPreview"
+                >
+                  Preview Generated Chart
+                </Button>
+                <Button
+                  variant="outline"
+                  :disabled="isCompareNotebookActionDisabled"
+                  @click="handleCombinedCompareNotebookAction"
+                >
+                  <span v-if="compareSaveLoading">Sending…</span>
+                  <span v-else>{{ compareNotebookActionLabel }}</span>
+                </Button>
+              </div>
+
+              <Dialog v-model:open="compareFilenameDialogOpen">
+                <DialogContent class="sm:max-w-[520px]">
+                  <DialogHeader>
+                    <DialogTitle>Send to Jupyter</DialogTitle>
+                    <DialogDescription>
+                      Choose a filename for the exported data.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div class="grid gap-2">
+                    <Label>Filename</Label>
+                    <Input
+                      v-model="compareFilenameInput"
+                      type="text"
+                      :placeholder="defaultCombinedCompareNotebookFilename()"
+                      :disabled="compareSaveLoading"
+                    />
+                    <p v-if="compareFilenameError" class="text-sm text-red-600">
+                      {{ compareFilenameError }}
+                    </p>
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      :disabled="compareSaveLoading"
+                      @click="compareFilenameDialogOpen = false"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      :disabled="compareSaveLoading"
+                      @click="handleCompareFilenamePrimaryAction"
+                    >
+                      <span v-if="compareSaveLoading">Sending…</span>
+                      <span v-else>{{
+                        compareCanGoToNotebooks ? "Go to notebooks" : "Send"
+                      }}</span>
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              <p v-if="compareChartError" class="text-sm text-red-600">
+                {{ compareChartError }}
+              </p>
+              <p v-if="compareSaveError" class="text-sm text-red-600">
+                {{ compareSaveError }}
+              </p>
+              <p v-if="compareSaveSuccessPath" class="text-sm text-green-700">
+                Saved to JupyterLite: {{ compareSaveSuccessPath }}
+              </p>
+            </div>
+          </div>
+
+          <div class="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+            <aside class="border rounded-xl bg-muted/10 overflow-hidden">
+              <div class="border-b px-4 py-4 grid gap-3">
+                <div>
+                  <div class="text-sm font-semibold text-foreground">
+                    Selected Markets
+                  </div>
+                  <p class="text-xs text-muted-foreground mt-1">
+                    Paste a Polymarket URL or open search, then preview charts
+                    or export data to notebooks.
+                  </p>
+                </div>
+
+                <div class="grid gap-2">
+                  <Label>Paste market or event URL</Label>
+                  <div class="flex gap-2">
+                    <Input
+                      v-model="quickAddMarketUrl"
+                      type="text"
+                      placeholder="https://polymarket.com/event/... or /market/..."
+                      @keydown.enter.prevent="handleQuickAddMarket"
+                    />
+                    <Button
+                      :disabled="!canQuickAddMarket"
+                      @click="handleQuickAddMarket"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+
+                <Button variant="outline" @click="openMarketSearchDialog">
+                  Open Search
+                </Button>
+
+                <div class="text-xs text-muted-foreground">
+                  {{ legs.length }} market{{ legs.length === 1 ? "" : "s" }}
+                  added
+                  <span v-if="isCompareInsightsMode">
+                    for cross-event comparison
+                  </span>
+                </div>
+              </div>
+
+              <div class="max-h-[58vh] overflow-y-auto p-3 space-y-2">
+                <div
+                  v-if="legs.length === 0"
+                  class="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground"
+                >
+                  Add a market to start charting, exporting, or sending data to
+                  JupyterLite.
+                </div>
+
+                <div
+                  v-for="(leg, idx) in legs"
+                  :key="idx"
+                  class="rounded-lg border p-3 transition-colors cursor-pointer"
+                  :class="
+                    idx === activeLegIndex
+                      ? 'border-primary bg-background shadow-sm'
+                      : 'border-border bg-background/70 hover:bg-background'
+                  "
+                  @click="selectLeg(idx)"
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="text-sm font-medium leading-5 break-words">
+                        {{ legDisplayTitle(leg, idx) }}
+                      </div>
+                      <p
+                        class="mt-1 text-xs"
+                        :class="
+                          leg.error ? 'text-red-600' : 'text-muted-foreground'
+                        "
+                      >
+                        {{ legStatusText(leg) }}
+                      </p>
+                    </div>
+
+                    <button
+                      v-if="canRemoveLeg(idx)"
+                      type="button"
+                      class="text-xs text-muted-foreground hover:text-foreground"
+                      @click.stop="removeLeg(idx)"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </aside>
+
+            <div class="min-w-0 grid gap-5">
+              <div
+                v-if="activeLeg"
+                class="border rounded-xl p-4 grid gap-4 bg-background"
+              >
+                <div
+                  class="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between"
+                >
+                  <div>
+                    <div class="text-lg font-semibold">
+                      {{ legDisplayTitle(activeLeg, activeLegIndex) }}
+                    </div>
+                    <p class="text-sm text-muted-foreground mt-1">
+                      {{
+                        activeLeg.title ||
+                        "Select a market and configure the preview/export range."
+                      }}
+                    </p>
+                  </div>
+                  <div
+                    class="text-xs uppercase tracking-wide text-muted-foreground"
+                  >
+                    {{ activeLegLoading ? "Loading" : "Active market" }}
+                  </div>
+                </div>
+
+                <div class="grid gap-2">
+                  <Label>Market/Event URL</Label>
+                  <div class="flex gap-2">
+                    <Input
+                      v-model="activeLeg.marketUrl"
+                      type="text"
+                      placeholder="https://polymarket.com/event/... or /market/..."
+                      @keydown.enter.prevent="loadLeg(activeLegIndex)"
+                    />
+                    <Button
+                      :disabled="
+                        activeLeg.loading || !activeLeg.marketUrl.trim()
+                      "
+                      @click="loadLeg(activeLegIndex)"
+                    >
+                      <span v-if="activeLeg.loading">Loading…</span>
+                      <span v-else>Load</span>
+                    </Button>
+                  </div>
+                  <p v-if="activeLeg.error" class="text-sm text-red-600">
+                    {{ activeLeg.error }}
+                  </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="grid gap-2">
+                    <Label>Market</Label>
+                    <Select
+                      v-model="activeLeg.selectedMarketId"
+                      :disabled="getMarketSelectOptions(activeLeg).length === 0"
+                      @update:model-value="() => onMarketChange(activeLegIndex)"
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select market" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="market in getMarketSelectOptions(activeLeg)"
+                            :key="market.id"
+                            :value="market.id"
+                          >
+                            {{ market.title }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div class="grid gap-2">
+                    <Label>Outcome</Label>
+                    <Select
+                      v-model="activeLeg.selectedOutcomeId"
+                      :disabled="
+                        getOutcomeSelectOptions(activeLeg).length === 0
+                      "
+                      @update:model-value="
+                        () => onOutcomeChange(activeLegIndex)
+                      "
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select outcome" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem
+                            v-for="outcome in getOutcomeSelectOptions(
+                              activeLeg,
+                            )"
+                            :key="outcome.id"
+                            :value="outcome.id"
+                          >
+                            {{ outcome.name }}
+                          </SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div
+                  v-if="activeLeg.marketOptions.length > 0"
+                  class="grid gap-3"
+                >
+                  <div
+                    class="inline-flex w-full rounded-lg border bg-muted/20 p-1"
+                  >
+                    <button
+                      type="button"
+                      class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                      :class="
+                        isLegInsightsTabActive(activeLeg, 'chart')
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      "
+                      @click="setLegInsightsTab(activeLeg, 'chart')"
+                    >
+                      View Chart
+                    </button>
+                    <button
+                      type="button"
+                      class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                      :class="
+                        isLegInsightsTabActive(activeLeg, 'export')
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground'
+                      "
+                      @click="setLegInsightsTab(activeLeg, 'export')"
+                    >
+                      Data Export
+                    </button>
+                  </div>
+
+                  <div class="border rounded-lg p-3 bg-muted/20 grid gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div class="grid gap-1">
+                        <Label>From date</Label>
+                        <Input
+                          v-model="activeLeg.exportFromDate"
+                          type="date"
+                          :min="activeLeg.minDate || undefined"
+                        />
+                      </div>
+                      <div class="grid gap-1">
+                        <Label>To date</Label>
+                        <Input
+                          v-model="activeLeg.exportToDate"
+                          type="date"
+                          :min="activeLeg.minDate || undefined"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="grid gap-1">
+                      <Label>Frequency</Label>
+                      <Select v-model="activeLeg.exportFrequency">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="minutely">Minutely</SelectItem>
+                          <SelectItem value="hourly">Hourly</SelectItem>
+                          <SelectItem value="daily">Daily</SelectItem>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div class="grid gap-2">
+                      <div class="flex items-center justify-between gap-2">
+                        <Label>Markets</Label>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          class="h-7 px-2 text-xs"
+                          @click="toggleExportMarketList"
+                        >
+                          {{
+                            showExportMarketList
+                              ? "Hide list"
+                              : "Select markets"
+                          }}
+                        </Button>
+                      </div>
+                      <p class="text-xs text-muted-foreground">
+                        Selected market:
+                        {{ activeLegSelectedMarketLabel(activeLeg) }}
+                      </p>
+                      <div v-if="showExportMarketList" class="grid gap-2">
+                        <div class="flex items-center gap-2">
+                          <Checkbox
+                            :id="`insights-select-all-${activeLegIndex}`"
+                            :model-value="exportSelectAllState(activeLeg)"
+                            @update:model-value="
+                              (value) =>
+                                toggleAllExportMarkets(activeLeg, value)
+                            "
+                          />
+                          <Label
+                            :for="`insights-select-all-${activeLegIndex}`"
+                            class="text-sm cursor-pointer"
+                          >
+                            Select All
+                          </Label>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2">
+                          <div
+                            v-for="(
+                              market, marketIdx
+                            ) in activeLeg.marketOptions"
+                            :key="market.id"
+                            class="flex items-center gap-2"
+                          >
+                            <Checkbox
+                              :id="`insights-market-${activeLegIndex}-${marketIdx}`"
+                              :model-value="
+                                activeLeg.exportSelectedMarkets.includes(
+                                  market.id,
+                                )
+                              "
+                              @update:model-value="
+                                (value) =>
+                                  toggleExportMarket(
+                                    activeLeg,
+                                    market.id,
+                                    value,
+                                  )
+                              "
+                            />
+                            <Label
+                              :for="`insights-market-${activeLegIndex}-${marketIdx}`"
+                              class="text-sm cursor-pointer"
+                            >
+                              {{ market.title }}
+                            </Label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="isLegInsightsTabActive(activeLeg, 'chart')"
+                    class="border rounded-lg p-3 bg-muted/20 grid gap-3"
+                  >
+                    <div class="font-semibold">View Price History Chart</div>
+
+                    <div class="grid gap-2">
+                      <div class="flex flex-col sm:flex-row gap-2">
+                        <Button
+                          :disabled="activeLeg.chartLoading"
+                          @click="handleViewChart(activeLeg)"
+                        >
+                          <span v-if="activeLeg.chartLoading">Loading…</span>
+                          <span v-else>Generate Chart</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          :disabled="
+                            activeLeg.chartLoading ||
+                            activeLeg.chartData.length === 0
+                          "
+                          @click="openLegChartPreview(activeLeg)"
+                        >
+                          Preview Generated Chart
+                        </Button>
+                      </div>
+
+                      <p
+                        v-if="activeLeg.chartError"
+                        class="text-sm text-red-600"
+                      >
+                        {{ activeLeg.chartError }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    v-else-if="isLegInsightsTabActive(activeLeg, 'export')"
+                    class="border rounded-lg p-3 bg-muted/20 grid gap-3"
+                  >
+                    <div class="font-semibold">Download Price History</div>
+
+                    <div class="grid gap-2">
+                      <Button
+                        :disabled="activeLeg.exportLoading"
+                        @click="handleDownloadExport(activeLeg)"
+                      >
+                        <span v-if="activeLeg.exportLoading">Downloading…</span>
+                        <span v-else>Download (.csv)</span>
+                      </Button>
+
+                      <p
+                        v-if="activeLeg.exportError"
+                        class="text-sm text-red-600"
+                      >
+                        {{ activeLeg.exportError }}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-else
+                class="border rounded-xl border-dashed p-8 text-center text-muted-foreground"
+              >
+                Add a market from the left rail to preview history, export CSV,
+                or queue JSON for JupyterLite.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="grid gap-5">
+          <div
+            v-for="(leg, idx) in legs"
+            :key="idx"
+            class="border rounded-md p-4 grid gap-3"
+          >
+            <div class="font-medium">Leg {{ idx + 1 }}</div>
+
+            <div class="grid gap-2">
+              <Label>Market/Event URL</Label>
+              <div class="flex gap-2">
+                <Input
+                  v-model="leg.marketUrl"
+                  type="text"
+                  placeholder="https://polymarket.com/event/... or /market/..."
+                />
+                <Button
+                  :disabled="leg.loading || !leg.marketUrl.trim()"
+                  @click="loadLeg(idx)"
+                >
+                  <span v-if="leg.loading">Loading…</span>
+                  <span v-else>Load</span>
+                </Button>
+              </div>
+              <p v-if="leg.error" class="text-sm text-red-600">
+                {{ leg.error }}
+              </p>
+              <p v-if="leg.title" class="text-sm text-muted-foreground">
+                {{ leg.title }}
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid gap-2">
+                <Label>Market</Label>
+                <Select
+                  v-model="leg.selectedMarketId"
+                  :disabled="getMarketSelectOptions(leg).length === 0"
+                  @update:model-value="() => onMarketChange(idx)"
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select market" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem
+                        v-for="m in getMarketSelectOptions(leg)"
+                        :key="m.id"
+                        :value="m.id"
+                      >
+                        {{ m.title }}
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div class="grid gap-2">
+                <Label>Outcome</Label>
+                <Select
+                  v-model="leg.selectedOutcomeId"
+                  :disabled="getOutcomeSelectOptions(leg).length === 0"
+                  @update:model-value="() => onOutcomeChange(idx)"
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select outcome" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem
+                        v-for="o in getOutcomeSelectOptions(leg)"
+                        :key="o.id"
+                        :value="o.id"
+                      >
+                        {{ o.name }}
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Review -->
+      <div v-else-if="!isInsightsMode" class="grid gap-3">
+        <div class="rounded-md border p-4 text-sm grid gap-2">
+          <div class="font-medium">Summary</div>
+
+          <div v-if="isSum">
+            <div>Type: Sum ({{ legsCount }} legs)</div>
+            <div>Direction: {{ direction.toUpperCase() }}</div>
+            <div>
+              Trigger: p1 + … + p{{ legsCount }} {{ operator }}
+              {{ threshold }}
+            </div>
+          </div>
+          <div v-else>
+            <div>Type: Single</div>
+            <div>
+              Trigger: {{ direction.toUpperCase() }}
+              {{ operatorSymbol(singleOperator) }}
+              {{ targetPrice }}
+            </div>
+          </div>
+
+          <div class="break-all">
+            Notify Discord: {{ notifyDiscord ? "Yes" : "No" }}
+          </div>
+          <div v-if="notifyDiscord && discordWebhook" class="break-all">
+            Webhook: {{ discordWebhook }}
+          </div>
+          <div>Repeat: {{ repeat ? "Yes" : "No" }}</div>
+
+          <div class="pt-2">
+            <div class="font-medium">Legs</div>
+            <div v-for="(leg, idx) in legs" :key="idx">
+              {{ idx + 1 }}. {{ leg.marketUrl }} —
+              {{ leg.selectedOutcomeName || "—" }}
+            </div>
+          </div>
+        </div>
+
+        <p v-if="submitError" class="text-sm text-red-600">
+          {{ submitError }}
+        </p>
+      </div>
+    </div>
+
+    <Dialog
+      :open="marketSearchDialogOpen"
+      @update:open="(open: boolean) => !open && closeMarketSearchDialog()"
+    >
+      <DialogContent
+        class="w-[92vw] max-w-[1800px] max-h-[85vh] overflow-hidden flex flex-col"
+      >
+        <DialogHeader>
+          <DialogTitle>Search Polymarket Markets</DialogTitle>
+          <DialogDescription>
+            Search events, then choose a market to load into the analytics
+            workspace.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="grid gap-4 min-h-0">
+          <div class="flex flex-col gap-3 md:flex-row md:items-center">
+            <Input
+              v-model="marketSearchQuery"
+              type="text"
+              placeholder="Search markets..."
+              @keydown.enter.prevent="runMarketSearch"
+            />
+            <Button
+              :disabled="marketSearchLoading || !marketSearchQuery.trim()"
+              @click="runMarketSearch"
+            >
+              {{ marketSearchLoading ? "Searching…" : "Search" }}
+            </Button>
+          </div>
+
+          <p v-if="marketSearchError" class="text-sm text-red-600">
+            {{ marketSearchError }}
+          </p>
+          <p
+            v-else-if="marketSearchQuery.trim() && !marketSearchLoading"
+            class="text-sm text-muted-foreground"
+          >
+            Showing {{ searchEventResults.length }} event{{
+              searchEventResults.length === 1 ? "" : "s"
+            }}
+          </p>
+
+          <div class="grid gap-4 min-h-0 lg:grid-cols-[320px_minmax(0,1fr)]">
+            <div
+              class="border rounded-lg overflow-hidden min-h-0 flex flex-col"
+            >
+              <div class="border-b px-4 py-3 text-sm font-medium">Events</div>
+              <div class="flex-1 overflow-y-auto p-3 space-y-2">
+                <div
+                  v-if="marketSearchLoading"
+                  class="text-sm text-muted-foreground"
+                >
+                  Loading events...
+                </div>
+                <button
+                  v-for="event in searchEventResults"
+                  :key="event.id"
+                  type="button"
+                  class="w-full rounded-lg border p-3 text-left transition-colors"
+                  :class="
+                    selectedSearchEvent?.id === event.id
+                      ? 'border-primary bg-muted/30'
+                      : 'border-border hover:bg-muted/20'
+                  "
+                  @click="selectSearchEvent(event.event)"
+                >
+                  <div class="flex items-start gap-3">
+                    <img
+                      :src="event.image"
+                      :alt="event.title"
+                      class="w-10 h-10 rounded-lg object-cover border"
+                      @error="handleSearchImageError"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <div class="text-sm font-medium line-clamp-2">
+                        {{ event.title }}
+                      </div>
+                      <div class="mt-1 text-xs text-muted-foreground">
+                        {{ event.subtitle }}
+                      </div>
+                      <div class="mt-2 text-xs font-semibold text-foreground">
+                        {{ event.chanceText }}
+                      </div>
+                    </div>
+                  </div>
+                </button>
+
+                <div
+                  v-if="!marketSearchLoading && searchEventResults.length === 0"
+                  class="text-sm text-muted-foreground"
+                >
+                  Search for an event to view its markets.
+                </div>
+
+                <div v-if="marketSearchPagination?.hasMore" class="pt-2">
+                  <Button
+                    variant="outline"
+                    class="w-full"
+                    :disabled="marketSearchLoadingMore"
+                    @click="loadMoreMarketSearchResults"
+                  >
+                    {{
+                      marketSearchLoadingMore ? "Loading…" : "Load more events"
+                    }}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="border rounded-lg overflow-hidden min-h-0 flex flex-col"
+            >
+              <div
+                class="border-b px-4 py-3 flex items-center justify-between gap-3"
+              >
+                <div>
+                  <div class="text-sm font-medium">
+                    {{ selectedSearchEvent?.title ?? "Markets" }}
+                  </div>
+                  <p class="text-xs text-muted-foreground mt-1">
+                    {{ selectedSearchEvent?.markets?.length ?? 0 }} market{{
+                      (selectedSearchEvent?.markets?.length ?? 0) === 1
+                        ? ""
+                        : "s"
+                    }}
+                    available
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                <div
+                  v-if="!selectedSearchEvent"
+                  class="h-full flex items-center justify-center text-sm text-muted-foreground"
+                >
+                  Select an event to view and add its markets.
+                </div>
+
+                <div
+                  v-for="market in selectedSearchEvent?.markets ?? []"
+                  :key="market.id"
+                  class="rounded-lg border p-4 grid gap-3"
+                  :class="
+                    isSearchMarketSelected(selectedSearchEvent, market)
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border'
+                  "
+                >
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                      <div class="text-sm font-semibold line-clamp-2">
+                        {{
+                          (market.groupItemTitle ?? "").trim() ||
+                          market.question ||
+                          "Market"
+                        }}
+                      </div>
+                      <p
+                        class="mt-1 text-xs text-muted-foreground line-clamp-2"
+                      >
+                        {{
+                          computeChance(market).subtitle ||
+                          selectedSearchEvent?.title ||
+                          ""
+                        }}
+                      </p>
+                      <a
+                        :href="toPolymarketMarketUrl(market)"
+                        target="_blank"
+                        rel="noreferrer"
+                        class="mt-2 inline-block text-xs text-primary underline-offset-4 hover:underline"
+                      >
+                        Open on Polymarket
+                      </a>
+                    </div>
+
+                    <div
+                      class="text-sm font-semibold whitespace-nowrap text-right"
+                    >
+                      <div>{{ computeChance(market).text }}</div>
+                      <div
+                        v-if="
+                          isSearchMarketSelected(selectedSearchEvent, market)
+                        "
+                        class="mt-1 text-xs font-medium text-primary"
+                      >
+                        Selected
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      class="h-full bg-primary"
+                      :style="{ width: computeChance(market).pct + '%' }"
+                    />
+                  </div>
+
+                  <div class="flex justify-end gap-2">
+                    <Button
+                      v-if="isSearchMarketSelected(selectedSearchEvent, market)"
+                      variant="outline"
+                      @click="
+                        selectedSearchEvent &&
+                        handleRemoveSearchMarket(selectedSearchEvent, market)
+                      "
+                    >
+                      Remove
+                    </Button>
+                    <Button
+                      v-else
+                      :disabled="
+                        (!canAddMoreInsightsMarkets && isInsightsMode) ||
+                        !selectedSearchEvent
+                      "
+                      @click="
+                        selectedSearchEvent &&
+                        handleAssignSearchMarket(selectedSearchEvent, market)
+                      "
+                    >
+                      Add market
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </div>
+
   <Dialog
+    v-else
     :open="isOpen"
     @update:open="(open: boolean) => !open && emit('close')"
   >
@@ -164,265 +1204,34 @@
         </div>
 
         <!-- Step 2: Select legs -->
-        <div v-else-if="step === 2" class="grid gap-5">
-          <div
-            v-if="isCompareInsightsMode"
-            class="border rounded p-4 bg-muted/10 grid gap-3"
-          >
-            <div class="font-semibold">Combined Comparison Chart</div>
+        <div v-else-if="step === 2">
+          <div v-if="isInsightsMode" class="grid gap-5">
+            <div
+              v-if="hasInsightsChartActions"
+              class="border rounded-xl p-4 bg-muted/10 grid gap-3"
+            >
+              <div class="font-semibold">{{ insightsChartPanelTitle }}</div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div class="grid gap-1">
-                <Label>From date</Label>
-                <Input
-                  v-model="compareFromDate"
-                  type="date"
-                  :min="compareMinDate || undefined"
-                />
-              </div>
-              <div class="grid gap-1">
-                <Label>To date</Label>
-                <Input
-                  v-model="compareToDate"
-                  type="date"
-                  :min="compareMinDate || undefined"
-                />
-              </div>
-              <div class="grid gap-1">
-                <Label>Frequency</Label>
-                <Select v-model="compareFrequency">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="minutely">Minutely</SelectItem>
-                    <SelectItem value="hourly">Hourly</SelectItem>
-                    <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div class="grid gap-2">
-              <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
-                <Button
-                  :disabled="isCombinedCompareChartDisabled"
-                  @click="handleViewCombinedCompareChart"
-                >
-                  <span v-if="compareChartLoading">Loading…</span>
-                  <span v-else>Generate Combined Data</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  :disabled="
-                    compareChartLoading ||
-                    compareChartData.length === 0 ||
-                    compareSaveLoading
-                  "
-                  @click="handleSendCombinedCompareChartToNotebooks"
-                >
-                  <span v-if="compareSaveLoading">Sending…</span>
-                  <span v-else>Save to Jupyter</span>
-                </Button>
-              </div>
-
-              <Dialog v-model:open="compareFilenameDialogOpen">
-                <DialogContent class="sm:max-w-[520px]">
-                  <DialogHeader>
-                    <DialogTitle>Save to Jupyter</DialogTitle>
-                    <DialogDescription>
-                      Choose a filename for the exported data.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div class="grid gap-2">
-                    <Label>Filename</Label>
-                    <Input
-                      v-model="compareFilenameInput"
-                      type="text"
-                      placeholder="polymarket-compare-YYYY-MM-DD.json"
-                      :disabled="compareSaveLoading"
-                    />
-                    <p v-if="compareFilenameError" class="text-sm text-red-600">
-                      {{ compareFilenameError }}
-                    </p>
-                  </div>
-
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      :disabled="compareSaveLoading"
-                      @click="compareFilenameDialogOpen = false"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      :disabled="compareSaveLoading"
-                      @click="handleConfirmSendCombinedCompareChartToNotebooks"
-                    >
-                      <span v-if="compareSaveLoading">Sending…</span>
-                      <span v-else>Send</span>
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-
-              <p v-if="compareChartError" class="text-sm text-red-600">
-                {{ compareChartError }}
-              </p>
-              <p v-if="compareSaveError" class="text-sm text-red-600">
-                {{ compareSaveError }}
-              </p>
-              <p v-if="compareSaveSuccessPath" class="text-sm text-green-700">
-                Saved to JupyterLite: {{ compareSaveSuccessPath }}
-              </p>
-            </div>
-
-            <div v-if="compareChartData.length > 0" class="mt-2">
-              <PriceScatterChart
-                :series="compareChartData"
-                title="Comparison Price History"
-                x-axis-name="Date"
-                y-axis-name="Value"
-                height="520px"
-              />
-            </div>
-          </div>
-
-          <div
-            v-for="(leg, idx) in legs"
-            :key="idx"
-            class="border rounded-md p-4 grid gap-3"
-          >
-            <div class="font-medium">Leg {{ idx + 1 }}</div>
-
-            <div class="grid gap-2">
-              <Label>Market/Event URL</Label>
-              <div class="flex gap-2">
-                <Input
-                  v-model="leg.marketUrl"
-                  type="text"
-                  placeholder="https://polymarket.com/event/... or /market/..."
-                />
-                <Button
-                  :disabled="leg.loading || !leg.marketUrl.trim()"
-                  @click="loadLeg(idx)"
-                >
-                  <span v-if="leg.loading">Loading…</span>
-                  <span v-else>Load</span>
-                </Button>
-              </div>
-              <p v-if="leg.error" class="text-sm text-red-600">
-                {{ leg.error }}
-              </p>
-              <p v-if="leg.title" class="text-sm text-muted-foreground">
-                {{ leg.title }}
-              </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="grid gap-2">
-                <Label>Market</Label>
-                <Select
-                  v-model="leg.selectedMarketId"
-                  :disabled="getMarketSelectOptions(leg).length === 0"
-                  @update:model-value="() => onMarketChange(idx)"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select market" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem
-                        v-for="m in getMarketSelectOptions(leg)"
-                        :key="m.id"
-                        :value="m.id"
-                      >
-                        {{ m.title }}
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div class="grid gap-2">
-                <Label>Outcome</Label>
-                <Select
-                  v-model="leg.selectedOutcomeId"
-                  :disabled="getOutcomeSelectOptions(leg).length === 0"
-                  @update:model-value="() => onOutcomeChange(idx)"
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select outcome" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem
-                        v-for="o in getOutcomeSelectOptions(leg)"
-                        :key="o.id"
-                        :value="o.id"
-                      >
-                        {{ o.name }}
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div v-if="leg.marketOptions.length > 0" class="grid gap-3">
-              <div class="inline-flex w-full rounded-lg border bg-muted/20 p-1">
-                <button
-                  type="button"
-                  class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-                  :class="
-                    isLegInsightsTabActive(leg, 'chart')
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  "
-                  @click="setLegInsightsTab(leg, 'chart')"
-                >
-                  View Chart
-                </button>
-                <button
-                  type="button"
-                  class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
-                  :class="
-                    isLegInsightsTabActive(leg, 'export')
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                  "
-                  @click="setLegInsightsTab(leg, 'export')"
-                >
-                  Data Export
-                </button>
-              </div>
-
-              <div class="border rounded p-3 bg-muted/20 grid gap-3">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div class="grid gap-1">
-                    <Label>From date</Label>
-                    <Input
-                      v-model="leg.exportFromDate"
-                      type="date"
-                      :min="leg.minDate || undefined"
-                    />
-                  </div>
-                  <div class="grid gap-1">
-                    <Label>To date</Label>
-                    <Input
-                      v-model="leg.exportToDate"
-                      type="date"
-                      :min="leg.minDate || undefined"
-                    />
-                  </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="grid gap-1">
+                  <Label>From date</Label>
+                  <Input
+                    v-model="compareFromDate"
+                    type="date"
+                    :min="compareMinDate || undefined"
+                  />
                 </div>
-
+                <div class="grid gap-1">
+                  <Label>To date</Label>
+                  <Input
+                    v-model="compareToDate"
+                    type="date"
+                    :min="compareMinDate || undefined"
+                  />
+                </div>
                 <div class="grid gap-1">
                   <Label>Frequency</Label>
-                  <Select v-model="leg.exportFrequency">
+                  <Select v-model="compareFrequency">
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -435,95 +1244,596 @@
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
 
-                <div class="grid gap-2">
-                  <Label>Markets</Label>
-                  <div class="flex items-center gap-2">
-                    <Checkbox
-                      :id="`insights-select-all-${idx}`"
-                      :model-value="exportSelectAllState(leg)"
-                      @update:model-value="
-                        (v) => toggleAllExportMarkets(leg, v)
-                      "
-                    />
-                    <Label
-                      :for="`insights-select-all-${idx}`"
-                      class="text-sm cursor-pointer"
-                      >Select All</Label
-                    >
-                  </div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2">
-                    <div
-                      v-for="(market, marketIdx) in leg.marketOptions"
-                      :key="market.id"
-                      class="flex items-center gap-2"
-                    >
-                      <Checkbox
-                        :id="`insights-market-${idx}-${marketIdx}`"
-                        :model-value="
-                          leg.exportSelectedMarkets.includes(market.id)
-                        "
-                        @update:model-value="
-                          (v) => toggleExportMarket(leg, market.id, v)
-                        "
+              <div class="grid gap-2">
+                <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+                  <Button
+                    :disabled="isCombinedCompareChartDisabled"
+                    @click="handleViewCombinedCompareChart"
+                  >
+                    <span v-if="compareChartLoading">Loading…</span>
+                    <span v-else>{{ insightsGenerateChartLabel }}</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    :disabled="
+                      compareChartLoading || compareChartData.length === 0
+                    "
+                    @click="openCombinedCompareChartPreview"
+                  >
+                    Preview Generated Chart
+                  </Button>
+                  <Button
+                    variant="outline"
+                    :disabled="isCompareNotebookActionDisabled"
+                    @click="handleCombinedCompareNotebookAction"
+                  >
+                    <span v-if="compareSaveLoading">Sending…</span>
+                    <span v-else>{{ compareNotebookActionLabel }}</span>
+                  </Button>
+                </div>
+
+                <Dialog v-model:open="compareFilenameDialogOpen">
+                  <DialogContent class="sm:max-w-[520px]">
+                    <DialogHeader>
+                      <DialogTitle>Send to Jupyter</DialogTitle>
+                      <DialogDescription>
+                        Choose a filename for the exported data.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div class="grid gap-2">
+                      <Label>Filename</Label>
+                      <Input
+                        v-model="compareFilenameInput"
+                        type="text"
+                        :placeholder="defaultCombinedCompareNotebookFilename()"
+                        :disabled="compareSaveLoading"
                       />
-                      <Label
-                        :for="`insights-market-${idx}-${marketIdx}`"
-                        class="text-sm cursor-pointer"
-                        >{{ market.title }}</Label
+                      <p
+                        v-if="compareFilenameError"
+                        class="text-sm text-red-600"
                       >
+                        {{ compareFilenameError }}
+                      </p>
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        :disabled="compareSaveLoading"
+                        @click="compareFilenameDialogOpen = false"
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        :disabled="compareSaveLoading"
+                        @click="handleCompareFilenamePrimaryAction"
+                      >
+                        <span v-if="compareSaveLoading">Sending…</span>
+                        <span v-else>{{
+                          compareCanGoToNotebooks ? "Go to notebooks" : "Send"
+                        }}</span>
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                <p v-if="compareChartError" class="text-sm text-red-600">
+                  {{ compareChartError }}
+                </p>
+                <p v-if="compareSaveError" class="text-sm text-red-600">
+                  {{ compareSaveError }}
+                </p>
+                <p v-if="compareSaveSuccessPath" class="text-sm text-green-700">
+                  Saved to JupyterLite: {{ compareSaveSuccessPath }}
+                </p>
+              </div>
+            </div>
+
+            <div class="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+              <aside class="border rounded-xl bg-muted/10 overflow-hidden">
+                <div class="border-b px-4 py-4 grid gap-3">
+                  <div>
+                    <div class="text-sm font-semibold text-foreground">
+                      Selected Markets
+                    </div>
+                    <p class="text-xs text-muted-foreground mt-1">
+                      Paste a Polymarket URL or open search, then preview charts
+                      or export data to notebooks.
+                    </p>
+                  </div>
+
+                  <div class="grid gap-2">
+                    <Label>Paste market or event URL</Label>
+                    <div class="flex gap-2">
+                      <Input
+                        v-model="quickAddMarketUrl"
+                        type="text"
+                        placeholder="https://polymarket.com/event/... or /market/..."
+                        @keydown.enter.prevent="handleQuickAddMarket"
+                      />
+                      <Button
+                        :disabled="!canQuickAddMarket"
+                        @click="handleQuickAddMarket"
+                      >
+                        Add
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Button variant="outline" @click="openMarketSearchDialog">
+                    Open Search
+                  </Button>
+
+                  <div class="text-xs text-muted-foreground">
+                    {{ legs.length }} market{{ legs.length === 1 ? "" : "s" }}
+                    added
+                    <span v-if="isCompareInsightsMode">
+                      for cross-event comparison
+                    </span>
+                  </div>
+                </div>
+
+                <div class="max-h-[58vh] overflow-y-auto p-3 space-y-2">
+                  <div
+                    v-if="legs.length === 0"
+                    class="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground"
+                  >
+                    Add a market to start charting, exporting, or sending data
+                    to JupyterLite.
+                  </div>
+
+                  <div
+                    v-for="(leg, idx) in legs"
+                    :key="idx"
+                    class="rounded-lg border p-3 transition-colors cursor-pointer"
+                    :class="
+                      idx === activeLegIndex
+                        ? 'border-primary bg-background shadow-sm'
+                        : 'border-border bg-background/70 hover:bg-background'
+                    "
+                    @click="selectLeg(idx)"
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="text-sm font-medium leading-5 break-words">
+                          {{ legDisplayTitle(leg, idx) }}
+                        </div>
+                        <p
+                          class="mt-1 text-xs"
+                          :class="
+                            leg.error ? 'text-red-600' : 'text-muted-foreground'
+                          "
+                        >
+                          {{ legStatusText(leg) }}
+                        </p>
+                      </div>
+
+                      <button
+                        v-if="canRemoveLeg(idx)"
+                        type="button"
+                        class="text-xs text-muted-foreground hover:text-foreground"
+                        @click.stop="removeLeg(idx)"
+                      >
+                        Remove
+                      </button>
                     </div>
                   </div>
                 </div>
-              </div>
+              </aside>
 
-              <div
-                v-if="isLegInsightsTabActive(leg, 'chart')"
-                class="border rounded p-3 bg-muted/20 grid gap-3"
-              >
-                <div class="font-semibold">View Price History Chart</div>
-
-                <div class="grid gap-2">
-                  <Button
-                    :disabled="leg.chartLoading"
-                    @click="handleViewChart(leg)"
+              <div class="min-w-0 grid gap-5">
+                <div
+                  v-if="activeLeg"
+                  class="border rounded-xl p-4 grid gap-4 bg-background"
+                >
+                  <div
+                    class="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between"
                   >
-                    <span v-if="leg.chartLoading">Loading…</span>
-                    <span v-else>Generate Chart</span>
-                  </Button>
+                    <div>
+                      <div class="text-lg font-semibold">
+                        {{ legDisplayTitle(activeLeg, activeLegIndex) }}
+                      </div>
+                      <p class="text-sm text-muted-foreground mt-1">
+                        {{
+                          activeLeg.title ||
+                          "Select a market and configure the preview/export range."
+                        }}
+                      </p>
+                    </div>
+                    <div
+                      class="text-xs uppercase tracking-wide text-muted-foreground"
+                    >
+                      {{ activeLegLoading ? "Loading" : "Active market" }}
+                    </div>
+                  </div>
 
-                  <p v-if="leg.chartError" class="text-sm text-red-600">
-                    {{ leg.chartError }}
-                  </p>
+                  <div class="grid gap-2">
+                    <Label>Market/Event URL</Label>
+                    <div class="flex gap-2">
+                      <Input
+                        v-model="activeLeg.marketUrl"
+                        type="text"
+                        placeholder="https://polymarket.com/event/... or /market/..."
+                        @keydown.enter.prevent="loadLeg(activeLegIndex)"
+                      />
+                      <Button
+                        :disabled="
+                          activeLeg.loading || !activeLeg.marketUrl.trim()
+                        "
+                        @click="loadLeg(activeLegIndex)"
+                      >
+                        <span v-if="activeLeg.loading">Loading…</span>
+                        <span v-else>Load</span>
+                      </Button>
+                    </div>
+                    <p v-if="activeLeg.error" class="text-sm text-red-600">
+                      {{ activeLeg.error }}
+                    </p>
+                  </div>
+
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid gap-2">
+                      <Label>Market</Label>
+                      <Select
+                        v-model="activeLeg.selectedMarketId"
+                        :disabled="
+                          getMarketSelectOptions(activeLeg).length === 0
+                        "
+                        @update:model-value="
+                          () => onMarketChange(activeLegIndex)
+                        "
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select market" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem
+                              v-for="market in getMarketSelectOptions(
+                                activeLeg,
+                              )"
+                              :key="market.id"
+                              :value="market.id"
+                            >
+                              {{ market.title }}
+                            </SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div class="grid gap-2">
+                      <Label>Outcome</Label>
+                      <Select
+                        v-model="activeLeg.selectedOutcomeId"
+                        :disabled="
+                          getOutcomeSelectOptions(activeLeg).length === 0
+                        "
+                        @update:model-value="
+                          () => onOutcomeChange(activeLegIndex)
+                        "
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select outcome" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectItem
+                              v-for="outcome in getOutcomeSelectOptions(
+                                activeLeg,
+                              )"
+                              :key="outcome.id"
+                              :value="outcome.id"
+                            >
+                              {{ outcome.name }}
+                            </SelectItem>
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div
+                    v-if="activeLeg.marketOptions.length > 0"
+                    class="grid gap-3"
+                  >
+                    <div
+                      class="inline-flex w-full rounded-lg border bg-muted/20 p-1"
+                    >
+                      <button
+                        type="button"
+                        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                        :class="
+                          isLegInsightsTabActive(activeLeg, 'chart')
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        "
+                        @click="setLegInsightsTab(activeLeg, 'chart')"
+                      >
+                        View Chart
+                      </button>
+                      <button
+                        type="button"
+                        class="flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors"
+                        :class="
+                          isLegInsightsTabActive(activeLeg, 'export')
+                            ? 'bg-background text-foreground shadow-sm'
+                            : 'text-muted-foreground hover:text-foreground'
+                        "
+                        @click="setLegInsightsTab(activeLeg, 'export')"
+                      >
+                        Data Export
+                      </button>
+                    </div>
+
+                    <div class="border rounded-lg p-3 bg-muted/20 grid gap-3">
+                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="grid gap-1">
+                          <Label>From date</Label>
+                          <Input
+                            v-model="activeLeg.exportFromDate"
+                            type="date"
+                            :min="activeLeg.minDate || undefined"
+                          />
+                        </div>
+                        <div class="grid gap-1">
+                          <Label>To date</Label>
+                          <Input
+                            v-model="activeLeg.exportToDate"
+                            type="date"
+                            :min="activeLeg.minDate || undefined"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="grid gap-1">
+                        <Label>Frequency</Label>
+                        <Select v-model="activeLeg.exportFrequency">
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="minutely">Minutely</SelectItem>
+                            <SelectItem value="hourly">Hourly</SelectItem>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div class="grid gap-2">
+                        <div class="flex items-center justify-between gap-2">
+                          <Label>Markets</Label>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            class="h-7 px-2 text-xs"
+                            @click="toggleExportMarketList"
+                          >
+                            {{
+                              showExportMarketList
+                                ? "Hide list"
+                                : "Select markets"
+                            }}
+                          </Button>
+                        </div>
+                        <p class="text-xs text-muted-foreground">
+                          Selected market:
+                          {{ activeLegSelectedMarketLabel(activeLeg) }}
+                        </p>
+                        <div v-if="showExportMarketList" class="grid gap-2">
+                          <div class="flex items-center gap-2">
+                            <Checkbox
+                              :id="`insights-select-all-${activeLegIndex}`"
+                              :model-value="exportSelectAllState(activeLeg)"
+                              @update:model-value="
+                                (value) =>
+                                  toggleAllExportMarkets(activeLeg, value)
+                              "
+                            />
+                            <Label
+                              :for="`insights-select-all-${activeLegIndex}`"
+                              class="text-sm cursor-pointer"
+                            >
+                              Select All
+                            </Label>
+                          </div>
+                          <div
+                            class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2"
+                          >
+                            <div
+                              v-for="(
+                                market, marketIdx
+                              ) in activeLeg.marketOptions"
+                              :key="market.id"
+                              class="flex items-center gap-2"
+                            >
+                              <Checkbox
+                                :id="`insights-market-${activeLegIndex}-${marketIdx}`"
+                                :model-value="
+                                  activeLeg.exportSelectedMarkets.includes(
+                                    market.id,
+                                  )
+                                "
+                                @update:model-value="
+                                  (value) =>
+                                    toggleExportMarket(
+                                      activeLeg,
+                                      market.id,
+                                      value,
+                                    )
+                                "
+                              />
+                              <Label
+                                :for="`insights-market-${activeLegIndex}-${marketIdx}`"
+                                class="text-sm cursor-pointer"
+                              >
+                                {{ market.title }}
+                              </Label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      v-if="isLegInsightsTabActive(activeLeg, 'chart')"
+                      class="border rounded-lg p-3 bg-muted/20 grid gap-3"
+                    >
+                      <div class="font-semibold">View Price History Chart</div>
+
+                      <div class="grid gap-2">
+                        <div class="flex flex-col sm:flex-row gap-2">
+                          <Button
+                            :disabled="activeLeg.chartLoading"
+                            @click="handleViewChart(activeLeg)"
+                          >
+                            <span v-if="activeLeg.chartLoading">Loading…</span>
+                            <span v-else>Generate Chart</span>
+                          </Button>
+                          <Button
+                            variant="outline"
+                            :disabled="
+                              activeLeg.chartLoading ||
+                              activeLeg.chartData.length === 0
+                            "
+                            @click="openLegChartPreview(activeLeg)"
+                          >
+                            Preview Generated Chart
+                          </Button>
+                        </div>
+
+                        <p
+                          v-if="activeLeg.chartError"
+                          class="text-sm text-red-600"
+                        >
+                          {{ activeLeg.chartError }}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      v-else-if="isLegInsightsTabActive(activeLeg, 'export')"
+                      class="border rounded-lg p-3 bg-muted/20 grid gap-3"
+                    >
+                      <div class="font-semibold">Download Price History</div>
+
+                      <div class="grid gap-2">
+                        <Button
+                          :disabled="activeLeg.exportLoading"
+                          @click="handleDownloadExport(activeLeg)"
+                        >
+                          <span v-if="activeLeg.exportLoading"
+                            >Downloading…</span
+                          >
+                          <span v-else>Download (.csv)</span>
+                        </Button>
+
+                        <p
+                          v-if="activeLeg.exportError"
+                          class="text-sm text-red-600"
+                        >
+                          {{ activeLeg.exportError }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div v-if="leg.chartData.length > 0" class="mt-4">
-                  <PriceScatterChart
-                    :series="leg.chartData"
-                    :title="`${leg.title || 'Market'} - Price History`"
-                    height="500px"
+                <div
+                  v-else
+                  class="border rounded-xl border-dashed p-8 text-center text-muted-foreground"
+                >
+                  Add a market from the left rail to preview history, export
+                  CSV, or queue JSON for JupyterLite.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-else class="grid gap-5">
+            <div
+              v-for="(leg, idx) in legs"
+              :key="idx"
+              class="border rounded-md p-4 grid gap-3"
+            >
+              <div class="font-medium">Leg {{ idx + 1 }}</div>
+
+              <div class="grid gap-2">
+                <Label>Market/Event URL</Label>
+                <div class="flex gap-2">
+                  <Input
+                    v-model="leg.marketUrl"
+                    type="text"
+                    placeholder="https://polymarket.com/event/... or /market/..."
                   />
+                  <Button
+                    :disabled="leg.loading || !leg.marketUrl.trim()"
+                    @click="loadLeg(idx)"
+                  >
+                    <span v-if="leg.loading">Loading…</span>
+                    <span v-else>Load</span>
+                  </Button>
                 </div>
+                <p v-if="leg.error" class="text-sm text-red-600">
+                  {{ leg.error }}
+                </p>
+                <p v-if="leg.title" class="text-sm text-muted-foreground">
+                  {{ leg.title }}
+                </p>
               </div>
 
-              <div
-                v-else-if="isLegInsightsTabActive(leg, 'export')"
-                class="border rounded p-3 bg-muted/20 grid gap-3"
-              >
-                <div class="font-semibold">Download Price History</div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid gap-2">
+                  <Label>Market</Label>
+                  <Select
+                    v-model="leg.selectedMarketId"
+                    :disabled="getMarketSelectOptions(leg).length === 0"
+                    @update:model-value="() => onMarketChange(idx)"
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select market" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem
+                          v-for="m in getMarketSelectOptions(leg)"
+                          :key="m.id"
+                          :value="m.id"
+                        >
+                          {{ m.title }}
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 <div class="grid gap-2">
-                  <Button
-                    :disabled="leg.exportLoading"
-                    @click="handleDownloadExport(leg)"
+                  <Label>Outcome</Label>
+                  <Select
+                    v-model="leg.selectedOutcomeId"
+                    :disabled="getOutcomeSelectOptions(leg).length === 0"
+                    @update:model-value="() => onOutcomeChange(idx)"
                   >
-                    <span v-if="leg.exportLoading">Downloading…</span>
-                    <span v-else>Download (.csv)</span>
-                  </Button>
-
-                  <p v-if="leg.exportError" class="text-sm text-red-600">
-                    {{ leg.exportError }}
-                  </p>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select outcome" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem
+                          v-for="o in getOutcomeSelectOptions(leg)"
+                          :key="o.id"
+                          :value="o.id"
+                        >
+                          {{ o.name }}
+                        </SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -614,12 +1924,275 @@
           </Button>
         </template>
       </DialogFooter>
+
+      <Dialog
+        :open="marketSearchDialogOpen"
+        @update:open="(open: boolean) => !open && closeMarketSearchDialog()"
+      >
+        <DialogContent
+          class="w-[92vw] max-w-[1200px] max-h-[85vh] overflow-hidden flex flex-col"
+        >
+          <DialogHeader>
+            <DialogTitle>Search Polymarket Markets</DialogTitle>
+            <DialogDescription>
+              Search events, then choose a market to load into the analytics
+              workspace.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div class="grid gap-4 min-h-0">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center">
+              <Input
+                v-model="marketSearchQuery"
+                type="text"
+                placeholder="Search markets..."
+                @keydown.enter.prevent="runMarketSearch"
+              />
+              <Button
+                :disabled="marketSearchLoading || !marketSearchQuery.trim()"
+                @click="runMarketSearch"
+              >
+                {{ marketSearchLoading ? "Searching…" : "Search" }}
+              </Button>
+            </div>
+
+            <p v-if="marketSearchError" class="text-sm text-red-600">
+              {{ marketSearchError }}
+            </p>
+            <p
+              v-else-if="marketSearchQuery.trim() && !marketSearchLoading"
+              class="text-sm text-muted-foreground"
+            >
+              Showing {{ searchEventResults.length }} event{{
+                searchEventResults.length === 1 ? "" : "s"
+              }}
+            </p>
+
+            <div class="grid gap-4 min-h-0 lg:grid-cols-[320px_minmax(0,1fr)]">
+              <div
+                class="border rounded-lg overflow-hidden min-h-0 flex flex-col"
+              >
+                <div class="border-b px-4 py-3 text-sm font-medium">Events</div>
+                <div class="flex-1 overflow-y-auto p-3 space-y-2">
+                  <div
+                    v-if="marketSearchLoading"
+                    class="text-sm text-muted-foreground"
+                  >
+                    Loading events...
+                  </div>
+                  <button
+                    v-for="event in searchEventResults"
+                    :key="event.id"
+                    type="button"
+                    class="w-full rounded-lg border p-3 text-left transition-colors"
+                    :class="
+                      selectedSearchEvent?.id === event.id
+                        ? 'border-primary bg-muted/30'
+                        : 'border-border hover:bg-muted/20'
+                    "
+                    @click="selectSearchEvent(event.event)"
+                  >
+                    <div class="flex items-start gap-3">
+                      <img
+                        :src="event.image"
+                        :alt="event.title"
+                        class="w-10 h-10 rounded-lg object-cover border"
+                        @error="handleSearchImageError"
+                      />
+                      <div class="min-w-0 flex-1">
+                        <div class="text-sm font-medium line-clamp-2">
+                          {{ event.title }}
+                        </div>
+                        <div class="mt-1 text-xs text-muted-foreground">
+                          {{ event.subtitle }}
+                        </div>
+                        <div class="mt-2 text-xs font-semibold text-foreground">
+                          {{ event.chanceText }}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+
+                  <div
+                    v-if="
+                      !marketSearchLoading && searchEventResults.length === 0
+                    "
+                    class="text-sm text-muted-foreground"
+                  >
+                    Search for an event to view its markets.
+                  </div>
+
+                  <div v-if="marketSearchPagination?.hasMore" class="pt-2">
+                    <Button
+                      variant="outline"
+                      class="w-full"
+                      :disabled="marketSearchLoadingMore"
+                      @click="loadMoreMarketSearchResults"
+                    >
+                      {{
+                        marketSearchLoadingMore
+                          ? "Loading…"
+                          : "Load more events"
+                      }}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="border rounded-lg overflow-hidden min-h-0 flex flex-col"
+              >
+                <div
+                  class="border-b px-4 py-3 flex items-center justify-between gap-3"
+                >
+                  <div>
+                    <div class="text-sm font-medium">
+                      {{ selectedSearchEvent?.title ?? "Markets" }}
+                    </div>
+                    <p class="text-xs text-muted-foreground mt-1">
+                      {{ selectedSearchEvent?.markets?.length ?? 0 }} market{{
+                        (selectedSearchEvent?.markets?.length ?? 0) === 1
+                          ? ""
+                          : "s"
+                      }}
+                      available
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                  <div
+                    v-if="!selectedSearchEvent"
+                    class="h-full flex items-center justify-center text-sm text-muted-foreground"
+                  >
+                    Select an event to view and add its markets.
+                  </div>
+
+                  <div
+                    v-for="market in selectedSearchEvent?.markets ?? []"
+                    :key="market.id"
+                    class="rounded-lg border p-4 grid gap-3"
+                    :class="
+                      isSearchMarketSelected(selectedSearchEvent, market)
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border'
+                    "
+                  >
+                    <div class="flex items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <div class="text-sm font-semibold line-clamp-2">
+                          {{
+                            (market.groupItemTitle ?? "").trim() ||
+                            market.question ||
+                            "Market"
+                          }}
+                        </div>
+                        <p
+                          class="mt-1 text-xs text-muted-foreground line-clamp-2"
+                        >
+                          {{
+                            computeChance(market).subtitle ||
+                            selectedSearchEvent?.title ||
+                            ""
+                          }}
+                        </p>
+                        <a
+                          :href="toPolymarketMarketUrl(market)"
+                          target="_blank"
+                          rel="noreferrer"
+                          class="mt-2 inline-block text-xs text-primary underline-offset-4 hover:underline"
+                        >
+                          Open on Polymarket
+                        </a>
+                      </div>
+
+                      <div
+                        class="text-sm font-semibold whitespace-nowrap text-right"
+                      >
+                        <div>{{ computeChance(market).text }}</div>
+                        <div
+                          v-if="
+                            isSearchMarketSelected(selectedSearchEvent, market)
+                          "
+                          class="mt-1 text-xs font-medium text-primary"
+                        >
+                          Selected
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        class="h-full bg-primary"
+                        :style="{ width: computeChance(market).pct + '%' }"
+                      />
+                    </div>
+
+                    <div class="flex justify-end gap-2">
+                      <Button
+                        v-if="
+                          isSearchMarketSelected(selectedSearchEvent, market)
+                        "
+                        variant="outline"
+                        @click="
+                          selectedSearchEvent &&
+                          handleRemoveSearchMarket(selectedSearchEvent, market)
+                        "
+                      >
+                        Remove
+                      </Button>
+                      <Button
+                        v-else
+                        :disabled="
+                          (!canAddMoreInsightsMarkets && isInsightsMode) ||
+                          !selectedSearchEvent
+                        "
+                        @click="
+                          selectedSearchEvent &&
+                          handleAssignSearchMarket(selectedSearchEvent, market)
+                        "
+                      >
+                        Add market
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </DialogContent>
+  </Dialog>
+
+  <Dialog v-model:open="chartPreviewDialogOpen">
+    <DialogContent
+      class="w-[92vw] max-w-[1200px] max-h-[85vh] overflow-hidden flex flex-col"
+    >
+      <DialogHeader>
+        <DialogTitle>{{ chartPreviewTitle }}</DialogTitle>
+        <DialogDescription>
+          Review the generated chart in a larger preview.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div class="min-h-0 overflow-auto">
+        <PriceScatterChart
+          v-if="chartPreviewSeries.length > 0"
+          :series="chartPreviewSeries"
+          :title="chartPreviewTitle"
+          x-axis-name="Date"
+          y-axis-name="Value"
+          height="560px"
+        />
+      </div>
     </DialogContent>
   </Dialog>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { useRouter } from "vue-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -646,6 +2219,10 @@ import {
   getPolymarketPricesHistory,
   type PolymarketPriceHistoryPoint,
   type AlertOperator,
+  searchPolymarketPublic,
+  type PolymarketGammaPagination,
+  type PolymarketGammaSearchEvent,
+  type PolymarketGammaSearchMarket,
   updateAlert,
 } from "@/api/polymarket";
 import PriceScatterChart, {
@@ -672,6 +2249,16 @@ type CompareMarketInput = {
   marketUrl: string;
   marketId: string;
   label?: string;
+};
+
+type SearchEventCardItem = {
+  id: string;
+  title: string;
+  subtitle: string;
+  chancePct: number;
+  chanceText: string;
+  image: string;
+  event: PolymarketGammaSearchEvent;
 };
 
 type UnknownRecord = Record<string, unknown>;
@@ -730,12 +2317,15 @@ type LegState = {
 type LegInsightsTab = "chart" | "export";
 
 const MAX_COMPARE_INSIGHTS_MARKETS = 10;
+const DEFAULT_FALLBACK_IMAGE =
+  "https://polymarket-upload.s3.us-east-2.amazonaws.com/polymarket_logo.png";
 
 interface Props {
   isOpen: boolean;
   mode?: "create" | "edit";
   initialAlert?: ExistingAlert | null;
   variant?: "alert" | "insights";
+  embedded?: boolean;
   initialMarketUrl?: string;
   initialSelectedMarketIds?: string[];
   initialCompareMarkets?: CompareMarketInput[];
@@ -747,6 +2337,10 @@ const emit = defineEmits<{
   (e: "created"): void;
   (e: "updated"): void;
 }>();
+
+const router = useRouter();
+
+const embedded = computed(() => props.embedded === true);
 
 type ExistingAlertLeg = {
   market_url?: string;
@@ -779,10 +2373,24 @@ type ExistingAlert = {
 
 const isEditMode = computed(() => props.mode === "edit");
 const isInsightsMode = computed(() => props.variant === "insights");
+const hasInitialCompareInsightsSelection = computed(
+  () => (props.initialCompareMarkets?.length ?? 0) > 0,
+);
+const hasInsightsChartActions = computed(
+  () => isInsightsMode.value && legs.value.length > 0,
+);
 const isCompareInsightsMode = computed(() => {
   if (!isInsightsMode.value) return false;
-  return (props.initialCompareMarkets?.length ?? 0) > 0;
+  return legs.value.length > 1 || hasInitialCompareInsightsSelection.value;
 });
+const insightsChartPanelTitle = computed(() =>
+  isCompareInsightsMode.value
+    ? "Combined Comparison Chart"
+    : "Chart and Notebook Export",
+);
+const insightsGenerateChartLabel = computed(() =>
+  isCompareInsightsMode.value ? "Generate Combined Chart" : "Generate Chart",
+);
 
 const compareFromDate = ref<string>("");
 const compareToDate = ref<string>("");
@@ -798,14 +2406,84 @@ const compareSaveSuccessPath = ref<string>("");
 const compareFilenameDialogOpen = ref<boolean>(false);
 const compareFilenameInput = ref<string>("");
 const compareFilenameError = ref<string | null>(null);
+const chartPreviewDialogOpen = ref(false);
+const chartPreviewTitle = ref("Generated Chart");
+const chartPreviewSeries = ref<ScatterSeries[]>([]);
+const activeLegIndex = ref<number>(0);
+const quickAddMarketUrl = ref<string>("");
+const showExportMarketList = ref(false);
+
+const marketSearchDialogOpen = ref(false);
+const marketSearchQuery = ref("");
+const marketSearchLoading = ref(false);
+const marketSearchLoadingMore = ref(false);
+const marketSearchError = ref<string | null>(null);
+const marketSearchPagination = ref<PolymarketGammaPagination | null>(null);
+const marketSearchCurrentPage = ref(1);
+const marketSearchEvents = ref<PolymarketGammaSearchEvent[]>([]);
+const selectedSearchEvent = ref<PolymarketGammaSearchEvent | null>(null);
 
 const isCombinedCompareChartDisabled = computed(() => {
   if (compareChartLoading.value) return true;
-  if (!isCompareInsightsMode.value) return true;
+  if (!hasInsightsChartActions.value) return true;
   // Disable if any selected event/market is still loading or hasn't loaded yet.
   return legs.value.some(
     (leg) => leg.loading || (leg.marketOptions?.length ?? 0) === 0,
   );
+});
+
+const compareCanGoToNotebooks = computed(
+  () => compareSaveSuccessPath.value.trim().length > 0,
+);
+const compareNotebookActionLabel = computed(() =>
+  compareCanGoToNotebooks.value ? "Go to notebooks" : "Send to Jupyter",
+);
+const isCompareNotebookActionDisabled = computed(() => {
+  if (compareSaveLoading.value) return true;
+  if (compareCanGoToNotebooks.value) return false;
+  return compareChartLoading.value || compareChartData.value.length === 0;
+});
+
+const activeLeg = computed(() => legs.value[activeLegIndex.value] ?? null);
+const activeLegLoading = computed(() => activeLeg.value?.loading ?? false);
+const canAddMoreInsightsMarkets = computed(
+  () => legs.value.length < MAX_COMPARE_INSIGHTS_MARKETS,
+);
+const canQuickAddMarket = computed(() => {
+  const url = quickAddMarketUrl.value.trim();
+  if (!url) return false;
+  if (!isInsightsMode.value) return true;
+  return canAddMoreInsightsMarkets.value;
+});
+const searchEventResults = computed<SearchEventCardItem[]>(() => {
+  const items: SearchEventCardItem[] = [];
+  const seen = new Set<string>();
+
+  for (const ev of marketSearchEvents.value ?? []) {
+    if (!ev?.id || seen.has(ev.id)) continue;
+    seen.add(ev.id);
+
+    const markets = ev.markets ?? [];
+    let best = { pct: 0, text: "—" };
+    for (const market of markets) {
+      const chance = computeChance(market);
+      if (chance.text !== "—" && chance.pct >= best.pct) {
+        best = { pct: chance.pct, text: chance.text };
+      }
+    }
+
+    items.push({
+      id: ev.id,
+      title: (ev.title ?? "Untitled event").trim(),
+      subtitle: `${markets.length} market${markets.length === 1 ? "" : "s"}`,
+      chancePct: best.text === "—" ? 0 : best.pct,
+      chanceText: best.text,
+      image: (ev.icon || ev.image || DEFAULT_FALLBACK_IMAGE).toString().trim(),
+      event: ev,
+    });
+  }
+
+  return items;
 });
 
 function createEmptyLeg(): LegState {
@@ -848,6 +2526,367 @@ function normalizeCompareInputs(): CompareMarketInput[] {
     }))
     .filter((m) => Boolean(m.marketUrl) && Boolean(m.marketId))
     .slice(0, MAX_COMPARE_INSIGHTS_MARKETS);
+}
+
+function safeJsonArray(value?: string) {
+  if (!value) return null;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function computeChance(market: PolymarketGammaSearchMarket) {
+  const directPriceCandidates = [
+    market.lastTradePrice,
+    market.bestBid,
+    market.bestAsk,
+  ].filter(
+    (value) =>
+      Number.isFinite(value) &&
+      (value as number) >= 0 &&
+      (value as number) <= 1,
+  ) as number[];
+
+  const preferred =
+    directPriceCandidates.length > 0 ? directPriceCandidates[0] : null;
+
+  const pricesRaw = safeJsonArray(market.outcomePrices);
+  const outcomesRaw = safeJsonArray(market.outcomes);
+
+  const prices = (pricesRaw ?? [])
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value) && value >= 0 && value <= 1);
+
+  const outcomes = (outcomesRaw ?? []).filter(
+    (value) => typeof value === "string",
+  ) as string[];
+
+  const yesIdx = outcomes.findIndex(
+    (value) => value.trim().toLowerCase() === "yes",
+  );
+  const yesPrice =
+    yesIdx >= 0 && Number.isFinite(prices[yesIdx]) ? prices[yesIdx] : null;
+
+  const chosen =
+    preferred ??
+    yesPrice ??
+    (prices.length > 0
+      ? prices.reduce((max, value) => (value > max ? value : max), prices[0])
+      : null);
+
+  const groupTitle = (market.groupItemTitle ?? "").trim();
+
+  if (chosen === null) {
+    return { pct: 0, text: "—", subtitle: groupTitle };
+  }
+
+  const pct = Math.round(chosen * 100);
+  const subtitle = groupTitle || (yesIdx >= 0 ? "Yes" : "");
+  return { pct, text: `${pct}%`, subtitle };
+}
+
+function toPolymarketMarketUrl(market: PolymarketGammaSearchMarket) {
+  const slug = (market.slug ?? "").trim();
+  if (!slug) return "https://polymarket.com";
+  return `https://polymarket.com/market/${encodeURIComponent(slug)}`;
+}
+
+function toPolymarketEventUrl(event: PolymarketGammaSearchEvent | null) {
+  const slug = (event?.slug ?? "").trim();
+  if (!slug) return "https://polymarket.com";
+  return `https://polymarket.com/event/${encodeURIComponent(slug)}`;
+}
+
+function legDisplayTitle(leg: LegState, index: number): string {
+  const explicit = (leg.compareLabel ?? "").trim();
+  if (explicit) return explicit;
+  const market = leg.marketOptions.find(
+    (item) => item.id === leg.selectedMarketId,
+  );
+  if (market?.title?.trim()) return market.title.trim();
+  if ((leg.title ?? "").trim()) return leg.title.trim();
+  if ((leg.marketUrl ?? "").trim()) return leg.marketUrl.trim();
+  return `Leg ${index + 1}`;
+}
+
+function legStatusText(leg: LegState): string {
+  if (leg.loading) return "Loading market data";
+  if (leg.error) return leg.error;
+  if (!leg.marketUrl.trim()) return "No market selected";
+  if (!leg.selectedMarketId) return "Choose a market";
+  if (!leg.selectedOutcomeId) return "Choose an outcome";
+  return leg.selectedOutcomeName || "Ready";
+}
+
+function activeLegSelectedMarketLabel(leg: LegState): string {
+  const selected = leg.marketOptions.find((m) => m.id === leg.selectedMarketId);
+  if (selected?.title?.trim()) return selected.title.trim();
+  return "No market selected";
+}
+
+function toggleExportMarketList() {
+  showExportMarketList.value = !showExportMarketList.value;
+}
+
+function selectLeg(index: number) {
+  if (index < 0 || index >= legs.value.length) return;
+  activeLegIndex.value = index;
+  showExportMarketList.value = false;
+  const leg = legs.value[index];
+  if (!isInsightsMode.value && leg?.marketUrl) {
+    quickAddMarketUrl.value = leg.marketUrl;
+  }
+}
+
+function createInsightsLeg(url = ""): LegState {
+  const leg = createEmptyLeg();
+  leg.marketUrl = url;
+  leg.showChart = true;
+  return leg;
+}
+
+function appendInsightsLeg(url = ""): number {
+  const nextIndex = legs.value.length;
+  legs.value.push(createInsightsLeg(url));
+  activeLegIndex.value = nextIndex;
+  showExportMarketList.value = false;
+  return nextIndex;
+}
+
+function canRemoveLeg(index: number): boolean {
+  if (!isInsightsMode.value) return false;
+  return index >= 0 && index < legs.value.length;
+}
+
+function removeLeg(index: number) {
+  if (!canRemoveLeg(index)) return;
+  legs.value.splice(index, 1);
+  if (legs.value.length === 0) {
+    activeLegIndex.value = 0;
+    return;
+  }
+  if (activeLegIndex.value >= legs.value.length) {
+    activeLegIndex.value = legs.value.length - 1;
+  }
+}
+
+async function assignSearchMarketToLeg(
+  event: PolymarketGammaSearchEvent,
+  market: PolymarketGammaSearchMarket,
+) {
+  const marketId = String(market.id ?? "").trim();
+  if (!marketId) return false;
+
+  let targetIndex = activeLegIndex.value;
+  if (isInsightsMode.value) {
+    if (!canAddMoreInsightsMarkets.value) return false;
+    targetIndex = appendInsightsLeg();
+  } else if (!activeLeg.value) {
+    return false;
+  }
+
+  const leg = legs.value[targetIndex];
+  if (!leg) return false;
+
+  leg.marketUrl = toPolymarketEventUrl(event);
+  leg.selectedMarketId = marketId;
+  leg.exportSelectedMarkets = [marketId];
+  leg.compareLabel = `${
+    (market.groupItemTitle ?? "").trim() || (market.question ?? "Market").trim()
+  } — ${(event.title ?? "Event").trim()}`;
+  activeLegIndex.value = targetIndex;
+  quickAddMarketUrl.value = leg.marketUrl;
+
+  await loadLeg(targetIndex);
+  return true;
+}
+
+async function handleQuickAddMarket() {
+  const url = quickAddMarketUrl.value.trim();
+  if (!url) return;
+
+  if (isInsightsMode.value) {
+    if (!canAddMoreInsightsMarkets.value) return;
+    const index = appendInsightsLeg(url);
+    quickAddMarketUrl.value = "";
+    await loadLeg(index);
+    return;
+  }
+
+  const leg = activeLeg.value;
+  if (!leg) return;
+  leg.marketUrl = url;
+  await loadLeg(activeLegIndex.value);
+}
+
+function openMarketSearchDialog() {
+  marketSearchDialogOpen.value = true;
+  marketSearchError.value = null;
+}
+
+function closeMarketSearchDialog() {
+  marketSearchDialogOpen.value = false;
+}
+
+function findInsightsLegIndexForMarket(
+  event: PolymarketGammaSearchEvent | null,
+  market: PolymarketGammaSearchMarket,
+) {
+  if (!isInsightsMode.value) return -1;
+  const marketId = String(market.id ?? "").trim();
+  if (!marketId) return -1;
+  const eventUrl = toPolymarketEventUrl(event);
+  return legs.value.findIndex(
+    (leg) =>
+      leg.selectedMarketId === marketId && leg.marketUrl.trim() === eventUrl,
+  );
+}
+
+function isSearchMarketSelected(
+  event: PolymarketGammaSearchEvent | null,
+  market: PolymarketGammaSearchMarket,
+) {
+  return findInsightsLegIndexForMarket(event, market) !== -1;
+}
+
+function handleRemoveSearchMarket(
+  event: PolymarketGammaSearchEvent | null,
+  market: PolymarketGammaSearchMarket,
+) {
+  const legIndex = findInsightsLegIndexForMarket(event, market);
+  if (legIndex === -1) return;
+  removeLeg(legIndex);
+}
+
+function openChartPreview(title: string, series: ScatterSeries[]) {
+  if (series.length === 0) return;
+  chartPreviewTitle.value = title;
+  chartPreviewSeries.value = series.map((item) => ({
+    ...item,
+    data: [...item.data],
+  }));
+  chartPreviewDialogOpen.value = true;
+}
+
+function openLegChartPreview(leg: LegState) {
+  const marketTitle = leg.marketOptions.find(
+    (item) => item.id === leg.selectedMarketId,
+  )?.title;
+  openChartPreview(
+    `${marketTitle || leg.title || "Market"} - Price History`,
+    leg.chartData,
+  );
+}
+
+function openCombinedCompareChartPreview() {
+  openChartPreview(
+    isCompareInsightsMode.value ? "Comparison Price History" : "Price History",
+    compareChartData.value,
+  );
+}
+
+async function handleAssignSearchMarket(
+  event: PolymarketGammaSearchEvent,
+  market: PolymarketGammaSearchMarket,
+) {
+  await assignSearchMarketToLeg(event, market);
+}
+
+function selectSearchEvent(event: PolymarketGammaSearchEvent) {
+  selectedSearchEvent.value = event;
+}
+
+function mergeSearchEvents(
+  existing: PolymarketGammaSearchEvent[],
+  incoming: PolymarketGammaSearchEvent[],
+) {
+  const seen = new Set(existing.map((event) => event.id));
+  const merged = [...existing];
+  for (const event of incoming) {
+    if (!event?.id || seen.has(event.id)) continue;
+    seen.add(event.id);
+    merged.push(event);
+  }
+  return merged;
+}
+
+async function fetchMarketSearchPage(opts: { page: number; append: boolean }) {
+  const query = marketSearchQuery.value.trim();
+  if (!query) {
+    marketSearchEvents.value = [];
+    marketSearchPagination.value = null;
+    marketSearchCurrentPage.value = 1;
+    selectedSearchEvent.value = null;
+    marketSearchError.value = null;
+    return;
+  }
+
+  if (opts.page === 1) {
+    marketSearchLoading.value = true;
+  } else {
+    marketSearchLoadingMore.value = true;
+  }
+  marketSearchError.value = null;
+
+  try {
+    const response = await searchPolymarketPublic({
+      q: query,
+      limitPerType: 50,
+      page: opts.page,
+    });
+
+    const nextEvents = Array.isArray(response.events) ? response.events : [];
+    marketSearchEvents.value = opts.append
+      ? mergeSearchEvents(marketSearchEvents.value, nextEvents)
+      : nextEvents;
+    marketSearchPagination.value = response.pagination ?? null;
+    marketSearchCurrentPage.value = opts.page;
+
+    if (marketSearchEvents.value.length === 0) {
+      selectedSearchEvent.value = null;
+    } else if (
+      !selectedSearchEvent.value ||
+      !marketSearchEvents.value.some(
+        (event) => event.id === selectedSearchEvent.value?.id,
+      )
+    ) {
+      selectedSearchEvent.value = marketSearchEvents.value[0] ?? null;
+    }
+  } catch (err) {
+    console.error("Failed to search Polymarket markets:", err);
+    marketSearchError.value = "Could not load results. Try again.";
+    if (!opts.append) {
+      marketSearchEvents.value = [];
+      marketSearchPagination.value = null;
+      marketSearchCurrentPage.value = 1;
+      selectedSearchEvent.value = null;
+    }
+  } finally {
+    marketSearchLoading.value = false;
+    marketSearchLoadingMore.value = false;
+  }
+}
+
+async function runMarketSearch() {
+  await fetchMarketSearchPage({ page: 1, append: false });
+}
+
+async function loadMoreMarketSearchResults() {
+  if (marketSearchLoading.value || marketSearchLoadingMore.value) return;
+  if (!marketSearchPagination.value?.hasMore) return;
+  await fetchMarketSearchPage({
+    page: marketSearchCurrentPage.value + 1,
+    append: true,
+  });
+}
+
+function handleSearchImageError(event: Event) {
+  const image = event.target as HTMLImageElement | null;
+  if (!image) return;
+  image.src = DEFAULT_FALLBACK_IMAGE;
 }
 
 async function loadCompareLegs() {
@@ -919,7 +2958,7 @@ const legs = ref<LegState[]>([
 ]);
 
 const compareMinDate = computed(() => {
-  if (!isCompareInsightsMode.value) return "";
+  if (!hasInsightsChartActions.value) return "";
   const dates = legs.value
     .map((l) => (l.minDate ?? "").trim())
     .filter(Boolean)
@@ -938,7 +2977,7 @@ function formatIsoTodayUtc(): string {
 watch(
   () => compareMinDate.value,
   (min) => {
-    if (!isCompareInsightsMode.value) return;
+    if (!hasInsightsChartActions.value) return;
     if (!min) return;
     if (!compareFromDate.value || isBeforeIsoDate(compareFromDate.value, min)) {
       compareFromDate.value = min;
@@ -948,6 +2987,20 @@ watch(
     }
     if (compareToDate.value && isBeforeIsoDate(compareToDate.value, min)) {
       compareToDate.value = min;
+    }
+  },
+  { immediate: true },
+);
+
+watch(
+  () => legs.value.length,
+  (length) => {
+    if (length === 0) {
+      activeLegIndex.value = 0;
+      return;
+    }
+    if (activeLegIndex.value >= length) {
+      activeLegIndex.value = length - 1;
     }
   },
   { immediate: true },
@@ -973,7 +3026,7 @@ async function handleViewCombinedCompareChart() {
   compareSaveError.value = null;
   compareSaveSuccessPath.value = "";
 
-  if (!isCompareInsightsMode.value) return;
+  if (!hasInsightsChartActions.value) return;
 
   const fromTs = compareFromDate.value
     ? unixSecondsFromDateInput(compareFromDate.value, false)
@@ -1074,7 +3127,9 @@ async function handleViewCombinedCompareChart() {
 
 function buildCombinedCompareExportJson(): string {
   const payload = {
-    type: "polymarket_combined_compare",
+    type: isCompareInsightsMode.value
+      ? "polymarket_combined_compare"
+      : "polymarket_market_chart",
     generated_at: new Date().toISOString(),
     range: {
       from_date: compareFromDate.value || null,
@@ -1096,7 +3151,10 @@ function buildCombinedCompareExportJson(): string {
 }
 
 function defaultCombinedCompareNotebookFilename(): string {
-  const base = `polymarket-compare-${new Date().toISOString().slice(0, 10)}`;
+  const prefix = isCompareInsightsMode.value
+    ? "polymarket-compare"
+    : "polymarket-chart";
+  const base = `${prefix}-${new Date().toISOString().slice(0, 10)}`;
   return buildSafeJsonFilename(base);
 }
 
@@ -1123,7 +3181,7 @@ async function performSendCombinedCompareChartToNotebooks(
   compareSaveSuccessPath.value = "";
 
   if (compareChartData.value.length === 0) {
-    compareSaveError.value = "Generate the combined chart first.";
+    compareSaveError.value = `Generate the ${isCompareInsightsMode.value ? "combined " : ""}chart first.`;
     return;
   }
 
@@ -1153,8 +3211,6 @@ async function performSendCombinedCompareChartToNotebooks(
     compareSaveSuccessPath.value = sync.skippedBecauseNotInitialized
       ? `${path} (queued)`
       : `${path}`;
-
-    compareFilenameDialogOpen.value = false;
   } catch (err) {
     console.error("Failed to save to JupyterLite IndexedDB:", err);
     compareSaveError.value =
@@ -1171,7 +3227,7 @@ function handleSendCombinedCompareChartToNotebooks() {
   compareSaveSuccessPath.value = "";
 
   if (compareChartData.value.length === 0) {
-    compareSaveError.value = "Generate the combined chart first.";
+    compareSaveError.value = `Generate the ${isCompareInsightsMode.value ? "combined " : ""}chart first.`;
     return;
   }
 
@@ -1180,9 +3236,29 @@ function handleSendCombinedCompareChartToNotebooks() {
   compareFilenameDialogOpen.value = true;
 }
 
+function goToNotebooks() {
+  void router.push("/notebooks");
+}
+
+function handleCombinedCompareNotebookAction() {
+  if (compareCanGoToNotebooks.value) {
+    goToNotebooks();
+    return;
+  }
+  handleSendCombinedCompareChartToNotebooks();
+}
+
 async function handleConfirmSendCombinedCompareChartToNotebooks() {
   compareFilenameError.value = null;
   await performSendCombinedCompareChartToNotebooks(compareFilenameInput.value);
+}
+
+async function handleCompareFilenamePrimaryAction() {
+  if (compareCanGoToNotebooks.value) {
+    goToNotebooks();
+    return;
+  }
+  await handleConfirmSendCombinedCompareChartToNotebooks();
 }
 
 const isSum = computed(() => legsCount.value !== 1);
@@ -1244,10 +3320,25 @@ watch(
     compareChartData.value = [];
     compareChartLoading.value = false;
     compareChartError.value = null;
+    chartPreviewDialogOpen.value = false;
+    chartPreviewTitle.value = "Generated Chart";
+    chartPreviewSeries.value = [];
+    showExportMarketList.value = false;
 
     const resetToDefaults = () => {
       step.value = 1;
       legsCount.value = 1;
+      activeLegIndex.value = 0;
+      quickAddMarketUrl.value = "";
+      marketSearchDialogOpen.value = false;
+      marketSearchQuery.value = "";
+      marketSearchLoading.value = false;
+      marketSearchLoadingMore.value = false;
+      marketSearchError.value = null;
+      marketSearchPagination.value = null;
+      marketSearchCurrentPage.value = 1;
+      marketSearchEvents.value = [];
+      selectedSearchEvent.value = null;
       operator.value = "lt";
       singleOperator.value = "gte";
       threshold.value = 0.95;
@@ -1372,6 +3463,7 @@ watch(
       resetToDefaults();
       legsCount.value = 1;
       step.value = 2;
+      legs.value = [];
 
       if (isCompareInsightsMode.value) {
         // Auto-load compare selection into multiple legs.
@@ -1381,10 +3473,10 @@ watch(
 
       const url = (props.initialMarketUrl ?? "").trim();
       if (url) {
-        legs.value[0].marketUrl = url;
+        const index = appendInsightsLeg(url);
         // Auto-load so chart/export can be used immediately.
         // Fire and forget; errors show on the leg.
-        void loadLeg(0);
+        void loadLeg(index);
       }
       return;
     }
@@ -1396,6 +3488,7 @@ watch(
 
     applyInitialAlert(props.initialAlert);
   },
+  { immediate: true },
 );
 
 watch(
@@ -1414,7 +3507,7 @@ watch(
   () => props.initialCompareMarkets,
   () => {
     if (!props.isOpen) return;
-    if (!isCompareInsightsMode.value) return;
+    if (!hasInitialCompareInsightsSelection.value) return;
     // If the selected markets arrive after the modal opens (prop timing), auto-load.
     void loadCompareLegs();
   },
@@ -1639,10 +3732,11 @@ async function loadLeg(index: number) {
   if (!url) return;
 
   const preserveSelection =
-    isEditMode.value || (isCompareInsightsMode.value && !!leg.selectedMarketId);
+    isEditMode.value || !!leg.selectedMarketId || !!leg.selectedOutcomeId;
   const prevSelectedMarketId = leg.selectedMarketId;
   const prevSelectedOutcomeId = leg.selectedOutcomeId;
   const prevSelectedOutcomeName = leg.selectedOutcomeName;
+  const prevExportSelectedMarkets = [...leg.exportSelectedMarkets];
   const prevInsightsTab = getLegInsightsTab(leg);
 
   const initialSelectedIds =
@@ -1700,6 +3794,17 @@ async function loadLeg(index: number) {
       if (initialSelectedIds.length === 0) return;
       const available = new Set(options.map((m) => m.id));
       const filtered = initialSelectedIds.filter((id) => available.has(id));
+      if (filtered.length > 0) {
+        leg.exportSelectedMarkets = filtered;
+      }
+    };
+
+    const applyPreviousExportSelection = () => {
+      if (prevExportSelectedMarkets.length === 0) return;
+      const available = new Set(options.map((m) => m.id));
+      const filtered = prevExportSelectedMarkets.filter((id) =>
+        available.has(id),
+      );
       if (filtered.length > 0) {
         leg.exportSelectedMarkets = filtered;
       }
@@ -1782,6 +3887,17 @@ async function loadLeg(index: number) {
     }
 
     applyInitialExportSelection();
+    applyPreviousExportSelection();
+
+    if (
+      leg.selectedMarketId &&
+      !leg.exportSelectedMarkets.includes(leg.selectedMarketId)
+    ) {
+      leg.exportSelectedMarkets = [
+        leg.selectedMarketId,
+        ...leg.exportSelectedMarkets,
+      ];
+    }
 
     // In compare insights mode, each leg represents a single selected market.
     // Keep that checkbox selected by default.
@@ -1824,6 +3940,16 @@ function onMarketChange(index: number) {
   const firstOutcome = leg.outcomeOptions[0];
   leg.selectedOutcomeId = firstOutcome?.id ?? "";
   leg.selectedOutcomeName = firstOutcome?.name ?? "";
+
+  if (
+    leg.selectedMarketId &&
+    !leg.exportSelectedMarkets.includes(leg.selectedMarketId)
+  ) {
+    leg.exportSelectedMarkets = [
+      leg.selectedMarketId,
+      ...leg.exportSelectedMarkets.filter((id) => id !== leg.selectedMarketId),
+    ];
+  }
 }
 
 function onOutcomeChange(index: number) {

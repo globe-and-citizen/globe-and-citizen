@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { menuItems } from "../composables/menuItems.ts";
+import { profileMenuItems } from "../composables/menuItems.ts";
 import { useQuery } from "@tanstack/vue-query";
 import { useAuthStore } from "@/store/authStore.ts";
 import { getUser } from "@/api/user.ts";
@@ -52,13 +52,16 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const groupedMenu = computed(() => {
-  return menuItems.reduce((acc: Record<string, typeof menuItems>, item) => {
-    if (!acc[item.section]) {
-      acc[item.section] = [];
-    }
-    acc[item.section].push(item);
-    return acc;
-  }, {});
+  return profileMenuItems.reduce(
+    (acc: Record<string, typeof profileMenuItems>, item) => {
+      if (!acc[item.section]) {
+        acc[item.section] = [];
+      }
+      acc[item.section].push(item);
+      return acc;
+    },
+    {},
+  );
 });
 
 const { data: userData } = useQuery({

@@ -8,7 +8,7 @@ import articles from "@/assets/icons/articles.svg";
 import journals from "@/assets/icons/journals.svg";
 // import comments from "@/assets/icons/comments.svg";
 
-export const menuItems = [
+export const profileMenuItems = [
   {
     section: "Profile",
     icon: userIcon,
@@ -75,16 +75,16 @@ export const menuItems = [
   //   title: "My Comments",
   //   url: "/my-comments",
   // },
+];
 
+export const serviceMenuItems = [
   {
     section: "Services",
-    // icon: password,
     title: "Polymarket price tracker",
     url: "/polymarket-price-tracker",
   },
   {
     section: "Services",
-    // icon: password,
     title: "Polymarket analytics",
     url: "/polymarket-analytics",
   },
@@ -100,3 +100,5 @@ export const menuItems = [
     url: "/notebooks",
   },
 ];
+
+export const menuItems = [...profileMenuItems, ...serviceMenuItems];

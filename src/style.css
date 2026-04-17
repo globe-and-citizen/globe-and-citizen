@@ -151,11 +151,6 @@ body {
   background-color: var(--color-white-100);
 }
 
-main {
-  margin: 0 auto;
-  /* min-height: calc(100vh - 496px); */
-}
-
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

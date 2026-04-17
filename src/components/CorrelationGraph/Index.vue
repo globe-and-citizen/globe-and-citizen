@@ -1,9 +1,9 @@
 <template>
   <main
-    class="mx-auto flex min-h-screen w-full max-w-full flex-col gap-6 px-4 py-6 lg:gap-7 lg:py-8"
+    class="flex w-full flex-col gap-6 px-4 py-4 md:px-6 md:py-8 lg:gap-7 xl:px-8"
   >
     <header
-      class="rounded-xl border border-base-300 bg-base-100 p-5 shadow-sm lg:p-6"
+      class="w-full rounded-xl border border-base-300 bg-base-100 p-5 shadow-sm lg:p-6"
     >
       <div class="flex flex-wrap items-start justify-between gap-4">
         <div class="space-y-2">
@@ -131,7 +131,7 @@
     </div> -->
 
     <div
-      class="rounded-xl border border-base-300 bg-base-100 p-5 shadow-sm lg:p-6"
+      class="w-full rounded-xl border border-base-300 bg-base-100 p-5 shadow-sm lg:p-6"
     >
       <MarketSelectionForm
         v-model:market-url-a="marketUrlA"

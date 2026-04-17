@@ -1,6 +1,6 @@
 <template>
-  <div class="w-full">
-    <div class="w-full mx-auto space-y-6">
+  <div class="w-full space-y-6 py-4 md:p-8">
+    <div class="px-4 md:px-6 xl:px-8">
       <div
         class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
       >
@@ -27,20 +27,20 @@
           </label>
         </div>
       </div>
+    </div>
 
-      <div class="rounded-xl overflow-hidden border border-gray-200 bg-gray-50">
-        <iframe
-          :key="iframeSrc"
-          :src="iframeSrc"
-          class="w-full"
-          :style="{ height: iframeHeight }"
-          title="JupyterLite"
-          loading="lazy"
-          referrerpolicy="no-referrer"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals allow-popups"
-          @load="handleIframeLoad"
-        />
-      </div>
+    <div class="w-full overflow-hidden border-y border-gray-200 bg-gray-50">
+      <iframe
+        :key="iframeSrc"
+        :src="iframeSrc"
+        class="block w-full"
+        :style="{ height: iframeHeight }"
+        title="JupyterLite"
+        loading="lazy"
+        referrerpolicy="no-referrer"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-downloads allow-modals allow-popups"
+        @load="handleIframeLoad"
+      />
     </div>
   </div>
 </template>

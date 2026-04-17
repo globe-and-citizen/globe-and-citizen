@@ -1,12 +1,12 @@
 <template>
-  <DesktopHeader />
-  <main>
-    <div class="min-h-[calc(100vh-457px)]">
+  <div class="flex min-h-screen flex-col bg-white">
+    <DesktopHeader />
+    <main class="flex-1">
       <RouterView />
-    </div>
-  </main>
-  <ModalsContainer />
-  <Footer />
+    </main>
+    <ModalsContainer />
+    <Footer />
+  </div>
 </template>
 
 <script setup lang="ts">
