@@ -199,6 +199,15 @@
                 </Button>
                 <Button
                   variant="outline"
+                  :disabled="
+                    compareChartLoading || compareChartData.length === 0
+                  "
+                  @click="handleDownloadCombinedCompareCsv"
+                >
+                  Export to CSV
+                </Button>
+                <Button
+                  variant="outline"
                   :disabled="isCompareNotebookActionDisabled"
                   @click="handleCombinedCompareNotebookAction"
                 >
@@ -455,6 +464,25 @@
                             {{ outcome.name }}
                           </SelectItem>
                         </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div class="grid gap-2">
+                    <Label>Outcome Mode</Label>
+                    <Select
+                      v-model="activeLeg.insightsOutcomeSelection"
+                      @update:model-value="
+                        () => onInsightsOutcomeSelectionChange(activeLegIndex)
+                      "
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="yes">Yes</SelectItem>
+                        <SelectItem value="no">No</SelectItem>
+                        <SelectItem value="both">Yes and No</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -715,6 +743,25 @@
                   </SelectContent>
                 </Select>
               </div>
+
+              <div class="grid gap-2">
+                <Label>Outcome Mode</Label>
+                <Select
+                  v-model="activeLeg.insightsOutcomeSelection"
+                  @update:model-value="
+                    () => onInsightsOutcomeSelectionChange(activeLegIndex)
+                  "
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="yes">Yes</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                    <SelectItem value="both">Yes and No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </div>
@@ -964,30 +1011,63 @@
                     />
                   </div>
 
-                  <div class="flex justify-end gap-2">
-                    <Button
-                      v-if="isSearchMarketSelected(selectedSearchEvent, market)"
-                      variant="outline"
-                      @click="
-                        selectedSearchEvent &&
-                        handleRemoveSearchMarket(selectedSearchEvent, market)
-                      "
-                    >
-                      Remove
-                    </Button>
-                    <Button
-                      v-else
-                      :disabled="
-                        (!canAddMoreInsightsMarkets && isInsightsMode) ||
-                        !selectedSearchEvent
-                      "
-                      @click="
-                        selectedSearchEvent &&
-                        handleAssignSearchMarket(selectedSearchEvent, market)
-                      "
-                    >
-                      Add market
-                    </Button>
+                  <div
+                    class="grid gap-2 sm:grid-cols-[minmax(0,220px)_auto] sm:items-end"
+                  >
+                    <div class="grid gap-1">
+                      <Label class="text-xs">Outcome</Label>
+                      <Select
+                        :model-value="
+                          getSearchOutcomeSelection(selectedSearchEvent, market)
+                        "
+                        @update:model-value="
+                          (value) =>
+                            selectedSearchEvent &&
+                            setSearchOutcomeSelection(
+                              selectedSearchEvent,
+                              market,
+                              String(value ?? ''),
+                            )
+                        "
+                      >
+                        <SelectTrigger class="h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                          <SelectItem value="both">Yes and No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div class="flex justify-end gap-2">
+                      <Button
+                        v-if="
+                          isSearchMarketSelected(selectedSearchEvent, market)
+                        "
+                        variant="outline"
+                        @click="
+                          selectedSearchEvent &&
+                          handleRemoveSearchMarket(selectedSearchEvent, market)
+                        "
+                      >
+                        Remove
+                      </Button>
+                      <Button
+                        v-else
+                        :disabled="
+                          (!canAddMoreInsightsMarkets && isInsightsMode) ||
+                          !selectedSearchEvent
+                        "
+                        @click="
+                          selectedSearchEvent &&
+                          handleAssignSearchMarket(selectedSearchEvent, market)
+                        "
+                      >
+                        Add market
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1223,6 +1303,15 @@
                     @click="openCombinedCompareChartPreview"
                   >
                     Preview Generated Chart
+                  </Button>
+                  <Button
+                    variant="outline"
+                    :disabled="
+                      compareChartLoading || compareChartData.length === 0
+                    "
+                    @click="handleDownloadCombinedCompareCsv"
+                  >
+                    Export to CSV
                   </Button>
                   <Button
                     variant="outline"
@@ -2046,32 +2135,72 @@
                       />
                     </div>
 
-                    <div class="flex justify-end gap-2">
-                      <Button
-                        v-if="
-                          isSearchMarketSelected(selectedSearchEvent, market)
-                        "
-                        variant="outline"
-                        @click="
-                          selectedSearchEvent &&
-                          handleRemoveSearchMarket(selectedSearchEvent, market)
-                        "
-                      >
-                        Remove
-                      </Button>
-                      <Button
-                        v-else
-                        :disabled="
-                          (!canAddMoreInsightsMarkets && isInsightsMode) ||
-                          !selectedSearchEvent
-                        "
-                        @click="
-                          selectedSearchEvent &&
-                          handleAssignSearchMarket(selectedSearchEvent, market)
-                        "
-                      >
-                        Add market
-                      </Button>
+                    <div
+                      class="grid gap-2 sm:grid-cols-[minmax(0,220px)_auto] sm:items-end"
+                    >
+                      <div class="grid gap-1">
+                        <Label class="text-xs">Outcome</Label>
+                        <Select
+                          :model-value="
+                            getSearchOutcomeSelection(
+                              selectedSearchEvent,
+                              market,
+                            )
+                          "
+                          @update:model-value="
+                            (value) =>
+                              selectedSearchEvent &&
+                              setSearchOutcomeSelection(
+                                selectedSearchEvent,
+                                market,
+                                String(value ?? ''),
+                              )
+                          "
+                        >
+                          <SelectTrigger class="h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="yes">Yes</SelectItem>
+                            <SelectItem value="no">No</SelectItem>
+                            <SelectItem value="both">Yes and No</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div class="flex justify-end gap-2">
+                        <Button
+                          v-if="
+                            isSearchMarketSelected(selectedSearchEvent, market)
+                          "
+                          variant="outline"
+                          @click="
+                            selectedSearchEvent &&
+                            handleRemoveSearchMarket(
+                              selectedSearchEvent,
+                              market,
+                            )
+                          "
+                        >
+                          Remove
+                        </Button>
+                        <Button
+                          v-else
+                          :disabled="
+                            (!canAddMoreInsightsMarkets && isInsightsMode) ||
+                            !selectedSearchEvent
+                          "
+                          @click="
+                            selectedSearchEvent &&
+                            handleAssignSearchMarket(
+                              selectedSearchEvent,
+                              market,
+                            )
+                          "
+                        >
+                          Add market
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -2169,6 +2298,8 @@ type CompareMarketInput = {
   label?: string;
 };
 
+type SearchOutcomeSelection = "yes" | "no" | "both";
+
 type SearchEventCardItem = {
   id: string;
   title: string;
@@ -2216,6 +2347,7 @@ type LegState = {
   outcomeOptions: OutcomeOption[];
   selectedOutcomeId: string;
   selectedOutcomeName: string;
+  insightsOutcomeSelection: SearchOutcomeSelection;
   usePerMarketDefaultOutcome: boolean;
   // Export
   showExport: boolean;
@@ -2340,6 +2472,9 @@ const marketSearchPagination = ref<PolymarketGammaPagination | null>(null);
 const marketSearchCurrentPage = ref(1);
 const marketSearchEvents = ref<PolymarketGammaSearchEvent[]>([]);
 const selectedSearchEvent = ref<PolymarketGammaSearchEvent | null>(null);
+const searchOutcomeSelectionByMarketKey = ref<
+  Record<string, SearchOutcomeSelection>
+>({});
 
 const isCombinedCompareChartDisabled = computed(() => {
   if (compareChartLoading.value) return true;
@@ -2417,6 +2552,7 @@ function createEmptyLeg(): LegState {
     outcomeOptions: [],
     selectedOutcomeId: "",
     selectedOutcomeName: "",
+    insightsOutcomeSelection: "yes",
     usePerMarketDefaultOutcome: false,
     showExport: false,
     exportFromDate: "",
@@ -2430,6 +2566,40 @@ function createEmptyLeg(): LegState {
     chartLoading: false,
     chartError: null,
   };
+}
+
+function normalizeSearchOutcomeSelection(
+  value: string,
+): SearchOutcomeSelection {
+  const v = (value ?? "").trim().toLowerCase();
+  if (v === "no") return "no";
+  if (v === "both") return "both";
+  return "yes";
+}
+
+function searchOutcomeSelectionLabel(
+  selection: SearchOutcomeSelection,
+): string {
+  if (selection === "no") return "No";
+  if (selection === "both") return "Yes and No";
+  return "Yes";
+}
+
+function searchMarketKey(
+  event: PolymarketGammaSearchEvent | null,
+  market: PolymarketGammaSearchMarket,
+): string {
+  const eventId = String(event?.id ?? "").trim();
+  const marketId = String(market.id ?? "").trim();
+  return `${eventId}:${marketId}`;
+}
+
+function getSearchOutcomeSelection(
+  event: PolymarketGammaSearchEvent | null,
+  market: PolymarketGammaSearchMarket,
+): SearchOutcomeSelection {
+  const key = searchMarketKey(event, market);
+  return searchOutcomeSelectionByMarketKey.value[key] ?? "yes";
 }
 
 function normalizeCompareInputs(): CompareMarketInput[] {
@@ -2536,6 +2706,11 @@ function legStatusText(leg: LegState): string {
   if (!leg.marketUrl.trim()) return "No market selected";
   if (!leg.selectedMarketId) return "Choose a market";
   if (!leg.selectedOutcomeId) return "Choose an outcome";
+  if (isInsightsMode.value) {
+    return `Outcome: ${searchOutcomeSelectionLabel(
+      leg.insightsOutcomeSelection,
+    )}`;
+  }
   return leg.selectedOutcomeName || "Ready";
 }
 
@@ -2594,6 +2769,7 @@ function removeLeg(index: number) {
 async function assignSearchMarketToLeg(
   event: PolymarketGammaSearchEvent,
   market: PolymarketGammaSearchMarket,
+  outcomeSelection: SearchOutcomeSelection,
 ) {
   const marketId = String(market.id ?? "").trim();
   if (!marketId) return false;
@@ -2611,14 +2787,23 @@ async function assignSearchMarketToLeg(
 
   leg.marketUrl = toPolymarketEventUrl(event);
   leg.selectedMarketId = marketId;
+  leg.insightsOutcomeSelection = outcomeSelection;
+  const marketKey = searchMarketKey(event, market);
+  searchOutcomeSelectionByMarketKey.value = {
+    ...searchOutcomeSelectionByMarketKey.value,
+    [marketKey]: outcomeSelection,
+  };
   leg.exportSelectedMarkets = [marketId];
   leg.compareLabel = `${
     (market.groupItemTitle ?? "").trim() || (market.question ?? "Market").trim()
-  } — ${(event.title ?? "Event").trim()}`;
+  } — ${(event.title ?? "Event").trim()} [${searchOutcomeSelectionLabel(
+    outcomeSelection,
+  )}]`;
   activeLegIndex.value = targetIndex;
   quickAddMarketUrl.value = leg.marketUrl;
 
   await loadLeg(targetIndex);
+  setSearchOutcomeSelection(event, market, outcomeSelection);
   return true;
 }
 
@@ -2710,7 +2895,51 @@ async function handleAssignSearchMarket(
   event: PolymarketGammaSearchEvent,
   market: PolymarketGammaSearchMarket,
 ) {
-  await assignSearchMarketToLeg(event, market);
+  const outcomeSelection = getSearchOutcomeSelection(event, market);
+  await assignSearchMarketToLeg(event, market, outcomeSelection);
+}
+
+function setSearchOutcomeSelection(
+  event: PolymarketGammaSearchEvent | null,
+  market: PolymarketGammaSearchMarket,
+  value: string,
+) {
+  const selection = normalizeSearchOutcomeSelection(value);
+  const key = searchMarketKey(event, market);
+  searchOutcomeSelectionByMarketKey.value = {
+    ...searchOutcomeSelectionByMarketKey.value,
+    [key]: selection,
+  };
+
+  const legIndex = findInsightsLegIndexForMarket(event, market);
+  if (legIndex === -1) return;
+  const leg = legs.value[legIndex];
+  if (!leg) return;
+
+  leg.insightsOutcomeSelection = selection;
+
+  if (!leg.selectedMarketId || leg.marketOptions.length === 0) return;
+  const selectedMarket = leg.marketOptions.find(
+    (item) => item.id === leg.selectedMarketId,
+  );
+  if (!selectedMarket) return;
+
+  const yesOutcome = selectedMarket.outcomes.find(
+    (item) => normalizeOutcomeNameForMatch(item.name) === "yes",
+  );
+  const noOutcome = selectedMarket.outcomes.find(
+    (item) => normalizeOutcomeNameForMatch(item.name) === "no",
+  );
+
+  const preferred =
+    selection === "no"
+      ? (noOutcome ?? yesOutcome ?? selectedMarket.outcomes[0])
+      : (yesOutcome ?? noOutcome ?? selectedMarket.outcomes[0]);
+
+  if (preferred) {
+    leg.selectedOutcomeId = preferred.id;
+    leg.selectedOutcomeName = preferred.name;
+  }
 }
 
 function selectSearchEvent(event: PolymarketGammaSearchEvent) {
@@ -2860,6 +3089,7 @@ const legs = ref<LegState[]>([
     outcomeOptions: [],
     selectedOutcomeId: "",
     selectedOutcomeName: "",
+    insightsOutcomeSelection: "yes",
     usePerMarketDefaultOutcome: false,
     showExport: false,
     exportFromDate: "",
@@ -2936,6 +3166,67 @@ function buildCompareSeriesName(leg: LegState): string {
   return marketTitle || eventTitle || "Market";
 }
 
+function findOutcomeByName(
+  outcomes: OutcomeOption[],
+  desiredName: "yes" | "no",
+): OutcomeOption | null {
+  return (
+    outcomes.find(
+      (o) => normalizeOutcomeNameForMatch(o.name) === desiredName,
+    ) ?? null
+  );
+}
+
+function selectOutcomesForSelection(
+  market: MarketOption,
+  selection: SearchOutcomeSelection,
+  desiredOutcomeIdForActiveMarket: string,
+  desiredOutcomeName: string,
+  isActiveMarket: boolean,
+): OutcomeOption[] {
+  const outcomes = market.outcomes ?? [];
+  if (outcomes.length === 0) return [];
+
+  const yesOutcome = findOutcomeByName(outcomes, "yes");
+  const noOutcome = findOutcomeByName(outcomes, "no");
+
+  if (selection === "both") {
+    const picked: OutcomeOption[] = [];
+    if (yesOutcome) picked.push(yesOutcome);
+    if (noOutcome && (!yesOutcome || noOutcome.id !== yesOutcome.id)) {
+      picked.push(noOutcome);
+    }
+    if (picked.length > 0) return picked;
+
+    // Fallback for non-binary markets: emit all outcomes.
+    return [...outcomes];
+  }
+
+  if (selection === "no") {
+    if (noOutcome) return [noOutcome];
+    if (yesOutcome) return [yesOutcome];
+    return [outcomes[0]];
+  }
+
+  // selection === "yes"
+  if (isActiveMarket && desiredOutcomeIdForActiveMarket) {
+    const byId = outcomes.find((o) => o.id === desiredOutcomeIdForActiveMarket);
+    if (byId) return [byId];
+  }
+
+  const desiredName = normalizeOutcomeNameForMatch(desiredOutcomeName);
+  if (desiredName) {
+    const byName = outcomes.find(
+      (o) => normalizeOutcomeNameForMatch(o.name) === desiredName,
+    );
+    if (byName) return [byName];
+  }
+
+  if (yesOutcome) return [yesOutcome];
+  if (noOutcome) return [noOutcome];
+  return [outcomes[0]];
+}
+
 async function handleViewCombinedCompareChart() {
   if (compareChartLoading.value) return;
 
@@ -2961,20 +3252,29 @@ async function handleViewCombinedCompareChart() {
   const frequency = normalizeExportFrequency(compareFrequency.value);
 
   const prepared = legs.value
-    .map((leg) => {
+    .flatMap((leg) => {
       const market = leg.marketOptions.find(
         (m) => m.id === leg.selectedMarketId,
       );
-      if (!market) return null;
-      const outcomeId = (leg.selectedOutcomeId ?? "").trim();
-      const outcomeName = (leg.selectedOutcomeName ?? "").trim();
-      if (!outcomeId || !outcomeName) return null;
-      return {
-        seriesName: buildCompareSeriesName(leg),
-        outcomeId,
-      };
+      if (!market) return [];
+
+      const selectedOutcomes = selectOutcomesForSelection(
+        market,
+        leg.insightsOutcomeSelection,
+        (leg.selectedOutcomeId ?? "").trim(),
+        (leg.selectedOutcomeName ?? "").trim(),
+        true,
+      );
+
+      return selectedOutcomes.map((outcome) => ({
+        seriesName: `${buildCompareSeriesName(leg)} (${outcome.name})`,
+        outcomeId: outcome.id,
+      }));
     })
-    .filter(Boolean) as Array<{ seriesName: string; outcomeId: string }>;
+    .filter((item) => Boolean(item.outcomeId)) as Array<{
+    seriesName: string;
+    outcomeId: string;
+  }>;
 
   if (prepared.length === 0) {
     compareChartError.value = "Load markets first (or check selections).";
@@ -3066,6 +3366,75 @@ function buildCombinedCompareExportJson(): string {
   };
 
   return JSON.stringify(payload, null, 2);
+}
+
+function buildCombinedCompareCsv(series: ScatterSeries[]): string {
+  const timestamps = new Set<number>();
+  const valuesBySeries = new Map<string, Map<number, number>>();
+
+  for (const s of series) {
+    const name = (s.name ?? "").trim() || "Series";
+    const map = new Map<number, number>();
+    for (const point of s.data ?? []) {
+      const ts = Number(point.timestamp);
+      const price = Number(point.price);
+      if (!Number.isFinite(ts) || !Number.isFinite(price)) continue;
+      timestamps.add(ts);
+      map.set(ts, price);
+    }
+    valuesBySeries.set(name, map);
+  }
+
+  const sortedTimestamps = Array.from(timestamps).sort((a, b) => a - b);
+  const seriesNames = Array.from(valuesBySeries.keys());
+
+  const header = [
+    csvQuote("Date (UTC)"),
+    csvQuote("Timestamp (UTC)"),
+    ...seriesNames.map((name) => csvQuote(name)),
+  ].join(",");
+
+  const rows: string[] = [];
+  for (const ts of sortedTimestamps) {
+    const dateStr = new Date(ts * 1000)
+      .toISOString()
+      .replace("T", " ")
+      .slice(0, 16);
+    const mmddyyyy = `${dateStr.slice(5, 7)}-${dateStr.slice(
+      8,
+      10,
+    )}-${dateStr.slice(0, 4)} ${dateStr.slice(11, 16)}`;
+
+    const values = seriesNames.map((name) => {
+      const v = valuesBySeries.get(name)?.get(ts);
+      return v === undefined ? "" : String(v);
+    });
+
+    rows.push(
+      [csvQuote(mmddyyyy), csvQuote(String(ts)), ...values.map(csvQuote)].join(
+        ",",
+      ),
+    );
+  }
+
+  return [header, ...rows].join("\n");
+}
+
+function handleDownloadCombinedCompareCsv() {
+  compareSaveError.value = null;
+
+  if (compareChartLoading.value) return;
+  if (compareChartData.value.length === 0) {
+    compareSaveError.value = `Generate the ${isCompareInsightsMode.value ? "combined " : ""}chart first.`;
+    return;
+  }
+
+  const csvText = buildCombinedCompareCsv(compareChartData.value);
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const prefix = isCompareInsightsMode.value
+    ? "polymarket-combined-compare"
+    : "polymarket-market-chart";
+  downloadCsv(`${prefix}_${stamp}.csv`, csvText);
 }
 
 function defaultCombinedCompareNotebookFilename(): string {
@@ -3219,6 +3588,7 @@ watch(
           outcomeOptions: [],
           selectedOutcomeId: "",
           selectedOutcomeName: "",
+          insightsOutcomeSelection: "yes",
         },
       );
     }
@@ -3257,6 +3627,7 @@ watch(
       marketSearchCurrentPage.value = 1;
       marketSearchEvents.value = [];
       selectedSearchEvent.value = null;
+      searchOutcomeSelectionByMarketKey.value = {};
       operator.value = "lt";
       singleOperator.value = "gte";
       threshold.value = 0.95;
@@ -3290,6 +3661,7 @@ watch(
           outcomeOptions: [],
           selectedOutcomeId: "",
           selectedOutcomeName: "",
+          insightsOutcomeSelection: "yes",
         },
       ];
 
@@ -3328,6 +3700,7 @@ watch(
           outcomeOptions: [],
           selectedOutcomeId: l.outcome_id ?? "",
           selectedOutcomeName: l.outcome_name ?? "",
+          insightsOutcomeSelection: "yes",
           usePerMarketDefaultOutcome: false,
           showExport: false,
           exportFromDate: "",
@@ -3364,6 +3737,7 @@ watch(
             chartLoading: false,
             chartError: null,
             selectedOutcomeName: alert.outcome_name ?? "",
+            insightsOutcomeSelection: "yes",
             usePerMarketDefaultOutcome: false,
             showExport: false,
             exportFromDate: "",
@@ -3855,9 +4229,18 @@ function onMarketChange(index: number) {
 
   const selected = leg.marketOptions.find((m) => m.id === leg.selectedMarketId);
   leg.outcomeOptions = selected?.outcomes ?? [];
-  const firstOutcome = leg.outcomeOptions[0];
-  leg.selectedOutcomeId = firstOutcome?.id ?? "";
-  leg.selectedOutcomeName = firstOutcome?.name ?? "";
+  const selectedOutcomes = selected
+    ? selectOutcomesForSelection(
+        selected,
+        leg.insightsOutcomeSelection,
+        leg.selectedOutcomeId,
+        leg.selectedOutcomeName,
+        true,
+      )
+    : [];
+  const preferredOutcome = selectedOutcomes[0] ?? leg.outcomeOptions[0];
+  leg.selectedOutcomeId = preferredOutcome?.id ?? "";
+  leg.selectedOutcomeName = preferredOutcome?.name ?? "";
 
   if (
     leg.selectedMarketId &&
@@ -3870,6 +4253,26 @@ function onMarketChange(index: number) {
   }
 }
 
+function onInsightsOutcomeSelectionChange(index: number) {
+  const leg = legs.value[index];
+  if (!leg) return;
+
+  const selected = leg.marketOptions.find((m) => m.id === leg.selectedMarketId);
+  if (!selected) return;
+
+  const preferred = selectOutcomesForSelection(
+    selected,
+    leg.insightsOutcomeSelection,
+    leg.selectedOutcomeId,
+    leg.selectedOutcomeName,
+    true,
+  )[0];
+
+  if (!preferred) return;
+  leg.selectedOutcomeId = preferred.id;
+  leg.selectedOutcomeName = preferred.name;
+}
+
 function onOutcomeChange(index: number) {
   const leg = legs.value[index];
   if (!leg) return;
@@ -3878,6 +4281,12 @@ function onOutcomeChange(index: number) {
   const selected = options.find((o) => o.id === leg.selectedOutcomeId);
   if (selected) {
     leg.selectedOutcomeName = selected.name;
+    const normalized = normalizeOutcomeNameForMatch(selected.name);
+    if (normalized === "yes") {
+      leg.insightsOutcomeSelection = "yes";
+    } else if (normalized === "no") {
+      leg.insightsOutcomeSelection = "no";
+    }
   }
 }
 
@@ -4068,57 +4477,34 @@ function normalizeOutcomeNameForMatch(value: string): string {
   return (value ?? "").trim().toLowerCase();
 }
 
-function selectExportOutcomeForMarket(
-  market: MarketOption,
-  desiredOutcomeName: string,
-  desiredOutcomeIdForActiveMarket: string,
-  isActiveMarket: boolean,
-): OutcomeOption | null {
-  const outcomes = market.outcomes ?? [];
-  if (outcomes.length === 0) return null;
-
-  if (isActiveMarket && desiredOutcomeIdForActiveMarket) {
-    const byId = outcomes.find((o) => o.id === desiredOutcomeIdForActiveMarket);
-    if (byId) return byId;
-  }
-
-  const desiredName = normalizeOutcomeNameForMatch(desiredOutcomeName);
-  if (desiredName) {
-    const byName = outcomes.find(
-      (o) => normalizeOutcomeNameForMatch(o.name) === desiredName,
-    );
-    if (byName) return byName;
-  }
-
-  // If we can't match, don't guess (avoids exporting the wrong side).
-  return null;
-}
-
-function selectOutcomeForLegAndMarket(
+function selectOutcomesForLegAndMarket(
   leg: LegState,
   market: MarketOption,
   desiredOutcomeName: string,
   desiredOutcomeIdForActiveMarket: string,
   isActiveMarket: boolean,
-): OutcomeOption | null {
+): OutcomeOption[] {
   if (leg.usePerMarketDefaultOutcome) {
     const outcomes = market.outcomes ?? [];
-    if (outcomes.length === 0) return null;
+    if (outcomes.length === 0) return [];
     const defId = (market.defaultOutcomeId ?? "").trim();
     if (defId) {
-      return outcomes.find((o) => o.id === defId) ?? outcomes[0];
+      const chosen = outcomes.find((o) => o.id === defId) ?? outcomes[0];
+      return chosen ? [chosen] : [];
     }
     // fallback
     const yes = outcomes.find(
       (o) => (o.name ?? "").trim().toLowerCase() === "yes",
     );
-    return yes ?? outcomes[0];
+    const chosen = yes ?? outcomes[0];
+    return chosen ? [chosen] : [];
   }
 
-  return selectExportOutcomeForMarket(
+  return selectOutcomesForSelection(
     market,
-    desiredOutcomeName,
+    leg.insightsOutcomeSelection,
     desiredOutcomeIdForActiveMarket,
+    desiredOutcomeName,
     isActiveMarket,
   );
 }
@@ -4162,69 +4548,75 @@ async function handleDownloadExport(leg: LegState) {
     const desiredOutcomeName = leg.selectedOutcomeName;
     const desiredOutcomeIdForActiveMarket = leg.selectedOutcomeId;
 
-    const tasks = marketIds
-      .map((marketId) => {
-        const market = leg.marketOptions.find((m) => m.id === marketId);
-        if (!market) return null;
+    const requests: Array<{
+      marketId: string;
+      marketTitle: string;
+      outcomeId: string;
+      outcomeName: string;
+      columnTitle: string;
+    }> = [];
 
-        const isActiveMarket = marketId === leg.selectedMarketId;
-        const outcome = selectOutcomeForLegAndMarket(
-          leg,
-          market,
-          desiredOutcomeName,
-          desiredOutcomeIdForActiveMarket,
-          isActiveMarket,
-        );
-        if (!outcome) return null;
+    let skippedCount = 0;
+    const titleCount = new Map<string, number>();
 
-        return async () => {
-          // IMPORTANT: the `market=` query param for prices-history is the CLOB token id.
-          const res = await getPolymarketPricesHistory({
-            market: outcome.id,
-            startTs: fromTs,
-          });
-          return {
-            marketId,
-            marketTitle: market.title ?? marketId,
-            outcomeId: outcome.id,
-            outcomeName: outcome.name,
-            history: res.history ?? [],
-          };
+    for (const marketId of marketIds) {
+      const market = leg.marketOptions.find((m) => m.id === marketId);
+      if (!market) {
+        skippedCount += 1;
+        continue;
+      }
+
+      const isActiveMarket = marketId === leg.selectedMarketId;
+      const outcomes = selectOutcomesForLegAndMarket(
+        leg,
+        market,
+        desiredOutcomeName,
+        desiredOutcomeIdForActiveMarket,
+        isActiveMarket,
+      );
+
+      if (outcomes.length === 0) {
+        skippedCount += 1;
+        continue;
+      }
+
+      for (const outcome of outcomes) {
+        const baseTitle = `${market.title ?? marketId} (${outcome.name})`;
+        const count = (titleCount.get(baseTitle) ?? 0) + 1;
+        titleCount.set(baseTitle, count);
+        requests.push({
+          marketId,
+          marketTitle: market.title ?? marketId,
+          outcomeId: outcome.id,
+          outcomeName: outcome.name,
+          columnTitle: count === 1 ? baseTitle : `${baseTitle} [${marketId}]`,
+        });
+      }
+    }
+
+    const results = await Promise.allSettled(
+      requests.map(async (req) => {
+        // IMPORTANT: the `market=` query param for prices-history is the CLOB token id.
+        const res = await getPolymarketPricesHistory({
+          market: req.outcomeId,
+          startTs: fromTs,
+        });
+        return {
+          ...req,
+          history: res.history ?? [],
         };
-      })
-      .filter(Boolean) as Array<
-      () => Promise<{
-        marketId: string;
-        marketTitle: string;
-        outcomeId: string;
-        outcomeName: string;
-        history: PolymarketPriceHistoryPoint[];
-      }>
-    >;
-
-    const skippedCount = marketIds.length - tasks.length;
-    const results = await Promise.allSettled(tasks.map((t) => t()));
+      }),
+    );
 
     // Build Polymarket-style pivot export:
     // Date (UTC), Timestamp (UTC), <Market Title 1>, <Market Title 2>, ...
-    const titleByMarketId = new Map(
-      leg.marketOptions.map((m) => [m.id, m.title] as const),
-    );
-
-    const desiredTitles: string[] = [];
-    const used = new Map<string, number>();
-    for (const mid of marketIds) {
-      const base = titleByMarketId.get(mid) ?? mid;
-      const count = (used.get(base) ?? 0) + 1;
-      used.set(base, count);
-      desiredTitles.push(count === 1 ? base : `${base} (${mid})`);
-    }
+    const desiredTitles = requests.map((req) => req.columnTitle);
 
     const seriesByTitle = new Map<string, Map<number, number>>();
     const timestamps = new Set<number>();
 
     let failedCount = 0;
-    // `skippedCount` = markets where we couldn't confidently pick the desired outcome.
+    // `skippedCount` = markets where no suitable outcomes were found.
 
     for (const r of results) {
       if (r.status === "rejected") {
@@ -4232,14 +4624,7 @@ async function handleDownloadExport(leg: LegState) {
         continue;
       }
 
-      const { marketId, marketTitle } = r.value;
-
-      // Column title should match UI selection order/titles; fall back safely.
-      const baseTitle =
-        titleByMarketId.get(marketId) ?? marketTitle ?? marketId;
-      const titleIndex = marketIds.indexOf(marketId);
-      const columnTitle =
-        titleIndex >= 0 ? desiredTitles[titleIndex] : baseTitle;
+      const { columnTitle } = r.value;
 
       let history = Array.isArray(r.value.history) ? r.value.history : [];
       if (fromTs) {
@@ -4316,9 +4701,9 @@ async function handleDownloadExport(leg: LegState) {
       if (failedCount > 0) parts.push(`${failedCount} request(s) failed`);
       if (skippedCount > 0)
         parts.push(
-          `${skippedCount} market(s) skipped (no matching outcome: ${
-            desiredOutcomeName || "selected"
-          })`,
+          `${skippedCount} market(s) skipped (no outcomes for ${searchOutcomeSelectionLabel(
+            leg.insightsOutcomeSelection,
+          )})`,
         );
       leg.exportError = `Downloaded CSV, but ${parts.join("; ")}.`;
     }
@@ -4371,60 +4756,63 @@ async function handleViewChart(leg: LegState) {
     const desiredOutcomeName = leg.selectedOutcomeName;
     const desiredOutcomeIdForActiveMarket = leg.selectedOutcomeId;
 
-    const tasks = marketIds
-      .map((marketId) => {
-        const market = leg.marketOptions.find((m) => m.id === marketId);
-        if (!market) return null;
+    const requests: Array<{
+      marketId: string;
+      marketTitle: string;
+      outcomeId: string;
+      outcomeName: string;
+      seriesName: string;
+    }> = [];
 
-        const isActiveMarket = marketId === leg.selectedMarketId;
-        const outcome = selectOutcomeForLegAndMarket(
-          leg,
-          market,
-          desiredOutcomeName,
-          desiredOutcomeIdForActiveMarket,
-          isActiveMarket,
-        );
-        if (!outcome) return null;
+    let skippedCount = 0;
+    const titleCount = new Map<string, number>();
 
-        return async () => {
-          const res = await getPolymarketPricesHistory({
-            market: outcome.id,
-            startTs: fromTs,
-          });
-          return {
-            marketId,
-            marketTitle: market.title ?? marketId,
-            outcomeId: outcome.id,
-            outcomeName: outcome.name,
-            history: res.history ?? [],
-          };
-        };
-      })
-      .filter(Boolean) as Array<
-      () => Promise<{
-        marketId: string;
-        marketTitle: string;
-        outcomeId: string;
-        outcomeName: string;
-        history: PolymarketPriceHistoryPoint[];
-      }>
-    >;
+    for (const marketId of marketIds) {
+      const market = leg.marketOptions.find((m) => m.id === marketId);
+      if (!market) {
+        skippedCount += 1;
+        continue;
+      }
 
-    const skippedCount = marketIds.length - tasks.length;
-    const results = await Promise.allSettled(tasks.map((t) => t()));
+      const isActiveMarket = marketId === leg.selectedMarketId;
+      const outcomes = selectOutcomesForLegAndMarket(
+        leg,
+        market,
+        desiredOutcomeName,
+        desiredOutcomeIdForActiveMarket,
+        isActiveMarket,
+      );
+      if (outcomes.length === 0) {
+        skippedCount += 1;
+        continue;
+      }
 
-    const titleByMarketId = new Map(
-      leg.marketOptions.map((m) => [m.id, m.title] as const),
-    );
-
-    const desiredTitles: string[] = [];
-    const used = new Map<string, number>();
-    for (const mid of marketIds) {
-      const base = titleByMarketId.get(mid) ?? mid;
-      const count = (used.get(base) ?? 0) + 1;
-      used.set(base, count);
-      desiredTitles.push(count === 1 ? base : `${base} (${mid})`);
+      for (const outcome of outcomes) {
+        const baseTitle = `${market.title ?? marketId} (${outcome.name})`;
+        const count = (titleCount.get(baseTitle) ?? 0) + 1;
+        titleCount.set(baseTitle, count);
+        requests.push({
+          marketId,
+          marketTitle: market.title ?? marketId,
+          outcomeId: outcome.id,
+          outcomeName: outcome.name,
+          seriesName: count === 1 ? baseTitle : `${baseTitle} [${marketId}]`,
+        });
+      }
     }
+
+    const results = await Promise.allSettled(
+      requests.map(async (req) => {
+        const res = await getPolymarketPricesHistory({
+          market: req.outcomeId,
+          startTs: fromTs,
+        });
+        return {
+          ...req,
+          history: res.history ?? [],
+        };
+      }),
+    );
 
     const chartSeries: ScatterSeries[] = [];
     let failedCount = 0;
@@ -4435,13 +4823,7 @@ async function handleViewChart(leg: LegState) {
         continue;
       }
 
-      const { marketId, marketTitle } = r.value;
-
-      const baseTitle =
-        titleByMarketId.get(marketId) ?? marketTitle ?? marketId;
-      const titleIndex = marketIds.indexOf(marketId);
-      const seriesName =
-        titleIndex >= 0 ? desiredTitles[titleIndex] : baseTitle;
+      const { seriesName } = r.value;
 
       let history = Array.isArray(r.value.history) ? r.value.history : [];
       if (fromTs) {
@@ -4482,9 +4864,9 @@ async function handleViewChart(leg: LegState) {
       if (failedCount > 0) parts.push(`${failedCount} request(s) failed`);
       if (skippedCount > 0)
         parts.push(
-          `${skippedCount} market(s) skipped (no matching outcome: ${
-            desiredOutcomeName || "selected"
-          })`,
+          `${skippedCount} market(s) skipped (no outcomes for ${searchOutcomeSelectionLabel(
+            leg.insightsOutcomeSelection,
+          )})`,
         );
       leg.chartError = `Chart displayed, but ${parts.join("; ")}.`;
     }
