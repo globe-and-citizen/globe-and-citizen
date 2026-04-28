@@ -38,6 +38,46 @@
             class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
             >About us</RouterLink
           >
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <button
+                class="inline-flex items-center gap-2 py-2 px-[8.5px] pb-1.5 border-b-1 transition-colors cursor-pointer"
+                :class="
+                  isServicesRoute
+                    ? 'text-red-500 border-b-red-500'
+                    : 'text-black-100 border-b-transparent hover:border-b-black-100'
+                "
+              >
+                Tools
+                <svg
+                  class="h-4 w-4"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" class="w-64">
+              <DropdownMenuItem
+                v-for="item in serviceMenuItems"
+                :key="item.url"
+                :class="
+                  route.path === item.url
+                    ? 'bg-accent text-accent-foreground'
+                    : ''
+                "
+                @select="router.push(item.url)"
+              >
+                {{ item.title }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <RouterLink
             to="/become-a-contributor"
             active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
@@ -244,6 +284,25 @@
               @click="closeMobileMenu"
               >Become a contributor</RouterLink
             >
+            <div class="rounded-md border border-gray-200 overflow-hidden">
+              <div
+                class="px-4 py-3 text-xs font-semibold uppercase tracking-[0.24em] text-gray-500 bg-gray-50"
+              >
+                Services
+              </div>
+              <div class="flex flex-col">
+                <RouterLink
+                  v-for="item in serviceMenuItems"
+                  :key="item.url"
+                  :to="item.url"
+                  class="text-black-100 py-3 px-4 rounded-none hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300"
+                  active-class="text-red-500 border-l-red-500 bg-red-50/50"
+                  @click="closeMobileMenu"
+                >
+                  {{ item.title }}
+                </RouterLink>
+              </div>
+            </div>
           </nav>
 
           <!-- Mobile Auth Buttons -->
@@ -379,6 +438,13 @@ import { getUser } from "@/api/user.ts";
 import type { UserType } from "@/models/Auth";
 import Button from "@/components/Button.vue";
 import { useNewOpinionStore } from "@/store/newOpinionStore.ts";
+import { serviceMenuItems } from "@/composables/menuItems";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type HeaderState = "default" | "no-user" | "no-user-search" | "logged-in";
 const authStore = useAuthStore();
@@ -410,6 +476,9 @@ const profilePictureUrl = computed(() => {
 
 const currentCategory = computed(
   () => route.query.category as string | undefined,
+);
+const isServicesRoute = computed(() =>
+  serviceMenuItems.some((item) => route.path === item.url),
 );
 
 const isMobileMenuOpen = ref(false);

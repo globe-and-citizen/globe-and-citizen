@@ -1,714 +1,96 @@
 <template>
-  <div class="w-full min-w-0">
-    <!-- Title Row -->
-    <div class="flex items-center justify-between gap-4">
-      <h1 class="text-2xl font-bold text-gray-800">Polymarket Analytics</h1>
+  <div class="w-full min-w-0 space-y-6">
+    <section
+      class="rounded-[28px] border border-slate-200 bg-white/90 shadow-sm overflow-hidden"
+    >
+      <div
+        class="border-b border-slate-200 bg-[linear-gradient(135deg,#fff7ed,transparent_55%),linear-gradient(180deg,#ffffff,#f8fafc)] px-6 py-6 md:px-8"
+      >
+        <div
+          class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between"
+        >
+          <div class="max-w-3xl space-y-3">
+            <div
+              class="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.3em] text-slate-500"
+            >
+              <span>Polymarket Analytics</span>
+              <span class="h-px w-12 bg-slate-300" />
+              <span>Market Insights</span>
+            </div>
+            <div class="space-y-2">
+              <h1
+                class="text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl"
+              >
+                Build charts, export price history, and queue notebook data from
+                the start.
+              </h1>
+              <p
+                class="max-w-2xl text-sm leading-6 text-slate-600 md:text-base"
+              >
+                The analytics page now opens directly into the Market Insights
+                workspace. Paste a market URL or use the search modal to add
+                markets, compare them, export CSVs, and send JSON payloads to
+                JupyterLite.
+              </p>
+            </div>
+          </div>
 
-      <div class="text-sm text-gray-500">
-        Search Polymarket markets by keyword
+          <div
+            class="grid gap-3 text-sm text-slate-600 sm:grid-cols-3 xl:min-w-[420px]"
+          >
+            <div
+              class="rounded-2xl border border-slate-200 bg-white/80 px-4 py-3"
+            >
+              <div
+                class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500"
+              >
+                Entry Points
+              </div>
+              <div class="mt-2 font-medium text-slate-900">
+                Paste URL or search
+              </div>
+            </div>
+            <div
+              class="rounded-2xl border border-slate-200 bg-white/80 px-4 py-3"
+            >
+              <div
+                class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500"
+              >
+                Output
+              </div>
+              <div class="mt-2 font-medium text-slate-900">
+                Charts and CSV export
+              </div>
+            </div>
+            <div
+              class="rounded-2xl border border-slate-200 bg-white/80 px-4 py-3"
+            >
+              <div
+                class="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500"
+              >
+                Notebook Flow
+              </div>
+              <div class="mt-2 font-medium text-slate-900">
+                Queue directly to JupyterLite
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Search Controls -->
-    <div class="mt-4 flex flex-col md:flex-row gap-3 md:items-center">
-      <div class="flex-1 min-w-0">
-        <input
-          v-model="query"
-          type="text"
-          placeholder="Search markets... (e.g. election)"
-          class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
-          @keydown.enter.prevent="runSearchNow"
+      <div class="px-4 py-4 md:px-6 md:py-6 xl:px-8">
+        <PolymarketAlertWizardModal
+          :is-open="true"
+          variant="insights"
+          embedded
         />
       </div>
-
-      <div class="flex items-center gap-4">
-        <!-- <label
-          class="flex items-center gap-2 text-sm text-gray-700 select-none"
-        >
-          <input
-            v-model="includeClosed"
-            type="checkbox"
-            class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-          />
-          Include closed markets
-        </label> -->
-
-        <button
-          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="isLoading || !query.trim()"
-          @click="runSearchNow"
-        >
-          {{ isLoading ? "Searching..." : "Search" }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Status / Errors -->
-    <div class="mt-3">
-      <p v-if="error" class="text-sm text-red-600">{{ error }}</p>
-      <p v-else-if="query.trim() && !isLoading" class="text-sm text-gray-500">
-        Showing {{ eventResults.length }} of
-        {{ pagination?.totalResults ?? eventResults.length }} result{{
-          (pagination?.totalResults ?? eventResults.length) === 1 ? "" : "s"
-        }}
-      </p>
-    </div>
-
-    <!-- Cross-event compare bar -->
-    <div
-      v-if="selectedCompareMarkets.length > 0"
-      class="mt-4 border border-gray-200 rounded-xl bg-white p-4"
-    >
-      <div class="flex items-start justify-between gap-4">
-        <div class="min-w-0">
-          <div class="text-sm font-semibold text-gray-900">
-            Selected for comparison
-            <span class="text-gray-500">
-              ({{ selectedCompareMarkets.length }}/{{ MAX_COMPARE_MARKETS }})
-            </span>
-          </div>
-          <p class="mt-1 text-xs text-gray-500">
-            You can pick markets from different events.
-          </p>
-
-          <div class="mt-3 flex flex-wrap gap-2">
-            <div
-              v-for="m in selectedCompareMarkets"
-              :key="m.marketId"
-              class="flex items-center gap-2 rounded-full border border-gray-200 px-3 py-1 text-xs"
-            >
-              <span class="font-medium text-gray-800 truncate max-w-[260px]">
-                {{ m.marketTitle }}
-              </span>
-              <span class="text-gray-400">•</span>
-              <span class="text-gray-500 truncate max-w-[180px]">
-                {{ m.eventTitle }}
-              </span>
-              <button
-                type="button"
-                class="ml-1 text-gray-500 hover:text-gray-900"
-                aria-label="Remove"
-                @click="removeCompareMarket(m.marketId)"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="flex flex-col items-end gap-2 flex-none">
-          <Button variant="outline" size="sm" @click="clearCompareSelection">
-            Clear
-          </Button>
-          <Button size="sm" @click="openCompareInsights">
-            Compare charts & export
-          </Button>
-        </div>
-      </div>
-
-      <p v-if="compareSelectError" class="mt-2 text-sm text-red-600">
-        {{ compareSelectError }}
-      </p>
-    </div>
-
-    <!-- Results -->
-    <div class="mt-4">
-      <div
-        v-if="isLoading"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
-      >
-        <div
-          v-for="n in 6"
-          :key="n"
-          class="border border-gray-200 rounded-xl p-4 bg-white animate-pulse"
-        >
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-lg bg-gray-200" />
-            <div class="flex-1">
-              <div class="h-4 bg-gray-200 rounded w-3/4" />
-              <div class="h-3 bg-gray-200 rounded w-1/3 mt-2" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <button
-          v-for="item in eventResults"
-          :key="item.id"
-          type="button"
-          class="border border-gray-200 rounded-xl p-4 bg-white hover:shadow-md transition-shadow text-left"
-          @click="openEventModal(item.event)"
-        >
-          <div class="flex items-start gap-3">
-            <img
-              :src="item.image"
-              :alt="item.title"
-              class="w-12 h-12 rounded-lg object-cover flex-none border border-gray-100"
-              @error="(e) => handleImageError(e)"
-            />
-
-            <div class="min-w-0 flex-1">
-              <div class="text-sm font-semibold text-gray-900 line-clamp-2">
-                {{ item.title }}
-              </div>
-
-              <div class="mt-2 flex items-center justify-between gap-3">
-                <div class="text-xs text-gray-500 truncate">
-                  {{ item.subtitle }}
-                </div>
-
-                <div class="text-sm font-bold text-gray-900 whitespace-nowrap">
-                  {{ item.chanceText }}
-                </div>
-              </div>
-
-              <div class="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
-                <div
-                  class="h-full bg-blue-600"
-                  :style="{ width: item.chancePct + '%' }"
-                />
-              </div>
-            </div>
-          </div>
-        </button>
-
-        <div
-          v-if="query.trim() && eventResults.length === 0"
-          class="col-span-full text-center text-gray-500 italic py-10"
-        >
-          No results.
-        </div>
-      </div>
-
-      <div
-        v-if="query.trim() && !isLoading && pagination?.hasMore"
-        class="mt-6 flex justify-center"
-      >
-        <Button :disabled="isLoadingMore" @click="loadMore">
-          {{ isLoadingMore ? "Loading..." : "Load more" }}
-        </Button>
-      </div>
-    </div>
-
-    <Dialog
-      :open="isEventModalOpen"
-      @update:open="(open: boolean) => !open && closeEventModal()"
-    >
-      <DialogContent
-        class="w-[90vw] max-w-[900px] max-h-[85vh] overflow-y-auto"
-      >
-        <DialogHeader>
-          <DialogTitle>
-            {{ selectedEvent?.title ?? "Event" }}
-          </DialogTitle>
-          <DialogDescription>
-            {{ selectedEvent?.markets?.length ?? 0 }} market{{
-              (selectedEvent?.markets?.length ?? 0) === 1 ? "" : "s"
-            }}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div class="mt-4">
-          <div class="flex items-center justify-between gap-3">
-            <div class="text-sm text-gray-600">
-              Select up to {{ MAX_COMPARE_MARKETS }} markets to compare.
-              <span class="font-semibold">
-                ({{ selectedCompareMarkets.length }}/{{ MAX_COMPARE_MARKETS }})
-              </span>
-            </div>
-            <div class="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                :disabled="selectedCompareMarkets.length === 0"
-                @click="clearCompareSelection"
-              >
-                Clear
-              </Button>
-              <Button
-                size="sm"
-                :disabled="selectedCompareMarkets.length === 0"
-                @click="openCompareInsights"
-              >
-                Compare ({{ selectedCompareMarkets.length }}/{{
-                  MAX_COMPARE_MARKETS
-                }})
-              </Button>
-            </div>
-          </div>
-
-          <p v-if="compareSelectError" class="mt-2 text-sm text-red-600">
-            {{ compareSelectError }}
-          </p>
-
-          <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div
-              v-for="m in selectedEvent?.markets ?? []"
-              :key="m.id"
-              class="border border-gray-200 rounded-xl p-4 bg-white hover:shadow-md transition-shadow"
-            >
-              <div class="flex items-start gap-3">
-                <img
-                  :src="
-                    (
-                      m.icon ||
-                      m.image ||
-                      selectedEvent?.icon ||
-                      selectedEvent?.image ||
-                      DEFAULT_FALLBACK_IMAGE
-                    ).toString()
-                  "
-                  :alt="m.question ?? m.groupItemTitle ?? 'Market'"
-                  class="w-10 h-10 rounded-lg object-cover flex-none border border-gray-100"
-                  @error="(e) => handleImageError(e)"
-                />
-
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                      <div
-                        class="text-sm font-semibold text-gray-900 line-clamp-2"
-                      >
-                        {{
-                          (m.groupItemTitle ?? "").trim() ||
-                          (m.question ?? "Untitled market")
-                        }}
-                      </div>
-                      <div class="text-xs text-gray-500 line-clamp-2 mt-1">
-                        {{ (m.groupItemTitle ?? "").trim() ? m.question : "" }}
-                      </div>
-                    </div>
-
-                    <div class="flex items-center gap-2 flex-none">
-                      <input
-                        type="checkbox"
-                        class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        :checked="isMarketSelectedForCompare(m)"
-                        @change="toggleMarketSelection(m)"
-                      />
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        @click="openMarketInsights(m)"
-                      >
-                        Insights
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div class="mt-2 flex items-center justify-between gap-3">
-                    <div class="text-xs text-gray-500 truncate">
-                      {{ computeChance(m).subtitle }}
-                    </div>
-                    <div
-                      class="text-sm font-bold text-gray-900 whitespace-nowrap"
-                    >
-                      {{ computeChance(m).text }}
-                    </div>
-                  </div>
-
-                  <div
-                    class="mt-2 h-2 rounded-full bg-gray-100 overflow-hidden"
-                  >
-                    <div
-                      class="h-full bg-blue-600"
-                      :style="{ width: computeChance(m).pct + '%' }"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter class="mt-4">
-          <Button @click="closeEventModal">Close</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-
-    <PolymarketAlertWizardModal
-      :is-open="isInsightsModalOpen"
-      variant="insights"
-      :initial-market-url="insightsMarketUrl"
-      @close="closeMarketInsights"
-    />
-
-    <PolymarketAlertWizardModal
-      :is-open="isCompareModalOpen"
-      variant="insights"
-      :initial-compare-markets="compareSelectedMarkets"
-      @close="closeCompareInsights"
-    />
+    </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import {
-  searchPolymarketPublic,
-  type PolymarketGammaSearchEvent,
-  type PolymarketGammaSearchMarket,
-  type PolymarketGammaPagination,
-} from "@/api/polymarket";
-
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-
 import PolymarketAlertWizardModal from "@/components/PolymarketAlertWizardModal.vue";
-
-const DEFAULT_FALLBACK_IMAGE =
-  "https://polymarket-upload.s3.us-east-2.amazonaws.com/polymarket_logo.png";
-
-const MAX_COMPARE_MARKETS = 10;
-
-const query = ref("");
-const includeClosed = ref(false);
-const isLoading = ref(false);
-const isLoadingMore = ref(false);
-const error = ref<string | null>(null);
-
-type EventCardItem = {
-  id: string;
-  title: string;
-  subtitle: string;
-  chancePct: number; // 0-100
-  chanceText: string;
-  image: string;
-  event: PolymarketGammaSearchEvent;
-};
-
-const rawEvents = ref<PolymarketGammaSearchEvent[]>([]);
-const rawMarkets = ref<PolymarketGammaSearchMarket[]>([]);
-
-const pagination = ref<PolymarketGammaPagination | null>(null);
-const currentPage = ref(1);
-
-const isEventModalOpen = ref(false);
-const selectedEvent = ref<PolymarketGammaSearchEvent | null>(null);
-
-type CompareMarket = {
-  marketId: string;
-  marketUrl: string;
-  marketTitle: string;
-  eventId: string;
-  eventTitle: string;
-  eventUrl: string;
-};
-
-const selectedCompareMarkets = ref<CompareMarket[]>([]);
-const compareSelectError = ref<string | null>(null);
-
-const isInsightsModalOpen = ref(false);
-const insightsMarketUrl = ref<string>("");
-
-const isCompareModalOpen = ref(false);
-
-const compareSelectedMarkets = ref<
-  Array<{ marketUrl: string; marketId: string; label?: string }>
->([]);
-
-const safeJsonArray = (value?: string) => {
-  if (!value) return null;
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-};
-
-const computeChance = (market: PolymarketGammaSearchMarket) => {
-  const directPriceCandidates = [
-    market.lastTradePrice,
-    market.bestBid,
-    market.bestAsk,
-  ].filter(
-    (v) => Number.isFinite(v) && (v as number) >= 0 && (v as number) <= 1,
-  ) as number[];
-
-  const preferred =
-    directPriceCandidates.length > 0 ? directPriceCandidates[0] : null;
-
-  const pricesRaw = safeJsonArray(market.outcomePrices);
-  const outcomesRaw = safeJsonArray(market.outcomes);
-
-  const prices = (pricesRaw ?? [])
-    .map((p) => Number(p))
-    .filter((p) => Number.isFinite(p) && p >= 0 && p <= 1);
-
-  const outcomes = (outcomesRaw ?? []).filter(
-    (o) => typeof o === "string",
-  ) as string[];
-
-  const yesIdx = outcomes.findIndex((o) => o.trim().toLowerCase() === "yes");
-  const yesPrice =
-    yesIdx >= 0 && Number.isFinite(prices[yesIdx]) ? prices[yesIdx] : null;
-
-  const chosen =
-    preferred ??
-    yesPrice ??
-    (prices.length > 0
-      ? prices.reduce((max, v) => (v > max ? v : max), prices[0])
-      : null);
-
-  const groupTitle = (market.groupItemTitle ?? "").trim();
-
-  if (chosen === null) {
-    return { pct: 0, text: "—", subtitle: groupTitle };
-  }
-
-  const pct = Math.round(chosen * 100);
-  const subtitle = groupTitle || (yesIdx >= 0 ? "Yes" : "");
-  return { pct, text: `${pct}%`, subtitle };
-};
-
-const toPolymarketMarketUrl = (market: PolymarketGammaSearchMarket) => {
-  const slug = (market.slug ?? "").trim();
-  if (!slug) return "https://polymarket.com";
-  return `https://polymarket.com/market/${encodeURIComponent(slug)}`;
-};
-
-const toPolymarketEventUrl = (ev: PolymarketGammaSearchEvent | null) => {
-  const slug = (ev?.slug ?? "").trim();
-  if (!slug) return "https://polymarket.com";
-  return `https://polymarket.com/event/${encodeURIComponent(slug)}`;
-};
-
-const eventResults = computed<EventCardItem[]>(() => {
-  const items: EventCardItem[] = [];
-  const seen = new Set<string>();
-
-  for (const ev of rawEvents.value ?? []) {
-    if (!ev?.id || seen.has(ev.id)) continue;
-    seen.add(ev.id);
-
-    const markets = ev.markets ?? [];
-    let best = { pct: 0, text: "—" };
-    for (const m of markets) {
-      const c = computeChance(m);
-      if (c.text !== "—" && c.pct >= best.pct) {
-        best = { pct: c.pct, text: c.text };
-      }
-    }
-
-    const marketCount = markets.length;
-    items.push({
-      id: ev.id,
-      title: (ev.title ?? "Untitled event").trim(),
-      subtitle: `${marketCount} market${marketCount === 1 ? "" : "s"}`,
-      chancePct: best.text === "—" ? 0 : best.pct,
-      chanceText: best.text,
-      image: (ev.icon || ev.image || DEFAULT_FALLBACK_IMAGE).toString().trim(),
-      event: ev,
-    });
-  }
-
-  return items;
-});
-
-const openEventModal = (ev: PolymarketGammaSearchEvent) => {
-  selectedEvent.value = ev;
-  compareSelectError.value = null;
-  isEventModalOpen.value = true;
-};
-
-const closeEventModal = () => {
-  isEventModalOpen.value = false;
-  selectedEvent.value = null;
-  compareSelectError.value = null;
-};
-
-const openMarketInsights = (market: PolymarketGammaSearchMarket) => {
-  insightsMarketUrl.value = toPolymarketMarketUrl(market);
-  isInsightsModalOpen.value = true;
-  closeEventModal();
-};
-
-const closeMarketInsights = () => {
-  isInsightsModalOpen.value = false;
-  insightsMarketUrl.value = "";
-};
-
-const clearCompareSelection = () => {
-  selectedCompareMarkets.value = [];
-  compareSelectError.value = null;
-};
-
-const removeCompareMarket = (marketId: string) => {
-  selectedCompareMarkets.value = selectedCompareMarkets.value.filter(
-    (m) => m.marketId !== marketId,
-  );
-};
-
-const isMarketSelectedForCompare = (market: PolymarketGammaSearchMarket) => {
-  const id = String(market.id ?? "").trim();
-  if (!id) return false;
-  return selectedCompareMarkets.value.some((m) => m.marketId === id);
-};
-
-const toggleMarketSelection = (market: PolymarketGammaSearchMarket) => {
-  const id = String(market.id ?? "").trim();
-  if (!id) return;
-
-  compareSelectError.value = null;
-
-  if (selectedCompareMarkets.value.some((m) => m.marketId === id)) {
-    selectedCompareMarkets.value = selectedCompareMarkets.value.filter(
-      (m) => m.marketId !== id,
-    );
-    return;
-  }
-
-  if (selectedCompareMarkets.value.length >= MAX_COMPARE_MARKETS) {
-    compareSelectError.value = `You can compare at most ${MAX_COMPARE_MARKETS} markets.`;
-    return;
-  }
-
-  const ev = selectedEvent.value;
-  const eventId = String(ev?.id ?? "").trim();
-  const eventTitle = (ev?.title ?? "Event").trim();
-  const eventUrl = toPolymarketEventUrl(ev);
-  const marketTitle =
-    (market.groupItemTitle ?? "").trim() ||
-    (market.question ?? "Market").trim() ||
-    `Market ${id}`;
-
-  selectedCompareMarkets.value = [
-    ...selectedCompareMarkets.value,
-    {
-      marketId: id,
-      marketUrl: toPolymarketMarketUrl(market),
-      marketTitle,
-      eventId,
-      eventTitle,
-      eventUrl,
-    },
-  ];
-};
-
-const openCompareInsights = () => {
-  if (selectedCompareMarkets.value.length === 0) return;
-
-  compareSelectedMarkets.value = selectedCompareMarkets.value.map((m) => ({
-    // Preload the event for each selected market.
-    marketUrl: m.eventUrl,
-    marketId: m.marketId,
-    label: `${m.marketTitle} — ${m.eventTitle}`,
-  }));
-  isCompareModalOpen.value = true;
-  closeEventModal();
-};
-
-const closeCompareInsights = () => {
-  isCompareModalOpen.value = false;
-  compareSelectedMarkets.value = [];
-};
-
-const doSearch = async () => {
-  await fetchSearchPage({ page: 1, append: false });
-};
-
-const mergeEvents = (
-  existing: PolymarketGammaSearchEvent[],
-  incoming: PolymarketGammaSearchEvent[],
-) => {
-  const seen = new Set(existing.map((e) => e.id));
-  const merged = [...existing];
-  for (const ev of incoming) {
-    if (!ev?.id || seen.has(ev.id)) continue;
-    seen.add(ev.id);
-    merged.push(ev);
-  }
-  return merged;
-};
-
-const fetchSearchPage = async (opts: { page: number; append: boolean }) => {
-  const q = query.value.trim();
-  if (!q) {
-    rawEvents.value = [];
-    rawMarkets.value = [];
-    pagination.value = null;
-    currentPage.value = 1;
-    error.value = null;
-    return;
-  }
-
-  const isFirstPage = opts.page === 1;
-  if (isFirstPage) {
-    isLoading.value = true;
-  } else {
-    isLoadingMore.value = true;
-  }
-  error.value = null;
-
-  try {
-    const res = await searchPolymarketPublic({
-      q,
-      keepClosedMarkets: includeClosed.value ? true : undefined,
-      limitPerType: 50,
-      page: opts.page,
-    });
-
-    const nextEvents = Array.isArray(res.events) ? res.events : [];
-    rawEvents.value = opts.append
-      ? mergeEvents(rawEvents.value, nextEvents)
-      : nextEvents;
-
-    rawMarkets.value = Array.isArray(res.markets) ? res.markets : [];
-    pagination.value = res.pagination ?? null;
-    currentPage.value = opts.page;
-  } catch (e) {
-    console.error(e);
-    error.value = "Could not load results. Try again.";
-    if (!opts.append) {
-      rawEvents.value = [];
-      rawMarkets.value = [];
-      pagination.value = null;
-      currentPage.value = 1;
-    }
-  } finally {
-    isLoading.value = false;
-    isLoadingMore.value = false;
-  }
-};
-
-const loadMore = async () => {
-  if (isLoading.value || isLoadingMore.value) return;
-  if (!pagination.value?.hasMore) return;
-  await fetchSearchPage({ page: currentPage.value + 1, append: true });
-};
-
-let debounceHandle: number | null = null;
-watch(
-  [query, includeClosed],
-  () => {
-    if (debounceHandle) window.clearTimeout(debounceHandle);
-    debounceHandle = window.setTimeout(() => {
-      doSearch();
-    }, 350);
-  },
-  { immediate: false },
-);
-
-const runSearchNow = async () => {
-  if (debounceHandle) window.clearTimeout(debounceHandle);
-  await doSearch();
-};
-
-const handleImageError = (e: Event) => {
-  const img = e.target as HTMLImageElement | null;
-  if (!img) return;
-  img.src = DEFAULT_FALLBACK_IMAGE;
-};
 </script>
 
 <!-- Response example: -->

@@ -30,12 +30,43 @@ import ChangePasswordView from "@/views/UserProfile/ChangePasswordView.vue";
 import PolymarketPriceTracker from "@/views/PolymarketPriceTracker.vue";
 import PolymarketAnalytics from "@/views/PolymarketAnalytics.vue";
 import CorrelationGraphView from "@/views/CorrelationGraphView.vue";
+import ServicesPageView from "@/views/ServicesPageView.vue";
 const routes = [
   {
     path: "/",
     component: PublicLayout,
     children: [
       { path: "", component: HomeView },
+      {
+        path: "",
+        component: ServicesPageView,
+        children: [
+          {
+            path: "polymarket-price-tracker",
+            name: "PolymarketPriceTrackerView",
+            component: PolymarketPriceTracker,
+            meta: { requiresAuth: true },
+          },
+          {
+            path: "polymarket-analytics",
+            name: "PolymarketAnalyticsView",
+            component: PolymarketAnalytics,
+            meta: { requiresAuth: true },
+          },
+          {
+            path: "correlation-graph",
+            name: "CorrelationGraphView",
+            component: CorrelationGraphView,
+            meta: { requiresAuth: true, fullWidth: true },
+          },
+          {
+            path: "notebooks",
+            name: "NotebooksView",
+            component: () => import("@/views/NotebooksView.vue"),
+            meta: { requiresAuth: true, fullWidth: true },
+          },
+        ],
+      },
       {
         path: "trending",
         component: TrendingView,
@@ -100,20 +131,19 @@ const routes = [
           { path: "my-comments", component: PublicView },
           {
             path: "polymarket-price-tracker",
-            component: PolymarketPriceTracker,
+            redirect: "/polymarket-price-tracker",
           },
           {
             path: "polymarket-analytics",
-            component: PolymarketAnalytics,
+            redirect: "/polymarket-analytics",
           },
           {
             path: "correlation-graph",
-            component: CorrelationGraphView,
+            redirect: "/correlation-graph",
           },
           {
             path: "notebooks",
-            name: "ProfileNotebooksView",
-            component: () => import("@/views/NotebooksView.vue"),
+            redirect: "/notebooks",
           },
         ],
       },

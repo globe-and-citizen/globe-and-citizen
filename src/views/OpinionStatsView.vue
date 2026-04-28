@@ -34,7 +34,7 @@ const {
       return response as Post | null;
     },
     enabled: computed(() => opinionId !== undefined),
-  })
+  }),
 );
 
 const countryVotes = computed(() => {
