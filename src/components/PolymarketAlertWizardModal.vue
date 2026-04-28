@@ -5,136 +5,19 @@
       <!-- <div class="text-sm text-muted-foreground">Step {{ step }} of 3</div> -->
 
       <!-- Step 1: Configure -->
-      <div v-if="!isInsightsMode && step === 1" class="grid gap-4">
-        <div class="grid gap-2">
-          <Label>Alert Type</Label>
-          <Select v-model="legsCountString">
-            <SelectTrigger>
-              <SelectValue placeholder="Select alert type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="1">Single market</SelectItem>
-                <SelectItem value="2">Sum of 2 markets (dyad)</SelectItem>
-                <SelectItem value="3">Sum of 3 markets (triad)</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div v-if="isSum" class="grid gap-4">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="grid gap-2">
-              <Label>Hold</Label>
-              <Input
-                v-model.number="threshold"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.95"
-              />
-            </div>
-            <div class="grid gap-2">
-              <Label>Operator</Label>
-              <Select v-model="operator">
-                <SelectTrigger class="w-full">
-                  <SelectValue placeholder="Select operator" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="lt">&lt;</SelectItem>
-                    <SelectItem value="lte">&le;</SelectItem>
-                    <SelectItem value="gt">&gt;</SelectItem>
-                    <SelectItem value="gte">&ge;</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-            <div class="grid gap-2">
-              <Label>Direction</Label>
-              <Select v-model="direction">
-                <SelectTrigger class="w-full">
-                  <SelectValue placeholder="Select direction" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="buy">Buy</SelectItem>
-                    <SelectItem value="sell">Sell</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="grid gap-2">
-            <Label>Target Price</Label>
-            <Input
-              v-model.number="targetPrice"
-              type="number"
-              min="0"
-              max="1"
-              step="0.01"
-              placeholder="0.95"
-            />
-          </div>
-
-          <div class="grid gap-2">
-            <Label>Operator</Label>
-            <Select v-model="singleOperator">
-              <SelectTrigger class="w-full">
-                <SelectValue placeholder="Select operator" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="lt">&lt;</SelectItem>
-                  <SelectItem value="lte">&le;</SelectItem>
-                  <SelectItem value="gt">&gt;</SelectItem>
-                  <SelectItem value="gte">&ge;</SelectItem>
-                  <SelectItem value="eq">=</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="grid gap-2">
-            <Label>Direction</Label>
-            <Select v-model="direction">
-              <SelectTrigger class="w-full">
-                <SelectValue placeholder="Select direction" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="buy">Buy</SelectItem>
-                  <SelectItem value="sell">Sell</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div class="grid gap-3">
-          <div class="flex items-center gap-2">
-            <Checkbox id="notify_discord" v-model="notifyDiscord" />
-            <Label for="notify_discord">Notify Discord</Label>
-          </div>
-
-          <div v-if="notifyDiscord" class="grid gap-2">
-            <Label>Discord Webhook (optional)</Label>
-            <Input
-              v-model="discordWebhook"
-              type="url"
-              placeholder="https://discord.com/api/webhooks/..."
-            />
-          </div>
-
-          <div class="flex items-center gap-2">
-            <Checkbox id="repeat" v-model="repeat" />
-            <Label for="repeat">Repeat</Label>
-          </div>
-        </div>
-      </div>
+      <PolymarketAlertWizardConfigStep
+        v-if="!isInsightsMode && step === 1"
+        v-model:legs-count-string="legsCountString"
+        v-model:threshold="threshold"
+        v-model:operator="operator"
+        v-model:direction="direction"
+        v-model:target-price="targetPrice"
+        v-model:single-operator="singleOperator"
+        v-model:notify-discord="notifyDiscord"
+        v-model:discord-webhook="discordWebhook"
+        v-model:repeat="repeat"
+        :is-sum="isSum"
+      />
 
       <!-- Step 2: Select legs -->
       <div v-else-if="step === 2">
@@ -768,48 +651,22 @@
       </div>
 
       <!-- Step 3: Review -->
-      <div v-else-if="!isInsightsMode" class="grid gap-3">
-        <div class="rounded-md border p-4 text-sm grid gap-2">
-          <div class="font-medium">Summary</div>
-
-          <div v-if="isSum">
-            <div>Type: Sum ({{ legsCount }} legs)</div>
-            <div>Direction: {{ direction.toUpperCase() }}</div>
-            <div>
-              Trigger: p1 + … + p{{ legsCount }} {{ operator }}
-              {{ threshold }}
-            </div>
-          </div>
-          <div v-else>
-            <div>Type: Single</div>
-            <div>
-              Trigger: {{ direction.toUpperCase() }}
-              {{ operatorSymbol(singleOperator) }}
-              {{ targetPrice }}
-            </div>
-          </div>
-
-          <div class="break-all">
-            Notify Discord: {{ notifyDiscord ? "Yes" : "No" }}
-          </div>
-          <div v-if="notifyDiscord && discordWebhook" class="break-all">
-            Webhook: {{ discordWebhook }}
-          </div>
-          <div>Repeat: {{ repeat ? "Yes" : "No" }}</div>
-
-          <div class="pt-2">
-            <div class="font-medium">Legs</div>
-            <div v-for="(leg, idx) in legs" :key="idx">
-              {{ idx + 1 }}. {{ leg.marketUrl }} —
-              {{ leg.selectedOutcomeName || "—" }}
-            </div>
-          </div>
-        </div>
-
-        <p v-if="submitError" class="text-sm text-red-600">
-          {{ submitError }}
-        </p>
-      </div>
+      <PolymarketAlertWizardReviewStep
+        v-else-if="!isInsightsMode"
+        :is-sum="isSum"
+        :legs-count="legsCount"
+        :direction="direction"
+        :operator="operator"
+        :single-operator="singleOperator"
+        :threshold="threshold"
+        :target-price="targetPrice"
+        :notify-discord="notifyDiscord"
+        :discord-webhook="discordWebhook"
+        :repeat="repeat"
+        :legs="legs"
+        :submit-error="submitError"
+        :operator-symbol="operatorSymbol"
+      />
     </div>
 
     <Dialog
@@ -1112,136 +969,19 @@
         <!-- <div class="text-sm text-muted-foreground">Step {{ step }} of 3</div> -->
 
         <!-- Step 1: Configure -->
-        <div v-if="!isInsightsMode && step === 1" class="grid gap-4">
-          <div class="grid gap-2">
-            <Label>Alert Type</Label>
-            <Select v-model="legsCountString">
-              <SelectTrigger>
-                <SelectValue placeholder="Select alert type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="1">Single market</SelectItem>
-                  <SelectItem value="2">Sum of 2 markets (dyad)</SelectItem>
-                  <SelectItem value="3">Sum of 3 markets (triad)</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div v-if="isSum" class="grid gap-4">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="grid gap-2">
-                <Label>Hold</Label>
-                <Input
-                  v-model.number="threshold"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="0.95"
-                />
-              </div>
-              <div class="grid gap-2">
-                <Label>Operator</Label>
-                <Select v-model="operator">
-                  <SelectTrigger class="w-full">
-                    <SelectValue placeholder="Select operator" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="lt">&lt;</SelectItem>
-                      <SelectItem value="lte">&le;</SelectItem>
-                      <SelectItem value="gt">&gt;</SelectItem>
-                      <SelectItem value="gte">&ge;</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div class="grid gap-2">
-                <Label>Direction</Label>
-                <Select v-model="direction">
-                  <SelectTrigger class="w-full">
-                    <SelectValue placeholder="Select direction" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="buy">Buy</SelectItem>
-                      <SelectItem value="sell">Sell</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="grid gap-2">
-              <Label>Target Price</Label>
-              <Input
-                v-model.number="targetPrice"
-                type="number"
-                min="0"
-                max="1"
-                step="0.01"
-                placeholder="0.95"
-              />
-            </div>
-
-            <div class="grid gap-2">
-              <Label>Operator</Label>
-              <Select v-model="singleOperator">
-                <SelectTrigger class="w-full">
-                  <SelectValue placeholder="Select operator" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="lt">&lt;</SelectItem>
-                    <SelectItem value="lte">&le;</SelectItem>
-                    <SelectItem value="gt">&gt;</SelectItem>
-                    <SelectItem value="gte">&ge;</SelectItem>
-                    <SelectItem value="eq">=</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div class="grid gap-2">
-              <Label>Direction</Label>
-              <Select v-model="direction">
-                <SelectTrigger class="w-full">
-                  <SelectValue placeholder="Select direction" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="buy">Buy</SelectItem>
-                    <SelectItem value="sell">Sell</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div class="grid gap-3">
-            <div class="flex items-center gap-2">
-              <Checkbox id="notify_discord" v-model="notifyDiscord" />
-              <Label for="notify_discord">Notify Discord</Label>
-            </div>
-
-            <div v-if="notifyDiscord" class="grid gap-2">
-              <Label>Discord Webhook (optional)</Label>
-              <Input
-                v-model="discordWebhook"
-                type="url"
-                placeholder="https://discord.com/api/webhooks/..."
-              />
-            </div>
-
-            <div class="flex items-center gap-2">
-              <Checkbox id="repeat" v-model="repeat" />
-              <Label for="repeat">Repeat</Label>
-            </div>
-          </div>
-        </div>
+        <PolymarketAlertWizardConfigStep
+          v-if="!isInsightsMode && step === 1"
+          v-model:legs-count-string="legsCountString"
+          v-model:threshold="threshold"
+          v-model:operator="operator"
+          v-model:direction="direction"
+          v-model:target-price="targetPrice"
+          v-model:single-operator="singleOperator"
+          v-model:notify-discord="notifyDiscord"
+          v-model:discord-webhook="discordWebhook"
+          v-model:repeat="repeat"
+          :is-sum="isSum"
+        />
 
         <!-- Step 2: Select legs -->
         <div v-else-if="step === 2">
@@ -1848,48 +1588,22 @@
         </div>
 
         <!-- Step 3: Review -->
-        <div v-else-if="!isInsightsMode" class="grid gap-3">
-          <div class="rounded-md border p-4 text-sm grid gap-2">
-            <div class="font-medium">Summary</div>
-
-            <div v-if="isSum">
-              <div>Type: Sum ({{ legsCount }} legs)</div>
-              <div>Direction: {{ direction.toUpperCase() }}</div>
-              <div>
-                Trigger: p1 + … + p{{ legsCount }} {{ operator }}
-                {{ threshold }}
-              </div>
-            </div>
-            <div v-else>
-              <div>Type: Single</div>
-              <div>
-                Trigger: {{ direction.toUpperCase() }}
-                {{ operatorSymbol(singleOperator) }}
-                {{ targetPrice }}
-              </div>
-            </div>
-
-            <div class="break-all">
-              Notify Discord: {{ notifyDiscord ? "Yes" : "No" }}
-            </div>
-            <div v-if="notifyDiscord && discordWebhook" class="break-all">
-              Webhook: {{ discordWebhook }}
-            </div>
-            <div>Repeat: {{ repeat ? "Yes" : "No" }}</div>
-
-            <div class="pt-2">
-              <div class="font-medium">Legs</div>
-              <div v-for="(leg, idx) in legs" :key="idx">
-                {{ idx + 1 }}. {{ leg.marketUrl }} —
-                {{ leg.selectedOutcomeName || "—" }}
-              </div>
-            </div>
-          </div>
-
-          <p v-if="submitError" class="text-sm text-red-600">
-            {{ submitError }}
-          </p>
-        </div>
+        <PolymarketAlertWizardReviewStep
+          v-else-if="!isInsightsMode"
+          :is-sum="isSum"
+          :legs-count="legsCount"
+          :direction="direction"
+          :operator="operator"
+          :single-operator="singleOperator"
+          :threshold="threshold"
+          :target-price="targetPrice"
+          :notify-discord="notifyDiscord"
+          :discord-webhook="discordWebhook"
+          :repeat="repeat"
+          :legs="legs"
+          :submit-error="submitError"
+          :operator-symbol="operatorSymbol"
+        />
       </div>
 
       <DialogFooter class="flex-col-reverse sm:flex-row gap-2">
@@ -2276,6 +1990,8 @@ import PriceScatterChart, {
   type ScatterSeries,
   type PriceDataPoint,
 } from "@/components/Charts/PriceScatterChart.vue";
+import PolymarketAlertWizardConfigStep from "@/components/PolymarketAlertWizardConfigStep.vue";
+import PolymarketAlertWizardReviewStep from "@/components/PolymarketAlertWizardReviewStep.vue";
 import {
   buildSafeJsonFilename,
   queueTextFileForNotebooks,
