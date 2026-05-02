@@ -322,36 +322,6 @@
                   </div>
 
                   <div class="grid gap-2">
-                    <Label>Outcome</Label>
-                    <Select
-                      v-model="activeLeg.selectedOutcomeId"
-                      :disabled="
-                        getOutcomeSelectOptions(activeLeg).length === 0
-                      "
-                      @update:model-value="
-                        () => onOutcomeChange(activeLegIndex)
-                      "
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select outcome" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem
-                            v-for="outcome in getOutcomeSelectOptions(
-                              activeLeg,
-                            )"
-                            :key="outcome.id"
-                            :value="outcome.id"
-                          >
-                            {{ outcome.name }}
-                          </SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div class="grid gap-2">
                     <Label>Outcome Mode</Label>
                     <Select
                       v-model="activeLeg.insightsOutcomeSelection"
@@ -1295,31 +1265,20 @@
                     </div>
 
                     <div class="grid gap-2">
-                      <Label>Outcome</Label>
+                      <Label>Outcome Mode</Label>
                       <Select
-                        v-model="activeLeg.selectedOutcomeId"
-                        :disabled="
-                          getOutcomeSelectOptions(activeLeg).length === 0
-                        "
+                        v-model="activeLeg.insightsOutcomeSelection"
                         @update:model-value="
-                          () => onOutcomeChange(activeLegIndex)
+                          () => onInsightsOutcomeSelectionChange(activeLegIndex)
                         "
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select outcome" />
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectGroup>
-                            <SelectItem
-                              v-for="outcome in getOutcomeSelectOptions(
-                                activeLeg,
-                              )"
-                              :key="outcome.id"
-                              :value="outcome.id"
-                            >
-                              {{ outcome.name }}
-                            </SelectItem>
-                          </SelectGroup>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                          <SelectItem value="both">Yes and No</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
