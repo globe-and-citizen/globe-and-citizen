@@ -31,6 +31,7 @@ import PolymarketPriceTracker from "@/views/PolymarketPriceTracker.vue";
 import PolymarketAnalytics from "@/views/PolymarketAnalytics.vue";
 import CorrelationGraphView from "@/views/CorrelationGraphView.vue";
 import ServicesPageView from "@/views/ServicesPageView.vue";
+import LiveFeedView from "@/views/LiveNewsFeed/LiveFeedView.vue";
 const routes = [
   {
     path: "/",
@@ -64,6 +65,12 @@ const routes = [
             name: "NotebooksView",
             component: () => import("@/views/NotebooksView.vue"),
             meta: { requiresAuth: true, fullWidth: true },
+          },
+          {
+            path: "live-feed",
+            name: "LiveFeedView",
+            component: LiveFeedView,
+            meta: { requiresAuth: true },
           },
         ],
       },
@@ -144,6 +151,10 @@ const routes = [
           {
             path: "notebooks",
             redirect: "/notebooks",
+          },
+          {
+            path: "live-feed",
+            redirect: "/live-feed",
           },
         ],
       },

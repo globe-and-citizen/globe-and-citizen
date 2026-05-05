@@ -99,6 +99,11 @@ export const serviceMenuItems = [
     title: "Notebooks",
     url: "/notebooks",
   },
+  {
+    section: "Services",
+    title: "Live feed",
+    url: "/live-feed",
+  },
 ];
 
 export const menuItems = [...profileMenuItems, ...serviceMenuItems];

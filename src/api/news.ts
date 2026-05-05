@@ -19,7 +19,7 @@ export async function fetchNewsApi({
       params.set("category", category);
     }
     const response = await fetch(
-      `${API_BASE_URL}/news-api?${params.toString()}`
+      `${API_BASE_URL}/news-api?${params.toString()}`,
     );
     if (!response) {
       throw new Error(`Error fetching posts`);
@@ -29,6 +29,55 @@ export async function fetchNewsApi({
     return data;
   } catch (error) {
     console.error("Error fetching all posts:", error);
+    throw error;
+  }
+}
+
+export type FetchNewsEverythingParams = {
+  q: string;
+  page?: number;
+  pageSize?: number;
+  sortBy?: "relevancy" | "popularity" | "publishedAt";
+  language?: string;
+  searchIn?: string;
+  sources?: string;
+  domains?: string;
+  excludeDomains?: string;
+  from?: string;
+  to?: string;
+};
+
+export async function fetchNewsEverything(
+  params: FetchNewsEverythingParams,
+): Promise<{ data: NewsApiResponse }> {
+  try {
+    const searchParams = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(params)) {
+      if (value === undefined || value === null) {
+        continue;
+      }
+
+      const normalized = String(value).trim();
+      if (!normalized) {
+        continue;
+      }
+
+      searchParams.set(key, normalized);
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/news-api/everything?${searchParams.toString()}`,
+    );
+
+    if (!response || !response.ok) {
+      throw new Error("Error fetching live feed");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching live feed:", error);
     throw error;
   }
 }
@@ -74,7 +123,7 @@ export type NewsApiSummaryPayload = {
 };
 
 export async function generateNewsApiSummary(
-  payload: NewsApiSummaryPayload
+  payload: NewsApiSummaryPayload,
 ): Promise<{ success: boolean; data: NewsApiSummaryPayload }> {
   try {
     const response = await fetch(
@@ -86,7 +135,7 @@ export async function generateNewsApiSummary(
           "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
-      }
+      },
     );
 
     if (!response || !response.ok) {
