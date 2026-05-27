@@ -95,6 +95,11 @@ export const serviceMenuItems = [
   },
   {
     section: "Services",
+    title: "Max contingency table",
+    url: "/max-contingency-table",
+  },
+  {
+    section: "Services",
     icon: journals,
     title: "Notebooks",
     url: "/notebooks",
