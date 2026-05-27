@@ -31,6 +31,8 @@ import PolymarketPriceTracker from "@/views/PolymarketPriceTracker.vue";
 import PolymarketAnalytics from "@/views/PolymarketAnalytics.vue";
 import CorrelationGraphView from "@/views/CorrelationGraphView.vue";
 import ServicesPageView from "@/views/ServicesPageView.vue";
+// import LiveFeedView from "@/views/LiveNewsFeed/LiveFeedView.vue";
+import MaxContingencyTableView from "@/views/MaxContingencyTableView.vue";
 const routes = [
   {
     path: "/",
@@ -57,6 +59,12 @@ const routes = [
             path: "correlation-graph",
             name: "CorrelationGraphView",
             component: CorrelationGraphView,
+            meta: { requiresAuth: true, fullWidth: true },
+          },
+          {
+            path: "max-contingency-table",
+            name: "MaxContingencyTableView",
+            component: MaxContingencyTableView,
             meta: { requiresAuth: true, fullWidth: true },
           },
           {
@@ -144,6 +152,10 @@ const routes = [
           {
             path: "notebooks",
             redirect: "/notebooks",
+          },
+          {
+            path: "max-contingency-table",
+            redirect: "/max-contingency-table",
           },
         ],
       },
