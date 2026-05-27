@@ -113,7 +113,9 @@
                 variant="ghost"
                 size="sm"
                 class="h-8 w-8 p-0"
-                @click="() => handleOpinionEdit(opinion ?? emptyOpinion as Post)"
+                @click="
+                  () => handleOpinionEdit(opinion ?? (emptyOpinion as Post))
+                "
               >
                 <span class="sr-only">Edit</span>
                 <component :is="PencilIcon" class="size-4" />
@@ -122,7 +124,9 @@
                 variant="ghost"
                 size="sm"
                 class="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                @click="() => handleOpinionDelete(opinion ?? emptyOpinion as Post)"
+                @click="
+                  () => handleOpinionDelete(opinion ?? (emptyOpinion as Post))
+                "
               >
                 <span class="sr-only">Delete</span>
                 <component :is="TrashBinIcon" class="size-4" />
@@ -206,7 +210,7 @@ useIntersectionObserver(
   },
   {
     threshold: [0.08],
-  }
+  },
 );
 
 useIntersectionObserver(
@@ -216,7 +220,7 @@ useIntersectionObserver(
   },
   {
     threshold: [0.11],
-  }
+  },
 );
 
 const touchStartX = ref(0);
@@ -279,7 +283,7 @@ const {
       const response = await fetchOpinionById(opinionId);
       return response as Post;
     },
-  })
+  }),
 );
 const opinionUserId = computed(() => opinion.value?.user_id || null);
 
@@ -321,12 +325,16 @@ const publishMutation = useMutation({
         newUserVote = variables.score;
       }
 
-      queryClient.setQueryData<Post | null>(["opinion", opinionId], {
-        ...prevData,
-        likes: newLikes,
-        dislikes: newDislikes,
-        user_vote: newUserVote,
-      });
+      queryClient.setQueryData<Post | null>(["opinion", opinionId], (old) =>
+        old
+          ? {
+              ...old,
+              likes: newLikes,
+              dislikes: newDislikes,
+              user_vote: newUserVote,
+            }
+          : old,
+      );
     }
 
     return { prevData };
@@ -364,7 +372,7 @@ const { mutate: deleteOpinionMutation } = useMutation({
 });
 
 const reactionPending = computed(
-  () => publishMutation.status.value === "pending"
+  () => publishMutation.status.value === "pending",
 );
 
 const handleReaction = (score: 1 | -1) => {

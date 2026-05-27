@@ -67,7 +67,7 @@
                     variant="ghost"
                     size="sm"
                     class="h-8 w-8 p-0"
-                    @click="() => handlePostEdit(post ?? emptyPost as Post)"
+                    @click="() => handlePostEdit(post ?? (emptyPost as Post))"
                   >
                     <span class="sr-only">Edit</span>
                     <component :is="PencilIcon" class="size-4" />
@@ -76,7 +76,7 @@
                     variant="ghost"
                     size="sm"
                     class="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                    @click="() => handlePostDelete(post ?? emptyPost as Post)"
+                    @click="() => handlePostDelete(post ?? (emptyPost as Post))"
                   >
                     <span class="sr-only">Delete</span>
                     <component :is="TrashBinIcon" class="size-4" />
@@ -337,7 +337,7 @@ const {
     enabled: !!postId,
     staleTime: 0,
     refetchOnMount: true,
-  })
+  }),
 );
 const opinionUserId = computed(() => post.value?.user_id || null);
 
@@ -372,12 +372,16 @@ const publishMutation = useMutation({
         else newDislikes += 1;
         newUserVote = variables.score;
       }
-      queryClient.setQueryData<Post | null>(["post", postId], {
-        ...prevData,
-        likes: newLikes,
-        dislikes: newDislikes,
-        user_vote: newUserVote,
-      });
+      queryClient.setQueryData<Post | null>(["post", postId], (old) =>
+        old
+          ? {
+              ...old,
+              likes: newLikes,
+              dislikes: newDislikes,
+              user_vote: newUserVote,
+            }
+          : old,
+      );
     }
     return { prevData };
   },
@@ -393,7 +397,7 @@ const publishMutation = useMutation({
 });
 
 const reactionPending = computed(
-  () => publishMutation.status.value === "pending"
+  () => publishMutation.status.value === "pending",
 );
 
 onBeforeRouteUpdate(async (to) => {
