@@ -585,6 +585,35 @@ function renderChart() {
 }
 
 onMounted(() => {
+  const state = history.state as Record<string, unknown> | null;
+  if (state && typeof state.csvText === "string" && state.csvText.trim()) {
+    try {
+      const metadata = extractMetadataFromCsv(state.csvText);
+      csvText.value = state.csvText;
+      loadedFileName.value = "From Polymarket Analytics";
+      parsedRowCount.value = metadata.rowCount;
+      numericColumns.value = metadata.numericColumns;
+      xColumn.value =
+        typeof state.xColumn === "string" &&
+        metadata.numericColumns.includes(state.xColumn)
+          ? state.xColumn
+          : (metadata.numericColumns[0] ?? "");
+      yColumn.value =
+        typeof state.yColumn === "string" &&
+        metadata.numericColumns.includes(state.yColumn)
+          ? state.yColumn
+          : (metadata.numericColumns[1] ?? metadata.numericColumns[0] ?? "");
+      if (metadata.minTs !== null && metadata.maxTs !== null) {
+        minDate.value = toIsoDateFromUnixSeconds(metadata.minTs);
+        maxDate.value = toIsoDateFromUnixSeconds(metadata.maxTs);
+        startDate.value = minDate.value;
+        endDate.value = maxDate.value;
+      }
+    } catch {
+      // Silently ignore malformed state
+    }
+  }
+
   const onResize = () => chart?.resize();
   window.addEventListener("resize", onResize);
 
