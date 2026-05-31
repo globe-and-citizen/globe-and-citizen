@@ -1,8 +1,6 @@
 import { API_BASE_URL } from "@/api/constants";
 import { fetchWithAuth } from "@/api/auth";
 
-const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, "");
-
 export type BetaRegressionRequest = {
   csv_text: string;
   x_column: string;

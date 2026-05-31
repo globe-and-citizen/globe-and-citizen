@@ -1577,7 +1577,8 @@ function handleSendToBetaRegression() {
 
   if (compareChartLoading.value) return;
   if (compareChartData.value.length < 2) {
-    compareSaveError.value = "Generate a chart with at least 2 markets to use Beta Regression.";
+    compareSaveError.value =
+      "Generate a chart with at least 2 markets to use Beta Regression.";
     return;
   }
 
