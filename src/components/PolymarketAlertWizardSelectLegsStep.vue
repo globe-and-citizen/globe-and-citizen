@@ -66,6 +66,13 @@
             </Button>
             <Button
               variant="outline"
+              :disabled="compareChartLoading || compareChartDataLength < 2"
+              @click="handleSendToBetaRegression"
+            >
+              Run Beta Regression
+            </Button>
+            <Button
+              variant="outline"
               :disabled="isCompareNotebookActionDisabled"
               @click="handleCombinedCompareNotebookAction"
             >
@@ -1040,6 +1047,7 @@ const props = defineProps<{
   handleViewCombinedCompareChart: () => void;
   openCombinedCompareChartPreview: () => void;
   handleDownloadCombinedCompareCsv: () => void;
+  handleSendToBetaRegression: () => void;
   handleCombinedCompareNotebookAction: () => void;
   handleCompareFilenamePrimaryAction: () => void;
   openMarketSearchDialog: () => void;

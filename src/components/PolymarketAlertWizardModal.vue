@@ -67,6 +67,7 @@
         :handle-view-combined-compare-chart="handleViewCombinedCompareChart"
         :open-combined-compare-chart-preview="openCombinedCompareChartPreview"
         :handle-download-combined-compare-csv="handleDownloadCombinedCompareCsv"
+        :handle-send-to-beta-regression="handleSendToBetaRegression"
         :handle-combined-compare-notebook-action="
           handleCombinedCompareNotebookAction
         "
@@ -227,6 +228,7 @@
           :handle-download-combined-compare-csv="
             handleDownloadCombinedCompareCsv
           "
+          :handle-send-to-beta-regression="handleSendToBetaRegression"
           :handle-combined-compare-notebook-action="
             handleCombinedCompareNotebookAction
           "
@@ -1568,6 +1570,27 @@ function handleDownloadCombinedCompareCsv() {
     ? "polymarket-combined-compare"
     : "polymarket-market-chart";
   downloadCsv(`${prefix}_${stamp}.csv`, csvText);
+}
+
+function handleSendToBetaRegression() {
+  compareSaveError.value = null;
+
+  if (compareChartLoading.value) return;
+  if (compareChartData.value.length < 2) {
+    compareSaveError.value = "Generate a chart with at least 2 markets to use Beta Regression.";
+    return;
+  }
+
+  const csvText = buildCombinedCompareCsv(compareChartData.value);
+  const seriesNames = compareChartData.value.map((s) => s.name);
+  void router.push({
+    path: "/beta-regression",
+    state: {
+      csvText,
+      xColumn: seriesNames[0],
+      yColumn: seriesNames[1],
+    },
+  });
 }
 
 function defaultCombinedCompareNotebookFilename(): string {

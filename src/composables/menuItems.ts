@@ -100,6 +100,11 @@ export const serviceMenuItems = [
   },
   {
     section: "Services",
+    title: "Beta regression",
+    url: "/beta-regression",
+  },
+  {
+    section: "Services",
     icon: journals,
     title: "Notebooks",
     url: "/notebooks",

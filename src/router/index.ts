@@ -33,6 +33,7 @@ import CorrelationGraphView from "@/views/CorrelationGraphView.vue";
 import ServicesPageView from "@/views/ServicesPageView.vue";
 // import LiveFeedView from "@/views/LiveNewsFeed/LiveFeedView.vue";
 import MaxContingencyTableView from "@/views/MaxContingencyTableView.vue";
+import BetaRegressionView from "@/views/BetaRegressionView.vue";
 const routes = [
   {
     path: "/",
@@ -65,6 +66,12 @@ const routes = [
             path: "max-contingency-table",
             name: "MaxContingencyTableView",
             component: MaxContingencyTableView,
+            meta: { requiresAuth: true, fullWidth: true },
+          },
+          {
+            path: "beta-regression",
+            name: "BetaRegressionView",
+            component: BetaRegressionView,
             meta: { requiresAuth: true, fullWidth: true },
           },
           {
@@ -156,6 +163,10 @@ const routes = [
           {
             path: "max-contingency-table",
             redirect: "/max-contingency-table",
+          },
+          {
+            path: "beta-regression",
+            redirect: "/beta-regression",
           },
         ],
       },
