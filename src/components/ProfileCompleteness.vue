@@ -110,7 +110,7 @@ const layer8BaseUrl = isProd
 const { data: loginUrl } = useQuery({
   queryKey: ["layer8LoginUrl"],
   queryFn: async () => {
-    const response = await getLayer8LoginUrl();
+    const response = await getLayer8LoginUrl(false);
 
     return response as { data: { auth_url: string } };
   },
@@ -134,7 +134,7 @@ const { data: userData } = useQuery({
 
 const { mutate } = useMutation({
   mutationFn: async (code: string) => {
-    await layer8Callback(code);
+    await layer8Callback(code, false);
   },
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ["user"] });
