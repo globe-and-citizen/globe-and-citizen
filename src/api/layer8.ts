@@ -3,7 +3,7 @@ import { API_BASE_URL } from "./constants";
 
 export async function getLayer8LoginUrl(): Promise<unknown> {
   try {
-    const response = await fetchWithAuth(`${API_BASE_URL}/layer8-login-url`);
+    const response = await fetchWithAuth(`${API_BASE_URL}/layer8-auth-url`);
 
     if (!response) {
       throw new Error(`Error fetching layer8 url: ${response}`);
