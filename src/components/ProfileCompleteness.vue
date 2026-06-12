@@ -134,7 +134,7 @@ const { data: userData } = useQuery({
 
 const { mutate } = useMutation({
   mutationFn: async (code: string) => {
-    await layer8Callback(code, false);
+    await layer8Callback(false, code, state.value);
   },
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ["user"] });
@@ -173,6 +173,24 @@ const profileDetails = computed(() => [
 ]);
 
 const loginUrlData = computed(() => loginUrl?.value?.data?.auth_url);
+
+const state = computed(() => {
+    const auth_url = loginUrl?.value?.data?.auth_url;
+
+    if (!auth_url) {
+        console.error("Auth URL is missing in the response.");
+        return ""
+    }
+
+    try {
+        const parsed = new URL(auth_url);
+        const params = parsed.searchParams;
+        return params.get("state") ?? ""
+    } catch (err) {
+        console.warn("Failed to parse auth_url:", err);
+        return ""
+    }
+});
 
 const openExternalLink = (url: string) => {
   const windowFeatures =

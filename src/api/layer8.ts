@@ -4,9 +4,13 @@ import type {SignInResponse} from "@/models/Auth";
 
 export async function getLayer8LoginUrl(isLogin: boolean): Promise<unknown> {
     try {
+        const options = {
+            credentials: "include",
+        } as const;
+
         const response = isLogin
-            ? await interceptorFetch(`${API_BASE_URL}/layer8-login-url`)
-            : await fetchWithAuth(`${API_BASE_URL}/layer8-auth-url`);
+            ? await interceptorFetch(`${API_BASE_URL}/layer8-login-url`, options)
+            : await fetchWithAuth(`${API_BASE_URL}/layer8-auth-url`, options);
 
         if (!response) {
             throw new Error(`Error fetching layer8 url: ${response}`);
@@ -20,12 +24,15 @@ export async function getLayer8LoginUrl(isLogin: boolean): Promise<unknown> {
     }
 }
 
-export async function layer8Callback(code: string, isLogin: boolean): Promise<unknown> {
+export async function layer8Callback(isLogin: boolean, code: string, state?: string): Promise<unknown> {
     try {
         const options = {
             method: "POST",
-            body: JSON.stringify({code}),
-        }
+            body: JSON.stringify({
+                code, state
+            }),
+            credentials: "include",
+        } as const;
 
         const response = isLogin
             ? await interceptorFetch(`${API_BASE_URL}/login-callback`, options)
@@ -36,9 +43,10 @@ export async function layer8Callback(code: string, isLogin: boolean): Promise<un
         }
 
         const responseData: SignInResponse | { data: string } = await response.json();
-        return await setSignedInUser(responseData)
+
+        return isLogin ? await setSignedInUser(responseData) : responseData;
     } catch (error) {
-        console.error("Failed to login with Layer8:", error);
+        console.error("Failed to handle layer8 callback:", error);
         throw error;
     }
 }

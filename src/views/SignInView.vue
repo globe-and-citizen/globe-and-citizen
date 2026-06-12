@@ -114,6 +114,8 @@ const username = ref("");
 const password = ref("");
 const errorMessage = ref("");
 const queryClient = useQueryClient();
+const state = ref("");
+
 // Mutation for sign-in
 const {mutate: signInMutation, isPending} = useMutation({
     mutationFn: async (data: { username: string; password: string }) =>
@@ -161,7 +163,21 @@ const {
         return res as { data: { auth_url: string } };
     },
     onSuccess: (response) => {
-        openExternalLink(response.data?.auth_url);
+        const auth_url = response.data?.auth_url;
+        if (!auth_url) {
+            console.error("Auth URL is missing in the response.");
+            return;
+        }
+
+        try {
+            const parsed = new URL(auth_url);
+            const params = parsed.searchParams;
+            state.value = params.get("state") ?? "";
+        } catch (err) {
+            console.warn("Failed to parse auth_url:", err);
+        }
+
+        openExternalLink(auth_url);
     },
     onError: (error) => {
         console.error("Failed to get login URL:", error);
@@ -173,7 +189,7 @@ const {
     isPending: isLayer8CallbackPending,
 } = useMutation({
     mutationFn: async (code: string) => {
-        await layer8Callback(code, true);
+        await layer8Callback(true, code, state.value);
     },
     onSuccess: () => {
         queryClient.invalidateQueries({queryKey: ["user"]});
