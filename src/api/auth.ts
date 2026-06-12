@@ -8,12 +8,13 @@ import {
   SIGN_IN_URL,
   SIGN_UP_URL,
 } from "./constants";
-import * as interceptorWasm from "layer8-interceptor-production";
+import * as interceptorWasm from "l8-intercept";
 import { traceUser } from "./user";
 
-const layer8Enabled = import.meta.env.VITE_API_BASE_URL.includes(
-  "globeandcitizenreverseproxy"
-);
+// const layer8Enabled = import.meta.env.VITE_API_BASE_URL.includes(
+//   "globeandcitizenreverseproxy"
+// );
+const layer8Enabled = import.meta.env.VITE_LAYER8_ENABLED === 'true';
 
 export async function interceptorFetch(
   url: string,

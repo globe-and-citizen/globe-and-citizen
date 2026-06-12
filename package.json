@@ -51,7 +51,7 @@
     "echarts": "^5.6.0",
     "ethers": "^5.7.2",
     "idb": "^8.0.3",
-    "layer8-interceptor-production": "^0.4.0",
+    "l8-intercept": "^0.4.3",
     "leaflet": "^1.9.4",
     "lightgallery": "^2.9.0",
     "pinia": "^3.0.2",
