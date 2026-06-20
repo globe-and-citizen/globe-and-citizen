@@ -21,10 +21,10 @@
           class="hidden lg:flex items-center gap-6 font-semibold text-base font-lato"
         >
           <RouterLink
-            to="/top-headlines"
+            to="/markets"
             active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
             class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
-            >Top Headlines</RouterLink
+            >Markets</RouterLink
           >
           <RouterLink
             to="/all-news?category=all-news"
@@ -257,11 +257,11 @@
             class="flex flex-col gap-4 font-semibold text-base font-lato mb-6"
           >
             <RouterLink
-              to="/top-headlines"
+              to="/markets"
               active-class="text-red-500"
               class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
               @click="closeMobileMenu"
-              >Top Headlines</RouterLink
+              >Markets</RouterLink
             >
             <RouterLink
               to="/all-news?category=all-news"

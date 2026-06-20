@@ -22,7 +22,7 @@ import PublicView from "@/views/UserProfile/PublicView.vue";
 import ProfileSettingsView from "@/views/UserProfile/ProfileSettingsView.vue";
 import MobileProfileMenuView from "@/views/UserProfile/MobileProfileMenuView.vue";
 import UserOpinionsView from "@/views/UserProfile/UserOpinionsView.vue";
-import TopHeadlines from "@/views/TopHeadlines.vue";
+import Markets from "@/views/Markets.vue";
 import CreateArticle from "@/views/UserProfile/CreateArticle.vue";
 import UserNewsView from "@/views/UserProfile/UserNewsView.vue";
 import AllNewsView from "@/views/AllNewsView.vue";
@@ -80,7 +80,7 @@ const routes = [
         component: TrendingView,
       },
       { path: "about-us", component: AboutView },
-      { path: "top-headlines", component: TopHeadlines },
+      { path: "markets", component: Markets },
       { path: "all-news", component: AllNewsView },
       { path: "become-a-contributor", component: BecomeAContributorView },
       { path: "sign-in", component: SignInView },
