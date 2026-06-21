@@ -19,31 +19,7 @@
     <div class="flex mb-6 flex-col">
       <div class="flex justify-between lg:items-center lg:flex-row flex-col">
         <h1 class="text-2xl font-semibold mb-4 lg:mb-0">Top headlines</h1>
-        <div class="flex flex-col lg:flex-row lg:w-fit w-full">
-          <!-- The category you want to get headlines for. Possible options: business, entertainment, general, health, science, sports, technology. Note: you can't mix this param with the sources param. -->
-          <div class="flex flex-col lg:ml-4 mt-4 lg:mt-0">
-            <label
-              for="category-select"
-              class="block text-sm font-medium text-gray-700 parent-selected"
-              >Category</label
-            >
-            <select
-              id="category-select"
-              v-model="selectedCategory"
-              class="block border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 h-10 lg:w-3xs px-2 no-select-arrow"
-              @change="handleCategoryChange"
-            >
-              <option value="">All Categories</option>
-              <option value="business">Business</option>
-              <option value="entertainment">Entertainment</option>
-              <option value="general">General</option>
-              <option value="health">Health</option>
-              <option value="science">Science</option>
-              <option value="sports">Sports</option>
-              <option value="technology">Technology</option>
-            </select>
-          </div>
-        </div>
+        <div class="flex flex-col lg:flex-row lg:w-fit w-full"></div>
       </div>
     </div>
     <div
@@ -153,7 +129,6 @@ import VerticalCard from "@/components/VerticalCard.vue";
 import {
   useInfiniteQuery,
   useMutation,
-  useQueryClient,
 } from "@tanstack/vue-query";
 import {
   fetchNewsApi,
@@ -177,25 +152,7 @@ import type { NewsApiResponse } from "@/models/News";
 
 const router = useRouter();
 const globalStore = useGlobalStore();
-const queryClient = useQueryClient();
 const sentinelRef = ref<HTMLElement | null>(null);
-// Multi-select sources (empty array means All Sources)
-const selectedSources = ref<string[]>([]);
-const isSourcesOpen = ref(false);
-const sourcesDropdownRef = ref<HTMLElement | null>(null);
-const selectedCategory = ref<string>("");
-
-const isSourceSpecific = computed(() => selectedSources.value.length > 0);
-const appliedFilters = computed(() => {
-  const filters: Record<string, unknown> = {};
-  if (selectedSources.value.length > 0) {
-    filters.source = selectedSources.value.join(",");
-  }
-  if (selectedCategory.value) {
-    filters.category = selectedCategory.value;
-  }
-  return filters;
-});
 
 const { mutate: generatePost } = useMutation({
   mutationFn: async (
@@ -221,30 +178,6 @@ const { mutate: generatePost } = useMutation({
   },
 });
 
-const handleCategoryChange = () => {
-  if (isSourceSpecific.value) return;
-  const category = selectedCategory.value || undefined;
-  const nextFilters = category ? { category } : {};
-
-  globalStore.setNewsApiFilters(nextFilters);
-  const key = ["newsApiData", nextFilters];
-
-  if (!queryClient.getQueryData(key)) {
-    queryClient.prefetchInfiniteQuery({
-      queryKey: key,
-      queryFn: async ({ pageParam = 1 }) => {
-        return fetchNewsApi({
-          page: pageParam,
-          ...(nextFilters as { source?: string; category?: string }),
-        });
-      },
-      initialPageParam: 1,
-      getNextPageParam: getNextPageParam,
-      staleTime: 1000 * 60 * 5,
-    });
-  }
-};
-
 const getNextPageParam = (
   lastPage: { data: NewsApiResponse },
   allPages: Array<{ data: NewsApiResponse }>
@@ -261,13 +194,6 @@ const getNextPageParam = (
   return currentPage + 1;
 };
 
-const onClickOutsideSources = (e: Event) => {
-  const target = e.target as HTMLElement;
-  if (sourcesDropdownRef.value && !sourcesDropdownRef.value.contains(target)) {
-    isSourcesOpen.value = false;
-  }
-};
-
 const {
   data,
   isLoading: isLoadingNews,
@@ -275,13 +201,9 @@ const {
   fetchNextPage,
   hasNextPage,
 } = useInfiniteQuery({
-  queryKey: ["newsApiData", appliedFilters],
+  queryKey: ["newsApiData"],
   queryFn: async ({ pageParam = 1 }) => {
-    const filters = appliedFilters.value as {
-      source?: string;
-      category?: string;
-    };
-    return fetchNewsApi({ page: pageParam, ...filters });
+    return fetchNewsApi({ page: pageParam });
   },
   getNextPageParam,
   initialPageParam: 1,
@@ -350,13 +272,11 @@ watch([sentinelRef, () => data.value], ([sentinel, newsData]) => {
 
 onMounted(() => {
   setupIntersectionObserver();
-  document.addEventListener("click", onClickOutsideSources);
 });
 
 onUnmounted(() => {
   if (observer) {
     observer.disconnect();
   }
-  document.removeEventListener("click", onClickOutsideSources);
 });
 </script>
