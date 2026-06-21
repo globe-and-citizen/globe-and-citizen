@@ -27,54 +27,55 @@ import CreateArticle from "@/views/UserProfile/CreateArticle.vue";
 import UserNewsView from "@/views/UserProfile/UserNewsView.vue";
 import AllNewsView from "@/views/AllNewsView.vue";
 import ChangePasswordView from "@/views/UserProfile/ChangePasswordView.vue";
-import PolymarketPriceTracker from "@/views/PolymarketPriceTracker.vue";
-import PolymarketAnalytics from "@/views/PolymarketAnalytics.vue";
-import CorrelationGraphView from "@/views/CorrelationGraphView.vue";
-import ServicesPageView from "@/views/ServicesPageView.vue";
+import PolymarketPriceTracker from "@/views/UserProfile/PolymarketPriceTracker.vue";
+import PolymarketAnalytics from "@/views/UserProfile/PolymarketAnalytics.vue";
+import CorrelationGraphView from "@/views/UserProfile/CorrelationGraphView.vue";
+// import ServicesPageView from "@/views/ServicesPageView.vue";
 // import LiveFeedView from "@/views/LiveNewsFeed/LiveFeedView.vue";
-import MaxContingencyTableView from "@/views/MaxContingencyTableView.vue";
+import MaxContingencyTableView from "@/views/UserProfile/MaxContingencyTableView.vue";
+import NotebooksView from "@/views/UserProfile/NotebooksView.vue";
 const routes = [
   {
     path: "/",
     component: PublicLayout,
     children: [
       { path: "", component: HomeView },
-      {
-        path: "",
-        component: ServicesPageView,
-        children: [
-          {
-            path: "polymarket-price-tracker",
-            name: "PolymarketPriceTrackerView",
-            component: PolymarketPriceTracker,
-            meta: { requiresAuth: true },
-          },
-          {
-            path: "polymarket-analytics",
-            name: "PolymarketAnalyticsView",
-            component: PolymarketAnalytics,
-            meta: { requiresAuth: true },
-          },
-          {
-            path: "correlation-graph",
-            name: "CorrelationGraphView",
-            component: CorrelationGraphView,
-            meta: { requiresAuth: true, fullWidth: true },
-          },
-          {
-            path: "max-contingency-table",
-            name: "MaxContingencyTableView",
-            component: MaxContingencyTableView,
-            meta: { requiresAuth: true, fullWidth: true },
-          },
-          {
-            path: "notebooks",
-            name: "NotebooksView",
-            component: () => import("@/views/NotebooksView.vue"),
-            meta: { requiresAuth: true, fullWidth: true },
-          },
-        ],
-      },
+      // {
+      //   path: "",
+      //   component: ServicesPageView,
+      //   children: [
+      //     {
+      //       path: "polymarket-price-tracker",
+      //       name: "PolymarketPriceTrackerView",
+      //       component: PolymarketPriceTracker,
+      //       meta: { requiresAuth: true },
+      //     },
+      //     {
+      //       path: "polymarket-analytics",
+      //       name: "PolymarketAnalyticsView",
+      //       component: PolymarketAnalytics,
+      //       meta: { requiresAuth: true },
+      //     },
+      //     {
+      //       path: "correlation-graph",
+      //       name: "CorrelationGraphView",
+      //       component: CorrelationGraphView,
+      //       meta: { requiresAuth: true, fullWidth: true },
+      //     },
+      //     {
+      //       path: "max-contingency-table",
+      //       name: "MaxContingencyTableView",
+      //       component: MaxContingencyTableView,
+      //       meta: { requiresAuth: true, fullWidth: true },
+      //     },
+      //     {
+      //       path: "notebooks",
+      //       name: "NotebooksView",
+      //       component: () => import("@/views/UserProfile/NotebooksView.vue"),
+      //       meta: { requiresAuth: true, fullWidth: true },
+      //     },
+      //   ],
+      // },
       {
         path: "trending",
         component: TrendingView,
@@ -139,23 +140,23 @@ const routes = [
           { path: "my-comments", component: PublicView },
           {
             path: "polymarket-price-tracker",
-            redirect: "/polymarket-price-tracker",
+            component: PolymarketPriceTracker,
           },
           {
             path: "polymarket-analytics",
-            redirect: "/polymarket-analytics",
+            component: PolymarketAnalytics,
           },
           {
             path: "correlation-graph",
-            redirect: "/correlation-graph",
+            component: CorrelationGraphView,
           },
           {
             path: "notebooks",
-            redirect: "/notebooks",
+            component: NotebooksView,
           },
           {
             path: "max-contingency-table",
-            redirect: "/max-contingency-table",
+            component: MaxContingencyTableView,
           },
         ],
       },

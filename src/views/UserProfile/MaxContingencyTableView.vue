@@ -634,7 +634,7 @@ import {
   type MaxContingencyTableMatrixRow,
   type MaxContingencyTableRequest,
   type MaxContingencyTableResponse,
-} from "@/api/contingency";
+} from "@/api/contingency.ts";
 import { computed, reactive, ref } from "vue";
 
 const form = reactive<MaxContingencyTableRequest>({
