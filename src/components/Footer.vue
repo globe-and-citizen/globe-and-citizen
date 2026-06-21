@@ -18,11 +18,6 @@
           class="flex items-center text-base font-semibold"
           >About us</RouterLink
         >
-        <RouterLink
-          to="/become-a-contributor"
-          class="flex items-center text-base font-semibold"
-          >Become a contributor</RouterLink
-        >
         <div
           class="flex items-center text-base font-semibold cursor-pointer"
           @click="runLatencyTest"

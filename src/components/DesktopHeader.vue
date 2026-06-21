@@ -32,12 +32,6 @@
             class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
             >News feed</RouterLink
           >
-          <RouterLink
-            to="/about-us"
-            active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
-            class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
-            >About us</RouterLink
-          >
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
               <button
@@ -78,12 +72,6 @@
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <RouterLink
-            to="/become-a-contributor"
-            active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
-            class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
-            >Become a contributor</RouterLink
-          >
         </nav>
       </div>
 
@@ -269,20 +257,6 @@
               class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
               @click="closeMobileMenu"
               >News feed</RouterLink
-            >
-            <RouterLink
-              to="/about-us"
-              active-class="text-red-500"
-              class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
-              @click="closeMobileMenu"
-              >About us</RouterLink
-            >
-            <RouterLink
-              to="/become-a-contributor"
-              active-class="text-red-500"
-              class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
-              @click="closeMobileMenu"
-              >Become a contributor</RouterLink
             >
             <div class="rounded-md border border-gray-200 overflow-hidden">
               <div
