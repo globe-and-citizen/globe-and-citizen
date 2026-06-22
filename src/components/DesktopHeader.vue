@@ -11,7 +11,7 @@
         >
           <component :is="logo" />
           <span class="font-libre font-medium text-xl tracking-[-1.5px]"
-            >Globe & Citizen</span
+            >Homepage</span
           >
         </RouterLink>
 
@@ -27,10 +27,10 @@
             >Markets</RouterLink
           >
           <RouterLink
-            to="/all-news?category=all-news"
+            to="/predictions?category=all-news"
             active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
             class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
-            >News feed</RouterLink
+            >Predictions</RouterLink
           >
         </nav>
       </div>
@@ -212,11 +212,11 @@
               >Markets</RouterLink
             >
             <RouterLink
-              to="/all-news?category=all-news"
+              to="/predictions?category=all-news"
               active-class="text-red-500"
               class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
               @click="closeMobileMenu"
-              >News feed</RouterLink
+              >Predictions</RouterLink
             >
 <!--            <div class="rounded-md border border-gray-200 overflow-hidden">-->
 <!--              <div-->
@@ -341,14 +341,14 @@
         class="gc-container flex items-center gap-6 overflow-x-auto text-base font-lato font-semibold px-4 md:px-0"
       >
         <RouterLink
-          :to="{ path: '/all-news', query: { category: 'all-news' } }"
+          :to="{ path: '/predictions', query: { category: 'all-news' } }"
           :class="{ 'text-red-500': currentCategory === 'all-news' }"
           class="py-3 text-gray-800 whitespace-nowrap hover:text-red-500 border-b-2 border-transparent"
         >
           News
         </RouterLink>
         <RouterLink
-          :to="{ path: '/all-news', query: { category: 'opinions' } }"
+          :to="{ path: '/predictions', query: { category: 'opinions' } }"
           :class="{ 'text-red-500': currentCategory === 'opinions' }"
           class="py-3 text-gray-800 whitespace-nowrap hover:text-red-500 border-b-2 border-transparent"
         >
@@ -379,7 +379,7 @@ const router = useRouter();
 const route = useRoute();
 
 const showFilterBar = computed(() => {
-  return route.path === "/all-news";
+  return route.path === "/predictions";
 });
 const storeUsername = computed(() =>
   authStore.user?.username ? authStore.user.username : "",

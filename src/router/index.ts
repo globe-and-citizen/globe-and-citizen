@@ -25,7 +25,7 @@ import UserOpinionsView from "@/views/UserProfile/UserOpinionsView.vue";
 import Markets from "@/views/Markets.vue";
 import CreateArticle from "@/views/UserProfile/CreateArticle.vue";
 import UserNewsView from "@/views/UserProfile/UserNewsView.vue";
-import AllNewsView from "@/views/AllNewsView.vue";
+import PredictionsView from "@/views/PredictionsView.vue";
 import ChangePasswordView from "@/views/UserProfile/ChangePasswordView.vue";
 import PolymarketPriceTracker from "@/views/UserProfile/PolymarketPriceTracker.vue";
 import PolymarketAnalytics from "@/views/UserProfile/PolymarketAnalytics.vue";
@@ -82,7 +82,7 @@ const routes = [
       },
       { path: "about-us", component: AboutView },
       { path: "markets", component: Markets },
-      { path: "all-news", component: AllNewsView },
+      { path: "predictions", component: PredictionsView },
       { path: "become-a-contributor", component: BecomeAContributorView },
       { path: "sign-in", component: SignInView },
       { path: "sign-up", component: SignUpView },
@@ -160,7 +160,7 @@ const routes = [
           },
         ],
       },
-      { path: "all-news", component: AllNewsView, name: "AllNewsPage" },
+      { path: "predictions", component: PredictionsView, name: "PredictionsPage" },
     ],
   },
   {
