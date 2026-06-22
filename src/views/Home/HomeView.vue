@@ -79,7 +79,7 @@ watch(
 );
 
 const filteredPosts = computed(() => {
-  return postsQuery.data.value?.data.posts.filter((post) => post.author !== "");
+    return (postsQuery.data.value?.data.posts ?? []).filter((post) => (post?.author ?? "") !== "");
 });
 
 const postsForWhatOurReadersSay = computed(() => {
