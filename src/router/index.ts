@@ -82,7 +82,7 @@ const routes = [
       },
       { path: "about-us", component: AboutView },
       { path: "markets", component: Markets },
-      { path: "predictions", component: PredictionsView },
+      { path: "predictions", component: PredictionsView, name: "PredictionsPage" },
       { path: "become-a-contributor", component: BecomeAContributorView },
       { path: "sign-in", component: SignInView },
       { path: "sign-up", component: SignUpView },
@@ -160,7 +160,7 @@ const routes = [
           },
         ],
       },
-      { path: "predictions", component: PredictionsView, name: "PredictionsPage" },
+      // { path: "predictions", component: PredictionsView, name: "PredictionsPage" },
     ],
   },
   {

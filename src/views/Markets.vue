@@ -1,282 +1,176 @@
 <template>
-  <!-- skeleton for when loading initial data -->
-  <div v-if="isLoadingNews" class="animate-pulse">
-    <div
-      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-    >
-      <div v-for="n in 8" :key="n" class="rounded-lg p-4 space-y-4">
-        <div class="bg-gray-300 h-40 w-full rounded-md"></div>
-        <div class="h-6 bg-gray-300 rounded w-3/4"></div>
-        <div class="h-4 bg-gray-300 rounded w-full"></div>
-        <div class="h-4 bg-gray-300 rounded w-full"></div>
-        <div class="h-4 bg-gray-300 rounded w-5/6"></div>
-      </div>
-    </div>
-  </div>
-  <div v-else class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- FILTERS BAR -->
-    <!-- Sources multi-select dropdown -->
-    <div class="flex mb-6 flex-col">
-      <div class="flex justify-between lg:items-center lg:flex-row flex-col">
-        <h1 class="text-2xl font-semibold mb-4 lg:mb-0">Top headlines</h1>
-        <div class="flex flex-col lg:flex-row lg:w-fit w-full"></div>
-      </div>
-    </div>
-    <div
-      v-if="allArticles.length"
-      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-    >
-      <div
-        v-for="(article, index) in allArticles"
-        :key="`${article.url}-${index}`"
-        class="relative"
-      >
-        <VerticalCard
-          :post="{
-            id: index,
-            title: article.title,
-            description: article.description || '',
-            content: article.content || '',
-            author: article.author || '',
-            created_at: article.publishedAt,
-            updated_at: article.publishedAt,
-            url_to_image: article.urlToImage || '',
-            user_id: 0,
-            categories: [],
-            is_external: true,
-            slug: article.title
-              .toLowerCase()
-              .replace(/[^a-z0-9]+/g, '-')
-              .replace(/(^-|-$)/g, ''),
-            source_url: article.url || '',
-            source_name: article.source.name,
-            version: 1,
-            comments: [],
-            sentences: [],
-            total_comments: 0,
-            user: {
-              id: 0,
-              username: article.source.name,
-              email: '',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              bio: '',
-              location: '',
-              website: '',
-              profile_picture_url:
-                'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
-              date_of_birth: '',
-              role_id: 0,
-              role: {
-                id: 0,
-                description: '',
-                level: 0,
-                name: 'user',
-              },
-              description: '',
-              email_verified: false,
-              display_name: article.source.name,
-              color: '',
-              metadata_updated_at: new Date().toISOString(),
-            },
-          }"
-          :show-reading-time-and-comments="false"
-        />
-        <div class="absolute top-28 right-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <Button variant="ghost" size="sm" class="bg-gray-800">
-                <MoreIcon class="h-6 w-6 [&>path]:stroke-white" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem @click="visitSource(article)">
-                Visit the Source
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="createArticle(article)">
-                Create Article
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+    <div class="px-4 md:px-8 lg:px-[120px]">
+        <div v-if="isLoading" class="animate-pulse">
+            <div
+                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
+            >
+                <div v-for="n in 8" :key="n" class="rounded-lg p-4 space-y-4">
+                    <div class="bg-gray-300 h-40 w-full rounded-md"></div>
+                    <div class="h-6 bg-gray-300 rounded w-3/4"></div>
+                    <div class="h-4 bg-gray-300 rounded w-full"></div>
+                    <div class="h-4 bg-gray-300 rounded w-full"></div>
+                    <div class="h-4 bg-gray-300 rounded w-5/6"></div>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
+        <div class="gc-container">
+            <div
+                v-if="!isLoading && news.length === 0"
+                class="w-full py-20 flex flex-col items-center text-center"
+            >
+                <img
+                    src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+                    alt="No articles"
+                    class="w-32 h-32 opacity-70 mb-4"
+                />
+                <h2 class="text-xl font-semibold text-gray-700">No articles found</h2>
+                <p class="text-gray-500 mt-1">
+                    Try adjusting your filters or check again later.
+                </p>
+            </div>
+            <!-- Articles Grid -->
+            <div
+                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mx-auto mt-12"
+            >
+                <div v-for="(article, index) in news" :key="index">
+                    <RouterLink
+                        v-if="!article.is_external"
+                        :to="{ name: 'PostView', params: { id: article.slug } }"
+                    >
+                        <VerticalCard
+                            :post="{
+                id: index,
+                title: article.title,
+                description: article.description || '',
+                content: article.content || '',
+                author: article.author ? article.author : article.user.username,
+                created_at: article.created_at || '',
+                updated_at: article.publishedAt || '',
+                url_to_image: article.url_to_image || '',
+                user_id: 0,
+                categories: [],
+                is_external: true,
 
-    <div
-      v-if="isFetchingNextPage"
-      class="mt-8 animate-pulse grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
-    >
-      <div v-for="n in 4" :key="n" class="rounded-lg p-4 space-y-4">
-        <div class="bg-gray-300 h-40 w-full rounded-md"></div>
-        <div class="h-6 bg-gray-300 rounded w-3/4"></div>
-        <div class="h-4 bg-gray-300 rounded w-full"></div>
-      </div>
-    </div>
+                slug: article.slug || `external-${index}`,
+                source_url: article.url || '',
+                source_name: article.source?.name || 'Unknown Source',
+                version: 1,
+                comments: [],
+                sentences: [],
+                total_comments: 0,
+                user: {
+                  id: 0,
+                  username: article.source?.name || 'Unknown Source',
+                  email: '',
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                  bio: '',
+                  location: '',
+                  website: '',
+                  profile_picture_url:
+                    'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
+                  date_of_birth: '',
+                  role_id: 0,
+                  role: { id: 0, description: '', level: 0, name: 'user' },
+                  description: '',
+                  email_verified: false,
+                  display_name: article.source?.name || 'Unknown Source',
+                  color: '',
+                  metadata_updated_at: new Date().toISOString(),
+                },
+              }"
+                            :show-reading-time-and-comments="false"
+                        />
+                    </RouterLink>
+                </div>
+            </div>
 
-    <div ref="sentinelRef" class="h-10"></div>
+            <!-- Pagination -->
+            <div
+                v-if="!isLoading && news.length > 0"
+                class="flex flex-col sm:flex-row items-center justify-between py-4"
+            >
+                <div class="flex items-center space-x-2 mx-auto">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="isLoading || !canGoPrev"
+                        @click="currentPage--"
+                    >
+                        Previous
+                    </Button>
 
-    <div
-      v-if="!hasNextPage && allArticles.length > 0"
-      class="text-center py-8 text-gray-500"
-    >
-      No more articles to load
+                    <span class="text-sm mx-2">
+            Page {{ currentPage }} of {{ totalPages }}
+          </span>
+
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        :disabled="isLoading || !canGoNext"
+                        @click="currentPage++"
+                    >
+                        Next
+                    </Button>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
+import {fetchAllPosts} from "@/api/posts";
+import type {AllNewsResponseType} from "@/models/Posts";
+import {useQuery} from "@tanstack/vue-query";
+import {computed, ref, watch} from "vue";
 import VerticalCard from "@/components/VerticalCard.vue";
-import {
-  useInfiniteQuery,
-  useMutation,
-} from "@tanstack/vue-query";
-import {
-  fetchNewsApi,
-  generateNewsApiSummary,
-  type NewsApiSummaryPayload,
-} from "@/api/news";
-import type { NewsApiArticle } from "@/models/News";
-import { computed, ref, onMounted, onUnmounted, watch } from "vue";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import MoreIcon from "@/assets/icons/more-icon.svg";
-import { useGlobalStore } from "@/store/globalStore";
-import { useRouter } from "vue-router";
-import { toast } from "vue3-toastify";
-import type { NewsApiResponse } from "@/models/News";
+import {RouterLink, useRoute, useRouter} from "vue-router";
 
+const route = useRoute();
+const pageSize = ref(10);
 const router = useRouter();
-const globalStore = useGlobalStore();
-const sentinelRef = ref<HTMLElement | null>(null);
 
-const { mutate: generatePost } = useMutation({
-  mutationFn: async (
-    payload: NewsApiSummaryPayload
-  ): Promise<{ success: boolean; data: NewsApiSummaryPayload }> => {
-    return await generateNewsApiSummary(payload);
-  },
-  onSuccess: (res) => {
-    globalStore.setGeneratedPost(res.data);
-    router.push(`/profile/create`).catch((err) => {
-      console.error("Navigation error:", err);
-    });
-  },
-  onMutate: () => {
-    toast("Generating post. Please wait...", {
-      type: "loading",
-    });
-  },
-  onError: () => {
-    toast("Failed to generate post. Please refresh and try again:", {
-      type: "error",
-    });
-  },
-});
+const currentPage = ref(Number(route.query.page) || 1);
 
-const getNextPageParam = (
-  lastPage: { data: NewsApiResponse },
-  allPages: Array<{ data: NewsApiResponse }>
-) => {
-  const currentPage = allPages.length;
-  const totalArticles = allPages.reduce(
-    (sum: number, page: { data: NewsApiResponse }) =>
-      sum + page.data.articles.length,
-    0
-  );
-  if (lastPage.data.articles.length === 0) return undefined;
-  if (lastPage.data.totalResults && totalArticles >= lastPage.data.totalResults)
-    return undefined;
-  return currentPage + 1;
+const fetchFn = async () => {
+    return fetchAllPosts(pageSize.value, currentPage.value);
 };
 
-const {
-  data,
-  isLoading: isLoadingNews,
-  isFetchingNextPage,
-  fetchNextPage,
-  hasNextPage,
-} = useInfiniteQuery({
-  queryKey: ["newsApiData"],
-  queryFn: async ({ pageParam = 1 }) => {
-    return fetchNewsApi({ page: pageParam });
-  },
-  getNextPageParam,
-  initialPageParam: 1,
-  refetchOnWindowFocus: false,
-  refetchOnMount: false,
-  staleTime: 1000 * 60 * 5,
+const {data, isLoading, refetch} = useQuery<AllNewsResponseType>({
+    queryKey: ["markets", currentPage.value, pageSize.value],
+    queryFn: fetchFn,
+    refetchOnWindowFocus: true,
 });
 
-const allArticles = computed<NewsApiArticle[]>(() => {
-  if (!data.value?.pages) return [];
-  return data.value.pages.flatMap((page) => page.data.articles);
+watch(currentPage, (newPage) => {
+    router.replace({
+        query: {
+            ...route.query,
+            page: newPage,
+        },
+    });
 });
 
-const visitSource = (article: NewsApiArticle) => {
-  if (article.url) {
-    window.open(article.url, "_blank");
-  }
-};
-
-const createArticle = (article: NewsApiArticle) => {
-  generatePost({
-    author: article.author,
-    content: article.content,
-    description: article.description,
-    publishedAt: article.publishedAt,
-    source: article.source.name,
-    title: article.title,
-    url: article.url,
-    urlToImage: article.urlToImage,
-  });
-};
-
-let observer: IntersectionObserver | null = null;
-
-const setupIntersectionObserver = () => {
-  if (observer) {
-    observer.disconnect();
-  }
-
-  observer = new IntersectionObserver(
-    (entries) => {
-      const firstEntry = entries[0];
-      if (
-        firstEntry.isIntersecting &&
-        hasNextPage.value &&
-        !isFetchingNextPage.value
-      ) {
-        fetchNextPage();
-      }
-    },
-    {
-      rootMargin: "100px",
+watch(
+    () => route.query.page,
+    (newPage) => {
+        currentPage.value = Number(newPage) || 1;
+        refetch();
     }
-  );
+);
 
-  if (sentinelRef.value) {
-    observer.observe(sentinelRef.value);
-  }
-};
+watch(
+    () => route.fullPath,
+    () => {
+        currentPage.value = Number(route.query.page) || 1;
+    },
+    { immediate: true }
+);
 
-watch([sentinelRef, () => data.value], ([sentinel, newsData]) => {
-  if (sentinel && newsData?.pages?.length) {
-    setupIntersectionObserver();
-  }
-});
+const news = computed(() => data.value?.data.posts ?? []);
+const totalCount = computed(() => data.value?.data.totalCount ?? 0);
+const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value));
 
-onMounted(() => {
-  setupIntersectionObserver();
-});
-
-onUnmounted(() => {
-  if (observer) {
-    observer.disconnect();
-  }
-});
+const canGoPrev = computed(() => currentPage.value > 1);
+const canGoNext = computed(() => currentPage.value < totalPages.value);
 </script>

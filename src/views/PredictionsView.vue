@@ -35,13 +35,10 @@
         <div v-for="(article, index) in news" :key="index">
           <RouterLink
             v-if="!article.is_external"
-            :to="
-              category === 'opinions'
-                ? {
+            :to="{
                     name: 'PostEntryView',
                     params: { id: article.post_slug, opinionId: article.slug },
                   }
-                : { name: 'PostView', params: { id: article.slug } }
             "
           >
             <VerticalCard
@@ -126,38 +123,27 @@
 </template>
 
 <script setup lang="ts">
-import { fetchAllPosts } from "@/api/posts";
-import { fetchAllOpinions } from "@/api/opinions";
-import type { AllNewsResponseType } from "@/models/Posts";
-import { useQuery } from "@tanstack/vue-query";
-import { computed, ref, watch } from "vue";
+import {fetchAllOpinions} from "@/api/opinions";
+import type {AllNewsResponseType} from "@/models/Posts";
+import {useQuery} from "@tanstack/vue-query";
+import {computed, ref, watch} from "vue";
 import VerticalCard from "@/components/VerticalCard.vue";
-import { RouterLink, useRoute, useRouter } from "vue-router";
+import {RouterLink, useRoute, useRouter} from "vue-router";
 
 const route = useRoute();
 const pageSize = ref(10);
 const router = useRouter();
 
 const currentPage = ref(Number(route.query.page) || 1);
-const category = computed(() => (route.query.category as string) || null);
 
 const fetchFn = async () => {
-  if (category.value === "opinions") {
     return fetchAllOpinions(pageSize.value, currentPage.value);
-  } else {
-    return fetchAllPosts(pageSize.value, currentPage.value);
-  }
 };
 
-const { data, isLoading, refetch } = useQuery<AllNewsResponseType>({
-  queryKey: ["allNews", currentPage, pageSize, category],
-  queryFn: fetchFn,
-  refetchOnWindowFocus: true,
-});
-
-watch(category, () => {
-  currentPage.value = 1;
-  refetch();
+const {data, isLoading, refetch} = useQuery<AllNewsResponseType>({
+    queryKey: ["predictions", currentPage.value, pageSize.value],
+    queryFn: fetchFn,
+    refetchOnWindowFocus: true,
 });
 
 watch(currentPage, (newPage) => {
