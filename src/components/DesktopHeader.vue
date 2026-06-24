@@ -42,9 +42,9 @@
           v-if="headerState === 'no-user' || headerState === 'no-user-search'"
         >
           <div class="hidden md:flex items-center gap-4">
-            <RouterLink to="/sign-up" class="w-fit">
-              <Button variant="secondary" title="Sign up" size="medium" />
-            </RouterLink>
+<!--            <RouterLink to="/sign-up" class="w-fit">-->
+<!--              <Button variant="secondary" title="Sign up" size="medium" />-->
+<!--            </RouterLink>-->
             <RouterLink to="/sign-in" class="w-fit">
               <Button variant="primary" title="Sign in" size="medium" />
             </RouterLink>
@@ -244,12 +244,12 @@
             v-if="headerState === 'no-user' || headerState === 'no-user-search'"
           >
             <div class="flex flex-col gap-3 border-t pt-4">
-              <RouterLink
-                to="/sign-up"
-                class="text-center py-3 px-4 border border-black rounded-md text-base font-lato text-black-100 font-semibold hover:bg-gray-50"
-                @click="closeMobileMenu"
-                >Sign up</RouterLink
-              >
+<!--              <RouterLink-->
+<!--                to="/sign-up"-->
+<!--                class="text-center py-3 px-4 border border-black rounded-md text-base font-lato text-black-100 font-semibold hover:bg-gray-50"-->
+<!--                @click="closeMobileMenu"-->
+<!--                >Sign up</RouterLink-->
+<!--              >-->
               <RouterLink
                 to="/sign-in"
                 class="text-center bg-black font-lato font-semibold text-white px-4 py-3 rounded-md text-base hover:opacity-90"
