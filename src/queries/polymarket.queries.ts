@@ -38,7 +38,7 @@ export const useMarketData = (
   queryId = "default",
 ) => {
   return useQuery({
-    queryKey: computed(() => ["marketData", queryId, endpoint]),
+    queryKey: computed(() => ["marketData", queryId, toValue(endpoint)]),
     queryFn: async () => {
       // Query params: passed as URL query string (?url=xxx)
       const queryParams = { url: toValue(endpoint) };

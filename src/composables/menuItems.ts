@@ -100,6 +100,12 @@ export const profileMenuItems = [
     },
     {
         section: "Tools",
+        icon: correlationGraph,
+        title: "Historical correlation graph",
+        url: "/historical-correlation-graph",
+    },
+    {
+        section: "Tools",
         icon: table,
         title: "Max contingency table",
         url: "/max-contingency-table",
@@ -127,6 +133,11 @@ export const serviceMenuItems = [
         section: "Services",
         title: "Polymarket correlation graph",
         url: "/correlation-graph",
+    },
+    {
+        section: "Services",
+        title: "Polymarket historical correlation graph",
+        url: "/historical-correlation-graph",
     },
     {
         section: "Services",

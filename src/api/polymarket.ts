@@ -182,21 +182,38 @@ export type PolymarketPriceHistoryResponse = {
 
 export const getPolymarketPricesHistory = async (params: {
   market: string;
-  startTs: number;
+  startTs?: number;
+  endTs?: number;
 }): Promise<PolymarketPriceHistoryResponse> => {
-  const { market, startTs } = params;
+  const {market, startTs, endTs} = params;
   if (!market?.trim()) {
     throw new Error("Missing CLOB token id");
   }
-  if (!Number.isFinite(startTs) || startTs < 0) {
-    throw new Error("Invalid start timestamp");
-  }
+
 
   const url = new URL("/prices-history", CLOB_BASE_URL);
   url.searchParams.set("market", market);
-  url.searchParams.set("startTs", String(Math.floor(startTs)));
 
-  const response = await interceptorFetch(url.toString(), { method: "GET" });
+  if (startTs) {
+    if (!Number.isFinite(startTs) || startTs < 0) {
+      throw new Error("Invalid start timestamp");
+    }
+
+    url.searchParams.set("startTs", String(Math.floor(startTs)));
+  }
+
+  if (endTs) {
+    if (!Number.isFinite(endTs) || endTs < 0 || (startTs && endTs < startTs)) {
+      throw new Error("Invalid end timestamp");
+    }
+
+    url.searchParams.set("endTs", String(Math.floor(endTs)));
+  }
+
+
+  url.searchParams.set("interval", "all");
+
+  const response = await interceptorFetch(url.toString(), {method: "GET"});
   if (!response.ok) {
     throw new Error(`Failed to fetch price history (${response.status})`);
   }
