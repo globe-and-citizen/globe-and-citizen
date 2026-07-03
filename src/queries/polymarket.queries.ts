@@ -45,7 +45,7 @@ export const useMarketData = (
 
       const { data } = await statsApiClient.get<
         PolymarketEvent | PolymarketMarket
-      >("/polymarket/market-data", { params: queryParams });
+      >("/v1/polymarket/market-data", { params: queryParams });
       return data || [];
     },
     // refetchInterval: 10000,
