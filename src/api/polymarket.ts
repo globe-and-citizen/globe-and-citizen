@@ -1,6 +1,6 @@
-import { fetchWithAuth, interceptorFetch } from "./auth";
-import { API_BASE_URL } from "./constants";
-import { toast } from "vue3-toastify";
+import {fetchWithAuth, interceptorFetch} from "./auth";
+import {API_BASE_URL} from "./constants";
+import {toast} from "vue3-toastify";
 
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, "");
 
@@ -224,6 +224,84 @@ export const getPolymarketPricesHistory = async (params: {
   }
 
   return res as PolymarketPriceHistoryResponse;
+};
+
+export type PolymarketPricesHistoriesResponse = {
+  history_a: PolymarketPriceHistoryPoint[];
+  history_b: PolymarketPriceHistoryPoint[];
+};
+
+export const getPolymarketPricesHistories = async (params: {
+  market_a: string;
+  market_b: string;
+  startTs: number;
+  endTs: number;
+}): Promise<PolymarketPricesHistoriesResponse> => {
+  const {market_a, market_b, startTs, endTs} = params;
+  if (!market_a?.trim() || !market_b?.trim()) {
+    throw new Error("Missing CLOB token id");
+  }
+
+  const url = new URL("/v1/polymarket/prices-histories", API_BASE_URL);
+  // url.searchParams.set("market", market);
+
+  if (!Number.isFinite(startTs) || startTs < 0) {
+    throw new Error("Invalid start timestamp");
+  }
+  // url.searchParams.set("startTs", String(Math.floor(startTs)));
+
+  if (!Number.isFinite(endTs) || endTs < 0 || (startTs && endTs < startTs)) {
+    throw new Error("Invalid end timestamp");
+  }
+  // url.searchParams.set("endTs", String(Math.floor(endTs)));
+
+  const response = await interceptorFetch(
+    url.toString(),
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        market_a: market_a,
+        market_b: market_b,
+        start_ts: startTs,
+        end_ts: endTs
+      }),
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch price history (${response.status})`);
+  }
+
+  const res = (await response.json()) as unknown;
+
+  // unwrap data envelope if present
+  let payload = res;
+  if (payload && typeof payload === "object" && "data" in payload) {
+    payload = payload.data;
+  }
+
+  let historyMap: Record<string, PolymarketPriceHistoryPoint[]> = {};
+  if (
+    payload &&
+    typeof payload === "object" &&
+    "history" in payload &&
+    payload.history &&
+    typeof payload.history === "object"
+  ) {
+    historyMap = payload.history as Record<
+      string,
+      PolymarketPriceHistoryPoint[]
+    >;
+  }
+
+  const result: PolymarketPricesHistoriesResponse = {
+    history_a: historyMap[market_a] ?? [],
+    history_b: historyMap[market_b] ?? [],
+  };
+
+  return result;
 };
 
 export type PolymarketGammaSearchMarket = {

@@ -198,7 +198,7 @@ import {
 import {CanvasRenderer} from "echarts/renderers";
 
 import type {EChartsOption} from "echarts";
-import type {PolymarketPriceHistoryResponse} from "@/api/polymarket.ts";
+import type {PolymarketPriceHistoryPoint} from "@/api/polymarket.ts";
 
 echarts.use([
   ScatterChart,
@@ -231,8 +231,8 @@ const props = withDefaults(
     xLabel?: string;
     yLabel?: string;
 
-    xHistory: PolymarketPriceHistoryResponse;
-    yHistory: PolymarketPriceHistoryResponse;
+    xHistory: PolymarketPriceHistoryPoint[];
+    yHistory: PolymarketPriceHistoryPoint[];
   }>(),
   {
     title: "Historical Correlation Scatter",
@@ -264,8 +264,8 @@ const yZoom = ref({
  * O(n)
  */
 const samples = computed<ScatterPoint[]>(() => {
-  const xHistory = [...props.xHistory.history].sort((a, b) => a.t - b.t);
-  const yHistory = [...props.yHistory.history].sort((a, b) => a.t - b.t);
+  const xHistory = [...props.xHistory].sort((a, b) => a.t - b.t);
+  const yHistory = [...props.yHistory].sort((a, b) => a.t - b.t);
 
   if (!xHistory.length || !yHistory.length) {
     return [];
@@ -371,8 +371,8 @@ const yRangeLabel = computed(
 
 const matchedLabel = computed(() => {
   const total = Math.max(
-    props.xHistory.history.length,
-    props.yHistory.history.length,
+    props.xHistory.length,
+    props.yHistory.length,
   );
 
   if (total === 0) {

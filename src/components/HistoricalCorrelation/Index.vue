@@ -17,7 +17,7 @@
           </p>
         </div>
 
-        <RouterLink to="/correlation-graph" class="btn btn-sm btn-ghost">
+        <RouterLink to="/profile/correlation-graph" class="btn btn-sm btn-ghost">
           Back to Live Correlation
         </RouterLink>
       </div>
@@ -58,7 +58,10 @@ import {RouterLink} from "vue-router";
 import {toast} from "vue-sonner";
 import HistoricalScatterPlot from "./HistoricalScatterPlot.vue";
 import MarketSelectionForm from "./MarketSelectionForm.vue";
-import {getPolymarketPricesHistory, type PolymarketPriceHistoryResponse} from "@/api/polymarket.ts";
+import {
+  getPolymarketPricesHistories,
+  type PolymarketPriceHistoryPoint,
+} from "@/api/polymarket.ts";
 
 defineOptions({name: "HistoricalCorrelationPage"});
 
@@ -73,8 +76,8 @@ const startDate = ref("");
 const endDate = ref("");
 const pairedSamplesCount = ref(0);
 
-const marketAHistory = ref<PolymarketPriceHistoryResponse>({history: []});
-const marketBHistory = ref<PolymarketPriceHistoryResponse>({history: []});
+const marketAHistory = ref<PolymarketPriceHistoryPoint[]>([]);
+const marketBHistory = ref<PolymarketPriceHistoryPoint[]>([]);
 
 const onGenerate = async () => {
   if (!tokenIdA.value || !tokenIdB.value) {
@@ -106,13 +109,15 @@ const onGenerate = async () => {
     let curStart = startMs;
     while (curStart <= endMs) {
       const chunkEnd = Math.min(endMs, curStart + chunkSec - 1);
-      const [aRes, bRes] = await Promise.all([
-        getPolymarketPricesHistory({ market: tokenIdA.value, startTs: curStart, endTs: chunkEnd }),
-        getPolymarketPricesHistory({ market: tokenIdB.value, startTs: curStart, endTs: chunkEnd }),
-      ]);
+      const res = await getPolymarketPricesHistories({
+        market_a: tokenIdA.value,
+        market_b: tokenIdB.value,
+        startTs: curStart,
+        endTs: chunkEnd
+      });
 
-      marketAHistory.value.history.push(...(aRes.history || []));
-      marketBHistory.value.history.push(...(bRes.history || []));
+      marketAHistory.value.push(...(res.history_a || []));
+      marketBHistory.value.push(...(res.history_b || []));
 
       curStart = chunkEnd + 1;
     }
@@ -124,8 +129,8 @@ const onGenerate = async () => {
       return Array.from(map.values()).sort((a, b) => a.t - b.t);
     };
 
-    marketAHistory.value.history = normalize(marketAHistory.value.history);
-    marketBHistory.value.history = normalize(marketBHistory.value.history);
+    marketAHistory.value = normalize(marketAHistory.value);
+    marketBHistory.value = normalize(marketBHistory.value);
 
     watch(pairedSamplesCount, (v) => {
       statusMessage.value = `Generated ${v} historical paired samples from ${startDate.value} to ${endDate.value}.`;
