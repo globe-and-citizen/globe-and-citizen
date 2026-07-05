@@ -98,6 +98,10 @@ const onGenerate = async () => {
     return;
   }
 
+  // clear previous history
+  marketAHistory.value = [];
+  marketBHistory.value = [];
+
   isLoading.value = true;
   statusMessage.value = "Generating historical correlation...";
   try {

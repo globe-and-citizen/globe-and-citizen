@@ -3,7 +3,7 @@ import axios, {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from "axios";
-import { BACKEND_URL } from "@/constants";
+import {BACKEND_URL} from "@/constants";
 import {interceptorFetch} from "@/api/auth.ts";
 
 /**
@@ -88,14 +88,12 @@ const createFetchAdapter = (customFetch?: typeof fetch) => {
     const baseURL = config.baseURL ?? "";
     const url = new URL(config.url ?? "", baseURL);
 
-    // query params
     const params = toSearchParams(config.params);
     params.forEach((v, k) => {
       url.searchParams.append(k, v);
     });
 
-    const method = (config.method || "get").toUpperCase();
-
+    const method = (config.method ?? "get").toUpperCase();
     const headers = toFetchHeaders(config.headers);
 
     let body: BodyInit | undefined;
@@ -115,10 +113,7 @@ const createFetchAdapter = (customFetch?: typeof fetch) => {
         body = JSON.stringify(config.data);
 
         if (!headers.has("Content-Type")) {
-          headers.set(
-            "Content-Type",
-            "application/json",
-          );
+          headers.set("Content-Type", "application/json");
         }
       } else {
         body = config.data as BodyInit;
@@ -136,11 +131,9 @@ const createFetchAdapter = (customFetch?: typeof fetch) => {
     });
 
     const contentType =
-      res.headers.get("content-type") || "";
+      res.headers.get("content-type") ?? "";
 
-    const data = contentType.includes(
-      "application/json",
-    )
+    const data = contentType.includes("application/json")
       ? await res.json()
       : await res.text();
 
@@ -150,7 +143,7 @@ const createFetchAdapter = (customFetch?: typeof fetch) => {
       responseHeaders[k] = v;
     });
 
-    return {
+    const response: AxiosResponse = {
       data,
       status: res.status,
       statusText: res.statusText,
@@ -158,6 +151,19 @@ const createFetchAdapter = (customFetch?: typeof fetch) => {
       config,
       request: res,
     };
+
+    // Make fetch behave like Axios
+    if (!res.ok) {
+      throw new axios.AxiosError(
+        `Request failed with status code ${res.status}`,
+        undefined,
+        config,
+        res,
+        response,
+      );
+    }
+
+    return response;
   };
 };
 
@@ -183,22 +189,23 @@ const statsApiClient = axios.create({
   adapter: createFetchAdapter(customFetch),
 });
 
-statsApiClient.interceptors.response.use((response) => {
-  const payload = response.data as
-    | { data?: unknown }
-    | unknown;
+statsApiClient.interceptors.response.use(
+  (response) => {
+    const payload = response.data as { data?: unknown } | unknown;
 
-  if (
-    payload &&
-    typeof payload === "object" &&
-    "data" in payload
-  ) {
-    response.data = (
-      payload as { data?: unknown }
-    ).data;
-  }
+    if (
+      payload &&
+      typeof payload === "object" &&
+      "data" in payload
+    ) {
+      response.data = (payload as { data?: unknown }).data;
+    }
 
-  return response;
-});
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error);
+  },
+);
 
 export default statsApiClient;

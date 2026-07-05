@@ -196,10 +196,10 @@ import type {PolymarketEvent, PolymarketMarket} from "@/types";
 import {parseIfString, parsePolymarketUrl} from "@/utils/trading/useTradingUtils.ts";
 import {useMarketData} from "@/queries";
 
-const tokenIdA = defineModel<string>("tokenIdA", { default: "" });
-const tokenIdB = defineModel<string>("tokenIdB", { default: "" });
-const startDate = defineModel<string>("startDate", { default: "" });
-const endDate = defineModel<string>("endDate", { default: "" });
+const tokenIdA = defineModel<string>("tokenIdA", {default: ""});
+const tokenIdB = defineModel<string>("tokenIdB", {default: ""});
+const startDate = defineModel<string>("startDate", {default: ""});
+const endDate = defineModel<string>("endDate", {default: ""});
 
 defineProps<{
   isLoading: boolean;
@@ -235,16 +235,24 @@ const marketUrlB = ref("");
 const marketA = ref<PolymarketMarket | null>(null);
 const marketB = ref<PolymarketMarket | null>(null);
 
-const endpointsA = computed(() => {
-  const parsed = parsePolymarketUrl(marketUrlA.value);
-  if (!parsed) return null;
+function computeEndpointFromUrl(url: string): string | null {
+  if (!url) return null;
+
+  const parsed = parsePolymarketUrl(url);
+  if (!parsed) {
+    console.error("Failed to parse polymarket URL:", url);
+    return null
+  }
+
   return parsed.type === "market" ? `/markets/slug/${parsed.slug}` : `/events/slug/${parsed.slug}`;
+}
+
+const endpointsA = computed(() => {
+  return computeEndpointFromUrl(marketUrlA.value);
 });
 
 const endpointsB = computed(() => {
-  const parsed = parsePolymarketUrl(marketUrlB.value);
-  if (!parsed) return null;
-  return parsed.type === "market" ? `/markets/slug/${parsed.slug}` : `/events/slug/${parsed.slug}`;
+  return computeEndpointFromUrl(marketUrlB.value);
 });
 
 const {data: marketDataA} = useMarketData(endpointsA, "historical-correlation-a");
@@ -308,16 +316,16 @@ const selectedOutcomeNameB = computed(() => {
   return selected?.name ?? "Market Two";
 });
 
-const xAxisName = defineModel<string>("xAxisName", { default: "" });
-const yAxisName = defineModel<string>("yAxisName", { default: "" });
+const xAxisName = defineModel<string>("xAxisName", {default: ""});
+const yAxisName = defineModel<string>("yAxisName", {default: ""});
 
 watch(selectedOutcomeNameA, (v) => {
   xAxisName.value = v;
-}, { immediate: true });
+}, {immediate: true});
 
 watch(selectedOutcomeNameB, (v) => {
   yAxisName.value = v;
-}, { immediate: true });
+}, {immediate: true});
 // const chartTitle = computed(() => `${selectedOutcomeNameA.value} vs ${selectedOutcomeNameB.value}`);
 
 </script>
