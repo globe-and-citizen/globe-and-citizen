@@ -89,7 +89,7 @@ export const getPolymarketForPriceAlerts = async (url: string) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({url}),
     },
   );
   if (!response.ok) {
@@ -236,8 +236,10 @@ export const getPolymarketPricesHistories = async (params: {
   market_b: string;
   startTs: number;
   endTs: number;
+  interval: string;
+  fidelity: number;
 }): Promise<PolymarketPricesHistoriesResponse> => {
-  const {market_a, market_b, startTs, endTs} = params;
+  const {market_a, market_b, startTs, endTs, interval, fidelity} = params;
   if (!market_a?.trim() || !market_b?.trim()) {
     throw new Error("Missing CLOB token id");
   }
@@ -266,7 +268,9 @@ export const getPolymarketPricesHistories = async (params: {
         market_a: market_a,
         market_b: market_b,
         start_ts: startTs,
-        end_ts: endTs
+        end_ts: endTs,
+        interval: interval,
+        fidelity: fidelity,
       }),
     },
   );
@@ -355,11 +359,11 @@ export const searchPolymarketPublic = async (params: {
   limitPerType?: number;
   page?: number;
 }): Promise<PolymarketGammaPublicSearchResponse> => {
-  const { q, keepClosedMarkets, limitPerType, page } = params;
+  const {q, keepClosedMarkets, limitPerType, page} = params;
 
   const query = (q ?? "").trim();
   if (!query) {
-    return { events: [], markets: [] };
+    return {events: [], markets: []};
   }
 
   const base = normalizeBaseUrl(API_BASE_URL);
@@ -398,3 +402,11 @@ export const searchPolymarketPublic = async (params: {
   // Backwards-compat if the backend returns the raw shape.
   return res as PolymarketGammaPublicSearchResponse;
 };
+
+// correlation graph
+export type SelectMarketOption = {
+  name: string;
+  event: PolymarketGammaSearchEvent | null;
+  market: PolymarketGammaSearchMarket | null;
+  isSelected: boolean;
+}

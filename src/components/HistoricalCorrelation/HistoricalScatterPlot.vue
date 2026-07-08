@@ -6,7 +6,7 @@
     <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
       <div>
         <h2 class="text-lg font-semibold text-base-content">
-          {{ title }}
+          Historical Correlation Scatter
         </h2>
 
         <p class="mt-1 text-sm text-base-content/70">
@@ -193,6 +193,7 @@ import {
   DataZoomComponent,
   ToolboxComponent,
   LegendComponent,
+  TitleComponent
 } from "echarts/components";
 
 import {CanvasRenderer} from "echarts/renderers";
@@ -209,6 +210,7 @@ echarts.use([
   ToolboxComponent,
   LegendComponent,
   CanvasRenderer,
+  TitleComponent
 ]);
 
 interface ScatterPoint {
@@ -235,7 +237,7 @@ const props = withDefaults(
     yHistory: PolymarketPriceHistoryPoint[];
   }>(),
   {
-    title: "Historical Correlation Scatter",
+    title: "",
     xLabel: "Market A",
     yLabel: "Market B",
   },
@@ -615,18 +617,36 @@ const tooltipFormatter = (params: unknown) => {
 const updateChart = () => {
   if (!chart) return;
 
+  const hasTitle = !!props.title;
+  const titleTop = 10;
+  const legendTop = hasTitle ? 42 : 12; // легенда будет ниже заголовка, если заголовок есть
+  const gridTop = hasTitle ? 80 : 50; // отступ сверху для сетки, чтобы не перекрывать заголовок/легенду
+
   const option: EChartsOption = {
     animation: false,
+
+    title: hasTitle
+      ? {
+        text: props.title,
+        left: "center",
+        top: titleTop,
+        textStyle: {
+          fontSize: 14,
+          fontWeight: 600,
+          color: "#111827",
+        },
+      }
+      : undefined,
 
     grid: {
       left: 70,
       right: 70,
-      top: 50,
+      top: gridTop,
       bottom: 70,
     },
 
     legend: {
-      top: 10,
+      top: legendTop,
       data: ["Samples", "Regression"],
     },
 
@@ -694,33 +714,18 @@ const updateChart = () => {
       {
         name: "Samples",
         type: "scatter",
-
         symbolSize: 8,
-
-        itemStyle: {
-          color: "#2563eb",
-        },
-
+        itemStyle: { color: "#2563eb" },
         data: scatterData.value,
       },
 
       {
         name: "Regression",
-
         type: "line",
-
         showSymbol: false,
-
         smooth: false,
-
         silent: true,
-
-        lineStyle: {
-          color: "#dc2626",
-          width: 2,
-          type: "dashed",
-        },
-
+        lineStyle: { color: "#dc2626", width: 2, type: "dashed" },
         data: regressionLine.value,
       },
     ],

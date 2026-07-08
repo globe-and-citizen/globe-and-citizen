@@ -1,5 +1,25 @@
 <template>
   <form class="space-y-5" @submit.prevent="$emit('generate')">
+    <div class="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <div>
+        <div class="text-sm font-semibold text-foreground">
+          Select 2 Markets
+        </div>
+        <p class="text-xs text-muted-foreground mt-1">
+          Paste Polymarket URLs or open search.
+        </p>
+      </div>
+
+      <Button variant="outline" @click="openMarketSearchDialog">
+        Open Search
+      </Button>
+    </div>
+
+    <SearchDialog
+      v-model:open="openSearchDialog"
+      v-model:select-market-options="marketOptions"
+    />
+
     <div class="grid gap-4 lg:grid-cols-2">
       <!-- Market A -->
       <div class="space-y-4 rounded-xl border border-base-300 bg-base-200/40 p-4">
@@ -134,7 +154,7 @@
       </div>
     </div>
 
-    <div class="grid gap-4 sm:grid-cols-2">
+    <div class="grid gap-4 sm:grid-cols-4">
       <div class="field-group flex flex-col gap-1.5">
         <label
           class="field-label text-[11px] font-semibold uppercase tracking-wide text-base-content/65"
@@ -159,6 +179,42 @@
           v-model="endDate"
           :disabled="isLoading"
           type="date"
+          class="input input-bordered h-10 w-full rounded-lg border-base-300 bg-base-100 text-sm border px-2"
+        />
+      </div>
+
+      <div class="field-group flex flex-col gap-1.5">
+        <label
+          class="field-label text-[11px] font-semibold uppercase tracking-wide text-base-content/65"
+        >
+          Frequency
+        </label>
+        <select
+          v-model="interval"
+          :disabled="isLoading"
+          class="select select-bordered h-10 w-full rounded-lg border-base-300 bg-base-100 text-sm border focus:ring-primary/20 px-2"
+        >
+          <option
+            v-for="opt in allowedIntervals"
+            :key="opt"
+            :value="opt"
+          >
+            {{ opt }}
+          </option>
+        </select>
+      </div>
+
+      <div class="field-group flex flex-col gap-1.5">
+        <label
+          class="field-label text-[11px] font-semibold uppercase tracking-wide text-base-content/65"
+        >
+          Fidelity
+        </label>
+        <input
+          v-model="fidelity"
+          :disabled="isLoading"
+          type="number"
+          step="1"
           class="input input-bordered h-10 w-full rounded-lg border-base-300 bg-base-100 text-sm border px-2"
         />
       </div>
@@ -195,17 +251,23 @@ import {computed, ref, watch} from "vue";
 import type {PolymarketEvent, PolymarketMarket} from "@/types";
 import {parseIfString, parsePolymarketUrl} from "@/utils/trading/useTradingUtils.ts";
 import {useMarketData} from "@/queries";
+import {Button} from "@/components/ui/button";
+import type {PolymarketGammaSearchEvent, SelectMarketOption} from "@/api/polymarket.ts";
+import SearchDialog from "@/components/HistoricalCorrelation/SearchDialog.vue";
 
 const tokenIdA = defineModel<string>("tokenIdA", {default: ""});
 const tokenIdB = defineModel<string>("tokenIdB", {default: ""});
 const startDate = defineModel<string>("startDate", {default: ""});
 const endDate = defineModel<string>("endDate", {default: ""});
+const interval = defineModel<string>("historyInterval", {default: "1h"});
+const allowedIntervals = ["1h", "6h", "1d", "1w", "1m", "all", "max"];
+const fidelity = defineModel<number>("historyFidelity", {default: 1});
 
 defineProps<{
   isLoading: boolean;
 }>();
 
-defineEmits(["generate"]);
+const emit = defineEmits(["generate", "update:chartTitle"]);
 
 const canGenerate = computed(() => {
   if (
@@ -234,6 +296,9 @@ const marketUrlA = ref("");
 const marketUrlB = ref("");
 const marketA = ref<PolymarketMarket | null>(null);
 const marketB = ref<PolymarketMarket | null>(null);
+
+const marketsA = ref<PolymarketMarket[]>([]);
+const marketsB = ref<PolymarketMarket[]>([]);
 
 function computeEndpointFromUrl(url: string): string | null {
   if (!url) return null;
@@ -267,8 +332,13 @@ const toMarketList = (value: PolymarketEvent | PolymarketMarket | unknown): Poly
   return marketValue.id ? [marketValue] : [];
 };
 
-const marketsA = computed(() => toMarketList(marketDataA.value));
-const marketsB = computed(() => toMarketList(marketDataB.value));
+watch(marketDataA, (value) => {
+  marketsA.value = toMarketList(value);
+}, {immediate: true});
+
+watch(marketDataB, (value) => {
+  marketsB.value = toMarketList(value);
+}, {immediate: true});
 
 const toOutcomes = (market: PolymarketMarket | null): MarketOutcome[] => {
   if (!market) return [];
@@ -326,6 +396,62 @@ watch(selectedOutcomeNameA, (v) => {
 watch(selectedOutcomeNameB, (v) => {
   yAxisName.value = v;
 }, {immediate: true});
-// const chartTitle = computed(() => `${selectedOutcomeNameA.value} vs ${selectedOutcomeNameB.value}`);
 
+const chartTitle = computed(() => {
+  if (!marketA.value || !marketB.value) return "";
+  return `${selectedOutcomeNameA.value.toUpperCase()} - ${marketA.value?.question} vs ${selectedOutcomeNameB.value.toUpperCase()} - ${marketB.value?.question}`;
+})
+
+watch(chartTitle, (v) => emit("update:chartTitle", v), {immediate: true});
+
+/// Search
+const openSearchDialog = ref(false);
+const marketOptions = ref<SelectMarketOption[]>([
+  {
+    name: "Market A",
+    event: null,
+    market: null,
+    isSelected: false,
+  },
+  {
+    name: "Market B",
+    event: null,
+    market: null,
+    isSelected: false,
+  },
+]);
+
+function openMarketSearchDialog() {
+  openSearchDialog.value = true;
+}
+
+function toPolymarketEventUrl(event: PolymarketGammaSearchEvent | null) {
+  const slug = (event?.slug ?? "").trim();
+  if (!slug) return "https://polymarket.com";
+  return `https://polymarket.com/event/${encodeURIComponent(slug)}`;
+}
+
+watch(marketOptions, (opts) => {
+  const a = opts.find(o => o.name === "Market A");
+  const b = opts.find(o => o.name === "Market B");
+  if (a?.isSelected) {
+    marketUrlA.value = toPolymarketEventUrl(a.event)
+    marketsA.value = a.event?.markets as PolymarketMarket[] ?? [];
+    marketA.value = marketsA.value.find(m => m.id === a.market?.id) ?? null;
+  } else if (marketUrlA.value !== "" && marketA.value !== null && marketsA.value.length > 0) {
+    marketUrlA.value = "";
+    marketA.value = null;
+    marketsA.value = [];
+  }
+
+  if (b?.isSelected) {
+    marketUrlB.value = toPolymarketEventUrl(b.event)
+    marketsB.value = b.event?.markets as PolymarketMarket[] ?? [];
+    marketB.value = marketsB.value.find(m => m.id === b.market?.id) ?? null;
+  } else if (marketUrlB.value !== "" && marketB.value !== null && marketsB.value.length > 0) {
+    marketUrlB.value = "";
+    marketB.value = null;
+    marketsB.value = [];
+  }
+}, {immediate: true, deep: true})
 </script>

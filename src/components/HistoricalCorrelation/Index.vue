@@ -31,8 +31,11 @@
         v-model:token-id-b="tokenIdB"
         v-model:start-date="startDate"
         v-model:end-date="endDate"
+        v-model:interval="historyInterval"
+        v-model:fidelity="historyFidelity"
         :is-loading="isLoading"
         @generate="onGenerate"
+        @update:chart-title="t => chartTitle = t"
       />
     </section>
 
@@ -42,6 +45,7 @@
       :y-history="marketBHistory"
       :x-label="xAxisName"
       :y-label="yAxisName"
+      :title="chartTitle"
     />
 
     <div class="rounded-md border border-base-300 bg-base-200/60 px-3 py-2.5">
@@ -74,7 +78,10 @@ const tokenIdA = ref("");
 const tokenIdB = ref("");
 const startDate = ref("");
 const endDate = ref("");
+const historyInterval = ref("all");
+const historyFidelity = ref(1);
 const pairedSamplesCount = ref(0);
+const chartTitle = ref("");
 
 const marketAHistory = ref<PolymarketPriceHistoryPoint[]>([]);
 const marketBHistory = ref<PolymarketPriceHistoryPoint[]>([]);
@@ -117,7 +124,9 @@ const onGenerate = async () => {
         market_a: tokenIdA.value,
         market_b: tokenIdB.value,
         startTs: curStart,
-        endTs: chunkEnd
+        endTs: chunkEnd,
+        interval: historyInterval.value,
+        fidelity: historyFidelity.value,
       });
 
       marketAHistory.value.push(...(res.history_a || []));
