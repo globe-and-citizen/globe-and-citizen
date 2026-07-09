@@ -24,34 +24,44 @@
         </p>
       </div>
 
-      <div class="join">
-        <button
-          class="btn btn-sm join-item"
-          @click="zoomOut"
-        >
-          −
-        </button>
+      <div class="flex items-center gap-3">
+        <!-- круглая группа zoom -->
+        <div class="flex items-center gap-1 rounded-lg bg-base-200/40 p-1">
+          <button
+            class="icon-btn btn btn-sm btn-circle btn-ghost"
+            @click="zoomOut"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+            </svg>
+          </button>
 
-        <button
-          class="btn btn-sm join-item"
-          @click="zoomIn"
-        >
-          +
-        </button>
+          <button
+            class="icon-btn btn btn-sm btn-circle btn-ghost"
+            @click="zoomIn"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+        </div>
 
-        <button
-          class="btn btn-sm btn-ghost join-item"
-          @click="fitToData"
-        >
-          Fit
-        </button>
+        <!-- Fit / Reset -->
+        <div class="flex items-center gap-2">
+          <button
+            class="btn btn-sm btn-outline flex items-center gap-2"
+            @click="fitToData"
+          >
+            Fit
+          </button>
 
-        <button
-          class="btn btn-sm btn-ghost join-item"
-          @click="resetZoom"
-        >
-          Reset
-        </button>
+          <button
+            class="btn btn-sm btn-ghost flex items-center gap-2"
+            @click="resetZoom"
+          >
+            Reset
+          </button>
+        </div>
       </div>
     </div>
 
@@ -472,7 +482,7 @@ const regressionLine = computed(() => {
   ];
 });
 
-const zoomStep = 0.85;
+const zoomStep = 0.95;
 
 const clampPercent = (value: number) => {
   if (value < 0) return 0;
@@ -574,7 +584,48 @@ const resetZoom = () => {
 };
 
 const fitToData = () => {
-  resetZoom();
+  if (!chart) {
+    resetZoom();
+    return;
+  }
+
+  if (!samples.value.length) {
+    resetZoom();
+    return;
+  }
+
+  try {
+    chart.dispatchAction({
+      type: "dataZoom",
+      dataZoomId: "xInside",
+      startValue: xRange.value.min,
+      endValue: xRange.value.max,
+    });
+    chart.dispatchAction({
+      type: "dataZoom",
+      dataZoomId: "xSlider",
+      startValue: xRange.value.min,
+      endValue: xRange.value.max,
+    });
+    chart.dispatchAction({
+      type: "dataZoom",
+      dataZoomId: "yInside",
+      startValue: yRange.value.min,
+      endValue: yRange.value.max,
+    });
+    chart.dispatchAction({
+      type: "dataZoom",
+      dataZoomId: "ySlider",
+      startValue: yRange.value.min,
+      endValue: yRange.value.max,
+    });
+
+    syncZoom();
+    zoomOut();
+  } catch (err) {
+    chartError.value = "Fit to data error: " + err;
+    resetZoom();
+  }
 };
 
 const regressionEquation = computed(() => {
@@ -843,3 +894,16 @@ watch(
   }
 );
 </script>
+
+<style scoped>
+.icon-btn {
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.icon-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+.btn-ghost svg, .btn-outline svg {
+  stroke-width: 1.6;
+}
+</style>

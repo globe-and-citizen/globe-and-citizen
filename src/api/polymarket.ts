@@ -275,7 +275,12 @@ export const getPolymarketPricesHistories = async (params: {
     },
   );
   if (!response.ok) {
-    throw new Error(`Failed to fetch price history (${response.status})`);
+    const errBody = await response.json().catch(() => null);
+    const errMsg =
+      errBody && typeof errBody === "object" && "error" in errBody
+        ? String((errBody as { error: string }).error)
+        : `status ${response.status}`;
+    throw new Error(`Failed to fetch price history: ${errMsg}`);
   }
 
   const res = (await response.json()) as unknown;

@@ -36,7 +36,7 @@
         <div
           class="flex items-center justify-between gap-2 border-b border-base-300 pb-2"
         >
-          <div class="badge badge-primary badge-sm font-mono">MARKET ONE</div>
+          <div class="badge badge-primary badge-sm font-mono">MARKET A</div>
           <span
             class="text-[11px] font-medium uppercase tracking-[0.18em] text-base-content/45"
           >
@@ -102,7 +102,7 @@
         <div
           class="flex items-center justify-between gap-2 border-b border-base-300 pb-2"
         >
-          <div class="badge badge-secondary badge-sm font-mono">MARKET TWO</div>
+          <div class="badge badge-secondary badge-sm font-mono">MARKET B</div>
           <span
             class="text-[11px] font-medium uppercase tracking-[0.18em] text-base-content/45"
           >
@@ -197,7 +197,7 @@
         <label
           class="field-label text-[11px] font-semibold uppercase tracking-wide text-base-content/65"
         >
-          Frequency
+          Interval
         </label>
         <select
           v-model="interval"
@@ -430,12 +430,12 @@ watch([marketB, outcomesB], () => {
 
 const selectedOutcomeNameA = computed(() => {
   const selected = outcomesA.value.find((o) => o.tokenId === tokenIdA.value);
-  return selected?.name ?? "Market One";
+  return selected?.name ?? "Market A";
 });
 
 const selectedOutcomeNameB = computed(() => {
   const selected = outcomesB.value.find((o) => o.tokenId === tokenIdB.value);
-  return selected?.name ?? "Market Two";
+  return selected?.name ?? "Market B";
 });
 
 const xAxisName = defineModel<string>("xAxisName", {default: ""});

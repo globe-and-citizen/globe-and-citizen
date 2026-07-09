@@ -35,6 +35,15 @@
       />
     </section>
 
+    <div
+      v-if="errorMsg"
+      class="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800"
+      role="alert"
+    >
+      <strong>Error:</strong>
+      <div class="whitespace-pre-wrap break-words mt-1">{{ errorMsg }}</div>
+    </div>
+
     <HistoricalScatterPlot
       v-model:paired-samples-count="pairedSamplesCount"
       :x-history="marketAHistory"
@@ -78,6 +87,7 @@ const historyInterval = ref("all");
 const historyFidelity = ref(1);
 const pairedSamplesCount = ref(0);
 const chartTitle = ref("");
+const errorMsg = ref("");
 
 const marketAHistory = ref<PolymarketPriceHistoryPoint[]>([]);
 const marketBHistory = ref<PolymarketPriceHistoryPoint[]>([]);
@@ -147,6 +157,7 @@ const onGenerate = async () => {
     toast.success("Historical correlation generated");
   } catch (error) {
     console.error(error);
+    errorMsg.value = error instanceof Error ? error.message : String(error);
     statusMessage.value = "Failed to generate historical correlation.";
     toast.error("Failed to generate historical correlation");
   } finally {

@@ -62,7 +62,8 @@
                 type="number"
                 min="0"
                 max="1"
-                step="0.01"
+                step="any"
+                inputmode="decimal"
                 required
               />
             </label>
@@ -75,7 +76,8 @@
                 type="number"
                 min="0"
                 max="1"
-                step="0.01"
+                step="any"
+                inputmode="decimal"
                 required
               />
             </label>
