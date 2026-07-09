@@ -92,17 +92,17 @@ export const profileMenuItems = [
         title: "Polymarket analytics",
         url: "/polymarket-analytics",
     },
+    // {
+    //     section: "Tools",
+    //     icon: correlationGraph,
+    //     title: "Polymarket correlation graph",
+    //     url: "/correlation-graph",
+    // },
     {
         section: "Tools",
         icon: correlationGraph,
-        title: "Polymarket correlation graph",
+        title: "Price Correlation graph",
         url: "/correlation-graph",
-    },
-    {
-        section: "Tools",
-        icon: correlationGraph,
-        title: "Historical correlation graph",
-        url: "/historical-correlation-graph",
     },
     {
         section: "Tools",
@@ -129,15 +129,15 @@ export const serviceMenuItems = [
         title: "Polymarket analytics",
         url: "/polymarket-analytics",
     },
+    // {
+    //     section: "Services",
+    //     title: "Polymarket correlation graph",
+    //     url: "/correlation-graph",
+    // },
     {
         section: "Services",
         title: "Polymarket correlation graph",
         url: "/correlation-graph",
-    },
-    {
-        section: "Services",
-        title: "Polymarket historical correlation graph",
-        url: "/historical-correlation-graph",
     },
     {
         section: "Services",

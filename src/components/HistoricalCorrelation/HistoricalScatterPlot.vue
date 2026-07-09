@@ -2,11 +2,21 @@
   <div
     class="rounded-xl border border-base-300 bg-base-100 p-5 shadow-sm lg:p-6"
   >
+    <!-- Error -->
+    <div
+      v-if="chartError"
+      class="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800"
+      role="alert"
+    >
+      <strong>Error:</strong>
+      <div class="whitespace-pre-wrap break-words mt-1">{{ chartError }}</div>
+    </div>
+
     <!-- Header -->
     <div class="mb-5 flex flex-wrap items-start justify-between gap-4">
       <div>
         <h2 class="text-lg font-semibold text-base-content">
-          Historical Correlation Scatter
+          Correlation Scatter
         </h2>
 
         <p class="mt-1 text-sm text-base-content/70">
@@ -169,7 +179,7 @@
 
         <div>
           <span class="font-semibold">Alignment:</span>
-          nearest timestamp (±{{ toleranceSeconds }} sec)
+          nearest timestamp (±{{ props.tolerance }} min)
         </div>
 
         <div>
@@ -193,7 +203,7 @@ import {
   DataZoomComponent,
   ToolboxComponent,
   LegendComponent,
-  TitleComponent
+  TitleComponent,
 } from "echarts/components";
 
 import {CanvasRenderer} from "echarts/renderers";
@@ -210,7 +220,7 @@ echarts.use([
   ToolboxComponent,
   LegendComponent,
   CanvasRenderer,
-  TitleComponent
+  TitleComponent,
 ]);
 
 interface ScatterPoint {
@@ -232,6 +242,7 @@ const props = withDefaults(
     title?: string;
     xLabel?: string;
     yLabel?: string;
+    tolerance?: number;
 
     xHistory: PolymarketPriceHistoryPoint[];
     yHistory: PolymarketPriceHistoryPoint[];
@@ -240,10 +251,13 @@ const props = withDefaults(
     title: "",
     xLabel: "Market A",
     yLabel: "Market B",
+    tolerance: 1, // по умолчанию ±1 minute
   },
 );
 
-const toleranceSeconds = 30;
+const chartError = ref<string | null>(null);
+
+const toleranceSeconds = computed(() => (props.tolerance ?? 1) * 60);
 
 const chartRef = ref<HTMLDivElement | null>(null);
 
@@ -262,8 +276,13 @@ const yZoom = ref({
 /**
  * Align two histories using nearest timestamp.
  *
- * Complexity:
- * O(n)
+ * Поведение:
+ * - Если у одной серии нет данных — возвращается пустой набор.
+ * - Для каждой точки из X ищется ближайшая точка Y.
+ * - Пара принимается только если разница по времени <= tolerance (minutes converted to seconds).
+ * - Тем самым не совпадающие данные отбрасываются и остаются только точек перекрытия.
+ *
+ * Complexity: O(n)
  */
 const samples = computed<ScatterPoint[]>(() => {
   const xHistory = [...props.xHistory].sort((a, b) => a.t - b.t);
@@ -278,10 +297,7 @@ const samples = computed<ScatterPoint[]>(() => {
   let j = 0;
 
   for (const x of xHistory) {
-    while (
-      j + 1 < yHistory.length &&
-      yHistory[j + 1].t <= x.t
-      ) {
+    while (j + 1 < yHistory.length && yHistory[j + 1].t <= x.t) {
       j++;
     }
 
@@ -289,15 +305,12 @@ const samples = computed<ScatterPoint[]>(() => {
 
     if (
       j + 1 < yHistory.length &&
-      Math.abs(yHistory[j + 1].t - x.t) <
-      Math.abs(best.t - x.t)
+      Math.abs(yHistory[j + 1].t - x.t) < Math.abs(best.t - x.t)
     ) {
       best = yHistory[j + 1];
     }
 
-    if (
-      Math.abs(best.t - x.t) <= toleranceSeconds
-    ) {
+    if (Math.abs(best.t - x.t) <= toleranceSeconds.value) {
       result.push({
         timestamp: x.t,
         x: x.p,
@@ -322,16 +335,31 @@ const scatterData = computed(() =>
   samples.value.map((sample) => ({
     value: [sample.x, sample.y],
     timestamp: sample.timestamp,
-  })),
+  }))
 );
 
-const xValues = computed(() =>
-  samples.value.map((p) => p.x),
+const latestSample = computed<ScatterPoint | null>(() => {
+  const pts = samples.value;
+  if (!pts.length) return null;
+  return pts.reduce((best: ScatterPoint | null, cur) =>
+      best === null || cur.timestamp > best.timestamp ? cur : best,
+    null);
+});
+
+const latestData = computed(() =>
+  latestSample.value
+    ? [
+      {
+        value: [latestSample.value.x, latestSample.value.y],
+        timestamp: latestSample.value.timestamp,
+      },
+    ]
+    : []
 );
 
-const yValues = computed(() =>
-  samples.value.map((p) => p.y),
-);
+const xValues = computed(() => samples.value.map((p) => p.x));
+
+const yValues = computed(() => samples.value.map((p) => p.y));
 
 const xRange = computed(() => {
   if (!xValues.value.length) {
@@ -362,20 +390,15 @@ const yRange = computed(() => {
 });
 
 const xRangeLabel = computed(
-  () =>
-    `${xRange.value.min.toFixed(3)} → ${xRange.value.max.toFixed(3)}`,
+  () => `${xRange.value.min.toFixed(3)} → ${xRange.value.max.toFixed(3)}`
 );
 
 const yRangeLabel = computed(
-  () =>
-    `${yRange.value.min.toFixed(3)} → ${yRange.value.max.toFixed(3)}`,
+  () => `${yRange.value.min.toFixed(3)} → ${yRange.value.max.toFixed(3)}`
 );
 
 const matchedLabel = computed(() => {
-  const total = Math.max(
-    props.xHistory.length,
-    props.yHistory.length,
-  );
+  const total = Math.max(props.xHistory.length, props.yHistory.length);
 
   if (total === 0) {
     return "-";
@@ -444,14 +467,8 @@ const regressionLine = computed(() => {
   const {slope, intercept} = statistics.value;
 
   return [
-    [
-      xRange.value.min,
-      slope * xRange.value.min + intercept,
-    ],
-    [
-      xRange.value.max,
-      slope * xRange.value.max + intercept,
-    ],
+    [xRange.value.min, slope * xRange.value.min + intercept],
+    [xRange.value.max, slope * xRange.value.max + intercept],
   ];
 });
 
@@ -463,17 +480,10 @@ const clampPercent = (value: number) => {
   return value;
 };
 
-const nextZoomWindow = (
-  start: number,
-  end: number,
-  ratio: number,
-) => {
+const nextZoomWindow = (start: number, end: number, ratio: number) => {
   const current = end - start;
 
-  const desired = Math.max(
-    5,
-    Math.min(100, current * ratio),
-  );
+  const desired = Math.max(5, Math.min(100, current * ratio));
 
   const center = (start + end) / 2;
 
@@ -504,7 +514,7 @@ const applyZoom = (
   nextY: {
     start: number;
     end: number;
-  },
+  }
 ) => {
   xZoom.value = nextX;
   yZoom.value = nextY;
@@ -538,31 +548,15 @@ const applyZoom = (
 
 const zoomIn = () => {
   applyZoom(
-    nextZoomWindow(
-      xZoom.value.start,
-      xZoom.value.end,
-      zoomStep,
-    ),
-    nextZoomWindow(
-      yZoom.value.start,
-      yZoom.value.end,
-      zoomStep,
-    ),
+    nextZoomWindow(xZoom.value.start, xZoom.value.end, zoomStep),
+    nextZoomWindow(yZoom.value.start, yZoom.value.end, zoomStep)
   );
 };
 
 const zoomOut = () => {
   applyZoom(
-    nextZoomWindow(
-      xZoom.value.start,
-      xZoom.value.end,
-      1 / zoomStep,
-    ),
-    nextZoomWindow(
-      yZoom.value.start,
-      yZoom.value.end,
-      1 / zoomStep,
-    ),
+    nextZoomWindow(xZoom.value.start, xZoom.value.end, 1 / zoomStep),
+    nextZoomWindow(yZoom.value.start, yZoom.value.end, 1 / zoomStep)
   );
 };
 
@@ -575,7 +569,7 @@ const resetZoom = () => {
     {
       start: 0,
       end: 100,
-    },
+    }
   );
 };
 
@@ -615,123 +609,146 @@ const tooltipFormatter = (params: unknown) => {
 };
 
 const updateChart = () => {
-  if (!chart) return;
+  try {
+    if (!chart) return;
 
-  const hasTitle = !!props.title;
-  const titleTop = 10;
-  const legendTop = hasTitle ? 42 : 12; // легенда будет ниже заголовка, если заголовок есть
-  const gridTop = hasTitle ? 80 : 50; // отступ сверху для сетки, чтобы не перекрывать заголовок/легенду
+    // очистка предыдущих ошибок перед обновлением
+    chartError.value = null;
 
-  const option: EChartsOption = {
-    animation: false,
+    const hasTitle = !!props.title;
+    const titleTop = 10;
+    const legendTop = hasTitle ? 42 : 12;
+    const gridTop = hasTitle ? 80 : 50;
 
-    title: hasTitle
-      ? {
-        text: props.title,
-        left: "center",
-        top: titleTop,
-        textStyle: {
-          fontSize: 14,
-          fontWeight: 600,
-          color: "#111827",
+    const option: EChartsOption = {
+      animation: false,
+
+      title: hasTitle
+        ? {
+          text: props.title,
+          left: "center",
+          top: titleTop,
+          textStyle: {
+            fontSize: 14,
+            fontWeight: 600,
+            color: "#111827",
+          },
+        }
+        : undefined,
+
+      grid: {
+        left: 70,
+        right: 70,
+        top: gridTop,
+        bottom: 70,
+      },
+
+      legend: {
+        top: legendTop,
+        data: ["Samples", "Regression"],
+      },
+
+      tooltip: {
+        trigger: "item",
+        formatter: tooltipFormatter,
+      },
+
+      xAxis: {
+        type: "value",
+        name: props.xLabel,
+        nameLocation: "middle",
+        nameGap: 40,
+        splitNumber: 10,
+        min: 0,
+        max: 1,
+      },
+
+      yAxis: {
+        type: "value",
+        name: props.yLabel,
+        nameLocation: "middle",
+        nameGap: 55,
+        splitNumber: 10,
+        min: 0,
+        max: 1,
+      },
+
+      dataZoom: [
+        {
+          id: "xInside",
+          type: "inside",
+          xAxisIndex: 0,
+          start: xZoom.value.start,
+          end: xZoom.value.end,
         },
-      }
-      : undefined,
+        {
+          id: "xSlider",
+          type: "slider",
+          xAxisIndex: 0,
+          start: xZoom.value.start,
+          end: xZoom.value.end,
+          bottom: 25,
+          height: 18,
+        },
+        {
+          id: "yInside",
+          type: "inside",
+          yAxisIndex: 0,
+          start: yZoom.value.start,
+          end: yZoom.value.end,
+        },
+        {
+          id: "ySlider",
+          type: "slider",
+          yAxisIndex: 0,
+          start: yZoom.value.start,
+          end: yZoom.value.end,
+          right: 20,
+          width: 18,
+        },
+      ],
 
-    grid: {
-      left: 70,
-      right: 70,
-      top: gridTop,
-      bottom: 70,
-    },
+      series: [
+        {
+          name: "Samples",
+          type: "scatter",
+          symbolSize: 8,
+          itemStyle: {color: "#2563eb"},
+          data: scatterData.value,
+        },
+        {
+          name: "Latest",
+          type: "scatter",
+          symbolSize: 8,
+          itemStyle: {color: "#dc2626"}, // красный
+          data: latestData.value,
+          label: {
+            show: !!latestSample.value,
+            formatter: "latest",
+            position: "top",
+            fontWeight: 500,
+            // color: "#dc2626",
+          },
+          // рисуется поверх основных точек
+          z: 10,
+        },
+        {
+          name: "Regression",
+          type: "line",
+          showSymbol: false,
+          smooth: false,
+          silent: true,
+          lineStyle: {color: "#dc2626", width: 2, type: "dashed"},
+          data: regressionLine.value,
+        },
+      ],
+    };
 
-    legend: {
-      top: legendTop,
-      data: ["Samples", "Regression"],
-    },
-
-    tooltip: {
-      trigger: "item",
-      formatter: tooltipFormatter,
-    },
-
-    xAxis: {
-      type: "value",
-      name: props.xLabel,
-      nameLocation: "middle",
-      nameGap: 40,
-      splitNumber: 10,
-      min: 0,
-      max: 1,
-    },
-
-    yAxis: {
-      type: "value",
-      name: props.yLabel,
-      nameLocation: "middle",
-      nameGap: 55,
-      splitNumber: 10,
-      min: 0,
-      max: 1,
-    },
-
-    dataZoom: [
-      {
-        id: "xInside",
-        type: "inside",
-        xAxisIndex: 0,
-        start: xZoom.value.start,
-        end: xZoom.value.end,
-      },
-      {
-        id: "xSlider",
-        type: "slider",
-        xAxisIndex: 0,
-        start: xZoom.value.start,
-        end: xZoom.value.end,
-        bottom: 25,
-        height: 18,
-      },
-      {
-        id: "yInside",
-        type: "inside",
-        yAxisIndex: 0,
-        start: yZoom.value.start,
-        end: yZoom.value.end,
-      },
-      {
-        id: "ySlider",
-        type: "slider",
-        yAxisIndex: 0,
-        start: yZoom.value.start,
-        end: yZoom.value.end,
-        right: 20,
-        width: 18,
-      },
-    ],
-
-    series: [
-      {
-        name: "Samples",
-        type: "scatter",
-        symbolSize: 8,
-        itemStyle: { color: "#2563eb" },
-        data: scatterData.value,
-      },
-
-      {
-        name: "Regression",
-        type: "line",
-        showSymbol: false,
-        smooth: false,
-        silent: true,
-        lineStyle: { color: "#dc2626", width: 2, type: "dashed" },
-        data: regressionLine.value,
-      },
-    ],
-  };
-
-  chart.setOption(option);
+    chart.setOption(option);
+  } catch (err) {
+    chartError.value = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
+    console.error("Chart render error:", err);
+  }
 };
 
 const syncZoom = () => {
@@ -748,14 +765,22 @@ const syncZoom = () => {
   const xSlider = zooms.find((z) => z.id === "xSlider");
   const ySlider = zooms.find((z) => z.id === "ySlider");
 
-  if (xSlider && typeof xSlider.start === "number" && typeof xSlider.end === "number") {
+  if (
+    xSlider &&
+    typeof xSlider.start === "number" &&
+    typeof xSlider.end === "number"
+  ) {
     xZoom.value = {
       start: xSlider.start,
       end: xSlider.end,
     };
   }
 
-  if (ySlider && typeof ySlider.start === "number" && typeof ySlider.end === "number") {
+  if (
+    ySlider &&
+    typeof ySlider.start === "number" &&
+    typeof ySlider.end === "number"
+  ) {
     yZoom.value = {
       start: ySlider.start,
       end: ySlider.end,
@@ -766,23 +791,29 @@ const syncZoom = () => {
 onMounted(() => {
   if (!chartRef.value) return;
 
-  chart = echarts.init(chartRef.value);
+  try {
+    chart = echarts.init(chartRef.value);
 
-  chart.on("datazoom", syncZoom);
+    chart.on("datazoom", syncZoom);
 
-  updateChart();
+    updateChart();
 
-  const resize = () => chart?.resize();
+    const resize = () => chart?.resize();
 
-  window.addEventListener("resize", resize);
+    window.addEventListener("resize", resize);
 
-  onUnmounted(() => {
-    window.removeEventListener("resize", resize);
+    onUnmounted(() => {
+      window.removeEventListener("resize", resize);
 
-    chart?.dispose();
+      chart?.dispose();
 
-    chart = null;
-  });
+      chart = null;
+      chartError.value = null;
+    });
+  } catch (err) {
+    chartError.value = err instanceof Error ? `${err.message}\n${err.stack ?? ""}` : String(err);
+    console.error("Chart init error:", err);
+  }
 });
 
 watch(
@@ -792,7 +823,7 @@ watch(
   },
   {
     deep: true,
-  },
+  }
 );
 
 watch(
@@ -802,18 +833,13 @@ watch(
   },
   {
     deep: true,
-  },
+  }
 );
 
 watch(
-  () => [
-    xZoom.value.start,
-    xZoom.value.end,
-    yZoom.value.start,
-    yZoom.value.end,
-  ],
+  () => [xZoom.value.start, xZoom.value.end, yZoom.value.start, yZoom.value.end],
   () => {
     updateChart();
-  },
+  }
 );
 </script>

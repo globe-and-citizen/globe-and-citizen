@@ -29,7 +29,7 @@ import PredictionsView from "@/views/PredictionsView.vue";
 import ChangePasswordView from "@/views/UserProfile/ChangePasswordView.vue";
 import PolymarketPriceTracker from "@/views/UserProfile/PolymarketPriceTracker.vue";
 import PolymarketAnalytics from "@/views/UserProfile/PolymarketAnalytics.vue";
-import CorrelationGraphView from "@/views/UserProfile/CorrelationGraphView.vue";
+// import CorrelationGraphView from "@/views/UserProfile/CorrelationGraphView.vue";
 // import ServicesPageView from "@/views/ServicesPageView.vue";
 // import LiveFeedView from "@/views/LiveNewsFeed/LiveFeedView.vue";
 import MaxContingencyTableView from "@/views/UserProfile/MaxContingencyTableView.vue";
@@ -148,12 +148,12 @@ const routes = [
             path: "polymarket-analytics",
             component: PolymarketAnalytics,
           },
+          // {
+          //   path: "correlation-graph",
+          //   component: CorrelationGraphView,
+          // },
           {
             path: "correlation-graph",
-            component: CorrelationGraphView,
-          },
-          {
-            path: "historical-correlation-graph",
             component: HistoricalCorrelationGraphView,
           },
           {

@@ -1,5 +1,15 @@
 <template>
-  <form class="space-y-5" @submit.prevent="$emit('generate')">
+  <form class="space-y-5" @submit.prevent="handleGenerate">
+    <!-- Error banner -->
+    <div
+      v-if="errorMsg"
+      class="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800"
+      role="alert"
+    >
+      <strong>Error:</strong>
+      <div class="whitespace-pre-wrap break-words mt-1">{{ errorMsg }}</div>
+    </div>
+
     <div class="grid gap-5 xl:grid-cols-[320px_minmax(0,1fr)]">
       <div>
         <div class="text-sm font-semibold text-foreground">
@@ -259,15 +269,15 @@ const tokenIdA = defineModel<string>("tokenIdA", {default: ""});
 const tokenIdB = defineModel<string>("tokenIdB", {default: ""});
 const startDate = defineModel<string>("startDate", {default: ""});
 const endDate = defineModel<string>("endDate", {default: ""});
-const interval = defineModel<string>("historyInterval", {default: "1h"});
+const interval = defineModel<string>("interval", {default: "1h"});
 const allowedIntervals = ["1h", "6h", "1d", "1w", "1m", "all", "max"];
-const fidelity = defineModel<number>("historyFidelity", {default: 1});
+const fidelity = ref<number>(1);
 
 defineProps<{
   isLoading: boolean;
 }>();
 
-const emit = defineEmits(["generate", "update:chartTitle"]);
+const emit = defineEmits(["generate", "update:chartTitle", "update:fidelity"]);
 
 const canGenerate = computed(() => {
   if (
@@ -286,6 +296,11 @@ const canGenerate = computed(() => {
   return Number.isFinite(start) && Number.isFinite(end) && start <= end;
 });
 
+function handleGenerate() {
+  emit('generate')
+  emit("update:fidelity", fidelity.value);
+}
+
 interface MarketOutcome {
   name: string;
   tokenId: string;
@@ -299,12 +314,15 @@ const marketB = ref<PolymarketMarket | null>(null);
 
 const marketsA = ref<PolymarketMarket[]>([]);
 const marketsB = ref<PolymarketMarket[]>([]);
+const errorMsg = ref<string | null>(null);
 
 function computeEndpointFromUrl(url: string): string | null {
+  errorMsg.value = null;
   if (!url) return null;
 
   const parsed = parsePolymarketUrl(url);
   if (!parsed) {
+    errorMsg.value = "Invalid Polymarket URL" + url;
     console.error("Failed to parse polymarket URL:", url);
     return null
   }
@@ -320,8 +338,28 @@ const endpointsB = computed(() => {
   return computeEndpointFromUrl(marketUrlB.value);
 });
 
-const {data: marketDataA} = useMarketData(endpointsA, "historical-correlation-a");
-const {data: marketDataB} = useMarketData(endpointsB, "historical-correlation-b");
+const {data: marketDataA, error: marketErrorA} = useMarketData(endpointsA, "historical-correlation-a");
+const {data: marketDataB, error: marketErrorB} = useMarketData(endpointsB, "historical-correlation-b");
+
+// нормализатор ошибки в строку
+function toMessage(err: unknown): string {
+  if (!err) return "";
+  if (typeof err === "string") return "Failed to fetch data: " + err;
+  if (err instanceof Error) return "Failed to fetch data: " + err.message || String(err);
+  try {
+    return "Failed to fetch data: " + String(err);
+  } catch {
+    return "";
+  }
+}
+
+watch(marketErrorA, (err) => {
+  errorMsg.value = toMessage(err);
+});
+
+watch(marketErrorB, (err) => {
+  errorMsg.value = toMessage(err);
+});
 
 const toMarketList = (value: PolymarketEvent | PolymarketMarket | unknown): PolymarketMarket[] => {
   if (!value || typeof value !== "object") return [];
@@ -339,6 +377,20 @@ watch(marketDataA, (value) => {
 watch(marketDataB, (value) => {
   marketsB.value = toMarketList(value);
 }, {immediate: true});
+
+watch(marketsA, (markets) => {
+  if (!marketA.value) return;
+
+  marketA.value =
+    markets.find(m => m.id === marketA.value!.id) ?? null;
+});
+
+watch(marketsB, (markets) => {
+  if (!marketB.value) return;
+
+  marketB.value =
+    markets.find(m => m.id === marketB.value!.id) ?? null;
+});
 
 const toOutcomes = (market: PolymarketMarket | null): MarketOutcome[] => {
   if (!market) return [];

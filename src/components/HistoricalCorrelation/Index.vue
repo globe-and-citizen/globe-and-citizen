@@ -10,16 +10,12 @@
             </span>
           </div>
           <h1 class="text-2xl font-semibold tracking-tight text-base-content lg:text-3xl">
-            Historical Correlation
+            Historical Price Correlation
           </h1>
           <p class="max-w-2xl text-sm leading-relaxed text-base-content/70">
             Pick any two markets/outcomes + date range, then generate historical correlation scatter.
           </p>
         </div>
-
-        <RouterLink to="/profile/correlation-graph" class="btn btn-sm btn-ghost">
-          Back to Live Correlation
-        </RouterLink>
       </div>
     </header>
 
@@ -32,10 +28,10 @@
         v-model:start-date="startDate"
         v-model:end-date="endDate"
         v-model:interval="historyInterval"
-        v-model:fidelity="historyFidelity"
         :is-loading="isLoading"
         @generate="onGenerate"
         @update:chart-title="t => chartTitle = t"
+        @update:fidelity="t => historyFidelity = t"
       />
     </section>
 
@@ -46,6 +42,7 @@
       :x-label="xAxisName"
       :y-label="yAxisName"
       :title="chartTitle"
+      :tolerance="historyFidelity"
     />
 
     <div class="rounded-md border border-base-300 bg-base-200/60 px-3 py-2.5">
@@ -58,7 +55,6 @@
 
 <script setup lang="ts">
 import {ref, watch} from "vue";
-import {RouterLink} from "vue-router";
 import {toast} from "vue-sonner";
 import HistoricalScatterPlot from "./HistoricalScatterPlot.vue";
 import MarketSelectionForm from "./MarketSelectionForm.vue";
