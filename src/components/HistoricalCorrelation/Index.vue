@@ -118,6 +118,7 @@ const onGenerate = async () => {
   isLoading.value = true;
   statusMessage.value = "Generating historical correlation...";
   try {
+    errorMsg.value = "";
     await new Promise((resolve) => setTimeout(resolve, 450));
 
     // the limit of the API is 15 days, so we need to chunk the requests

@@ -184,16 +184,25 @@
                 >
                   <div class="flex justify-end gap-4">
                     <Button
-                      v-for="opt in selectMarketOptions ?? []"
-                      :key="opt.name"
                       :class="
-                        isOptionSelected(opt, selectedSearchEvent, market)
+                        isOptionSelected(selectOptionA, selectedSearchEvent, market)
                           ? 'bg-gray-600 text-white hover:bg-gray-700'
                           : ''
                       "
-                      @click="addSelectedMarket(opt, selectedSearchEvent, market)"
+                      @click="addSelectedMarket(selectOptionA, selectedSearchEvent, market)"
                     >
-                      {{ isOptionSelected(opt, selectedSearchEvent, market) ? "Remove" : "Add" }} {{ opt.name }}
+                      {{ isOptionSelected(selectOptionA, selectedSearchEvent, market) ? "Remove" : "Add" }} Market A
+                    </Button>
+
+                    <Button
+                      :class="
+                        isOptionSelected(selectOptionB, selectedSearchEvent, market)
+                          ? 'bg-gray-600 text-white hover:bg-gray-700'
+                          : ''
+                      "
+                      @click="addSelectedMarket(selectOptionB, selectedSearchEvent, market)"
+                    >
+                      {{ isOptionSelected(selectOptionB, selectedSearchEvent, market) ? "Remove" : "Add" }} Market B
                     </Button>
                   </div>
                 </div>
@@ -242,8 +251,22 @@ const marketSearchCurrentPage = ref(1);
 const marketSearchEvents = ref<PolymarketGammaSearchEvent[]>([]);
 const selectedSearchEvent = ref<PolymarketGammaSearchEvent | null>(null);
 
-const selectMarketOptions = defineModel<SelectMarketOption[]>("selectMarketOptions", {
-  default: () => [],
+const selectOptionA = defineModel<SelectMarketOption>("selectOptionA", {
+  default: () => ({
+    name: "Market A",
+    isSelected: false,
+    event: null,
+    market: null,
+  }),
+});
+
+const selectOptionB = defineModel<SelectMarketOption>("selectOptionB", {
+  default: () => ({
+    name: "Market B",
+    isSelected: false,
+    event: null,
+    market: null,
+  }),
 });
 
 async function runMarketSearch() {
@@ -393,16 +416,7 @@ function isSearchMarketSelected(
   event: PolymarketGammaSearchEvent | null,
   market: PolymarketGammaSearchMarket | PolymarketMarket,
 ) {
-  for (const opt of selectMarketOptions.value ?? []) {
-    if (
-      opt.isSelected &&
-      opt.event?.id === event?.id &&
-      opt.market?.id === market.id
-    ) {
-      return true;
-    }
-  }
-  return false;
+  return isOptionSelected(selectOptionA.value, event, market) || isOptionSelected(selectOptionB.value, event, market)
 }
 
 function toPolymarketMarketUrl(market: PolymarketGammaSearchMarket | PolymarketMarket) {

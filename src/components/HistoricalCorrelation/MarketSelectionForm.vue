@@ -27,7 +27,8 @@
 
     <SearchDialog
       v-model:open="openSearchDialog"
-      v-model:select-market-options="marketOptions"
+      v-model:select-option-a="searchOptionA"
+      v-model:select-option-b="searchOptionB"
     />
 
     <div class="grid gap-4 lg:grid-cols-2">
@@ -55,6 +56,7 @@
             :disabled="isLoading"
             placeholder="https://polymarket.com/event/..."
             class="input input-bordered h-10 w-full rounded-lg border-base-300 bg-base-100 text-sm border focus:ring-primary/20 px-2"
+            @input="handleInputMarketUrlA"
           />
         </div>
 
@@ -121,6 +123,7 @@
             :disabled="isLoading"
             placeholder="https://polymarket.com/event/..."
             class="input input-bordered h-10 w-full rounded-lg border-base-300 bg-base-100 text-sm border focus:ring-primary/20 px-2"
+            @input="handleInputMarketUrlB"
           />
         </div>
 
@@ -212,6 +215,9 @@
             {{ opt }}
           </option>
         </select>
+        <p class="text-xs text-muted-foreground mt-1">
+          Time interval for data aggregation.
+        </p>
       </div>
 
       <div class="field-group flex flex-col gap-1.5">
@@ -227,6 +233,9 @@
           step="1"
           class="input input-bordered h-10 w-full rounded-lg border-base-300 bg-base-100 text-sm border px-2"
         />
+        <p class="text-xs text-muted-foreground mt-1">
+          Accuracy of the data expressed in minutes. Default is 1 minute.
+        </p>
       </div>
     </div>
 
@@ -315,6 +324,8 @@ const marketB = ref<PolymarketMarket | null>(null);
 const marketsA = ref<PolymarketMarket[]>([]);
 const marketsB = ref<PolymarketMarket[]>([]);
 const errorMsg = ref<string | null>(null);
+const endpointsA = ref<string | null>(null);
+const endpointsB = ref<string | null>(null);
 
 function computeEndpointFromUrl(url: string): string | null {
   errorMsg.value = null;
@@ -330,16 +341,47 @@ function computeEndpointFromUrl(url: string): string | null {
   return parsed.type === "market" ? `/markets/slug/${parsed.slug}` : `/events/slug/${parsed.slug}`;
 }
 
-const endpointsA = computed(() => {
-  return computeEndpointFromUrl(marketUrlA.value);
-});
-
-const endpointsB = computed(() => {
-  return computeEndpointFromUrl(marketUrlB.value);
-});
+const toMarketList = (value: PolymarketEvent | PolymarketMarket | unknown): PolymarketMarket[] => {
+  if (!value || typeof value !== "object") return [];
+  if ("markets" in value && Array.isArray((value as PolymarketEvent).markets)) {
+    return (value as PolymarketEvent).markets;
+  }
+  const marketValue = value as PolymarketMarket;
+  return marketValue.id ? [marketValue] : [];
+};
 
 const {data: marketDataA, error: marketErrorA} = useMarketData(endpointsA, "historical-correlation-a");
 const {data: marketDataB, error: marketErrorB} = useMarketData(endpointsB, "historical-correlation-b");
+
+watch(marketErrorA, (err) => {
+  errorMsg.value = toMessage(err);
+});
+
+watch(marketErrorB, (err) => {
+  errorMsg.value = toMessage(err);
+});
+
+watch(marketDataA, (value) => {
+  marketsA.value = toMarketList(value);
+}, {immediate: true});
+
+watch(marketDataB, (value) => {
+  marketsB.value = toMarketList(value);
+}, {immediate: true});
+
+function handleInputMarketUrlA(event: Event) {
+  const input = event.target as HTMLInputElement;
+  marketUrlA.value = input.value.trim();
+
+  endpointsA.value = computeEndpointFromUrl(marketUrlA.value);
+}
+
+function handleInputMarketUrlB(event: Event) {
+  const input = event.target as HTMLInputElement;
+  marketUrlB.value = input.value.trim();
+
+  endpointsB.value = computeEndpointFromUrl(marketUrlB.value);
+}
 
 // нормализатор ошибки в строку
 function toMessage(err: unknown): string {
@@ -352,45 +394,6 @@ function toMessage(err: unknown): string {
     return "";
   }
 }
-
-watch(marketErrorA, (err) => {
-  errorMsg.value = toMessage(err);
-});
-
-watch(marketErrorB, (err) => {
-  errorMsg.value = toMessage(err);
-});
-
-const toMarketList = (value: PolymarketEvent | PolymarketMarket | unknown): PolymarketMarket[] => {
-  if (!value || typeof value !== "object") return [];
-  if ("markets" in value && Array.isArray((value as PolymarketEvent).markets)) {
-    return (value as PolymarketEvent).markets;
-  }
-  const marketValue = value as PolymarketMarket;
-  return marketValue.id ? [marketValue] : [];
-};
-
-watch(marketDataA, (value) => {
-  marketsA.value = toMarketList(value);
-}, {immediate: true});
-
-watch(marketDataB, (value) => {
-  marketsB.value = toMarketList(value);
-}, {immediate: true});
-
-watch(marketsA, (markets) => {
-  if (!marketA.value) return;
-
-  marketA.value =
-    markets.find(m => m.id === marketA.value!.id) ?? null;
-});
-
-watch(marketsB, (markets) => {
-  if (!marketB.value) return;
-
-  marketB.value =
-    markets.find(m => m.id === marketB.value!.id) ?? null;
-});
 
 const toOutcomes = (market: PolymarketMarket | null): MarketOutcome[] => {
   if (!market) return [];
@@ -458,20 +461,20 @@ watch(chartTitle, (v) => emit("update:chartTitle", v), {immediate: true});
 
 /// Search
 const openSearchDialog = ref(false);
-const marketOptions = ref<SelectMarketOption[]>([
-  {
-    name: "Market A",
-    event: null,
-    market: null,
-    isSelected: false,
-  },
-  {
-    name: "Market B",
-    event: null,
-    market: null,
-    isSelected: false,
-  },
-]);
+
+const searchOptionA = ref<SelectMarketOption>({
+  name: "Market A",
+  event: null,
+  market: null,
+  isSelected: false,
+});
+
+const searchOptionB = ref<SelectMarketOption>({
+  name: "Market B",
+  event: null,
+  market: null,
+  isSelected: false,
+});
 
 function openMarketSearchDialog() {
   openSearchDialog.value = true;
@@ -483,9 +486,7 @@ function toPolymarketEventUrl(event: PolymarketGammaSearchEvent | null) {
   return `https://polymarket.com/event/${encodeURIComponent(slug)}`;
 }
 
-watch(marketOptions, (opts) => {
-  const a = opts.find(o => o.name === "Market A");
-  const b = opts.find(o => o.name === "Market B");
+watch(searchOptionA, (a) => {
   if (a?.isSelected) {
     marketUrlA.value = toPolymarketEventUrl(a.event)
     marketsA.value = a.event?.markets as PolymarketMarket[] ?? [];
@@ -495,7 +496,9 @@ watch(marketOptions, (opts) => {
     marketA.value = null;
     marketsA.value = [];
   }
+}, {immediate: true, deep: true})
 
+watch(searchOptionB, (b) => {
   if (b?.isSelected) {
     marketUrlB.value = toPolymarketEventUrl(b.event)
     marketsB.value = b.event?.markets as PolymarketMarket[] ?? [];
