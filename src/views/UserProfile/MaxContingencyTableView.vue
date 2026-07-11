@@ -167,29 +167,28 @@
       </p>
 
       <div class="mt-4 overflow-auto rounded-xl border border-slate-200">
-        <table class="matrix-table w-full border-collapse text-center text-xs">
-          <thead>
-          <tr>
-            <th class="matrix-axis-cell sticky left-0 top-0 z-20 bg-white">
-              {{ form.event_y_name }} \<br> {{ form.event_x_name }}
-            </th>
-            <th
-              v-for="(xValue, xIndex) in xAxisLabels"
-              :key="`x-${xIndex}`"
-              class="matrix-axis-cell"
-            >
-              {{ xValue.toFixed(2) }}
-            </th>
-          </tr>
-          </thead>
+        <table class="matrix-table border-collapse text-center text-xs">
           <tbody>
+          <!-- Heatmap -->
           <tr
             v-for="(row, rowIndex) in result?.matrix_grid"
             :key="`row-${rowIndex}`"
           >
-            <th class="matrix-axis-cell sticky left-0 z-10 bg-white">
+            <!-- Vertical Market B -->
+            <th
+              v-if="rowIndex === 0"
+              :rowspan="(result?.matrix_grid.length ?? 0) + 2"
+              class="matrix-axis-title"
+            >
+              {{ form.event_y_name }}
+            </th>
+
+            <!-- Y labels -->
+            <th class="matrix-axis-cell sticky left-12 z-20 bg-white">
               {{ yAxisLabels[rowIndex]?.toFixed(2) ?? "-" }}
             </th>
+
+            <!-- Heatmap -->
             <td
               v-for="(value, colIndex) in row"
               :key="`cell-${rowIndex}-${colIndex}`"
@@ -198,6 +197,31 @@
             >
               {{ formatMatrixValue(value) }}
             </td>
+          </tr>
+
+          <!-- X values -->
+          <tr>
+            <th class="bg-white"></th>
+
+            <th
+              v-for="(xValue, index) in xAxisLabels"
+              :key="`bottom-${index}`"
+              class="matrix-axis-cell bg-white"
+            >
+              {{ xValue.toFixed(2) }}
+            </th>
+          </tr>
+
+          <!-- Market A -->
+          <tr>
+            <th class="bg-white"></th>
+
+            <th
+              :colspan="xAxisLabels.length"
+              class="bg-white py-3 text-center text-sm font-semibold tracking-wide text-slate-700"
+            >
+              {{ form.event_x_name }}
+            </th>
           </tr>
           </tbody>
         </table>
@@ -377,4 +401,29 @@ function calculateContingencyMatrix(): number[][] {
   padding: 0.35rem 0.4rem;
   font-weight: 600;
 }
+
+.matrix-axis-title {
+  position: sticky;
+  left: 0;
+  z-index: 30;
+
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+
+  white-space: nowrap;
+  min-width: 48px;
+  padding: 12px 8px;
+
+  text-align: center;
+  vertical-align: middle;
+
+  font-weight: 600;
+  font-size: 0.875rem;
+
+  color: rgb(51 65 85);
+
+  background: white;
+  border-right: 1px solid rgb(226 232 240);
+}
+
 </style>
