@@ -92,6 +92,12 @@ const errorMsg = ref("");
 const marketAHistory = ref<PolymarketPriceHistoryPoint[]>([]);
 const marketBHistory = ref<PolymarketPriceHistoryPoint[]>([]);
 
+watch(pairedSamplesCount, (v) => {
+  statusMessage.value = v
+    ? `Generated ${v} historical paired samples from ${startDate.value} to ${endDate.value}.`
+    : "No paired samples generated.";
+}, { immediate: true });
+
 const onGenerate = async () => {
   if (!tokenIdA.value || !tokenIdB.value) {
     toast.error("Select two outcomes first.");
@@ -152,9 +158,6 @@ const onGenerate = async () => {
     marketAHistory.value = normalize(marketAHistory.value);
     marketBHistory.value = normalize(marketBHistory.value);
 
-    watch(pairedSamplesCount, (v) => {
-      statusMessage.value = `Generated ${v} historical paired samples from ${startDate.value} to ${endDate.value}.`;
-    });
     toast.success("Historical correlation generated");
   } catch (error) {
     console.error(error);

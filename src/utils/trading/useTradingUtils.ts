@@ -1,6 +1,6 @@
 export const parsePolymarketUrl = (url: string) => {
   if (url === undefined) return null;
-  const match = url.match(/polymarket\.com\/(market|event|[^/]*)\/(.+\/)*([^?#/]+)$/)
+  const match = url.match(/polymarket\.com\/(market|event|[^/]*)\/(.+\/)*([^?#]+)$/)
   if (!match) return null
   return { type: match[1], slug: match[3] }
 }

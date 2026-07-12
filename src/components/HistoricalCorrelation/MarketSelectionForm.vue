@@ -333,8 +333,8 @@ function computeEndpointFromUrl(url: string): string | null {
 
   const parsed = parsePolymarketUrl(url);
   if (!parsed) {
-    errorMsg.value = "Invalid Polymarket URL" + url;
-    console.error("Failed to parse polymarket URL:", url);
+    errorMsg.value = "Invalid Polymarket URL: " + url;
+    console.error("Failed to parse polymarket URL: ", url);
     return null
   }
 
@@ -387,7 +387,9 @@ function handleInputMarketUrlB(event: Event) {
 function toMessage(err: unknown): string {
   if (!err) return "";
   if (typeof err === "string") return "Failed to fetch data: " + err;
-  if (err instanceof Error) return "Failed to fetch data: " + err.message || String(err);
+  if (err instanceof Error) {
+    return "Failed to fetch data: " + (err.message || String(err));
+  }
   try {
     return "Failed to fetch data: " + String(err);
   } catch {

@@ -232,7 +232,6 @@
 
 <script setup lang="ts">
 import {
-  // calculateMaxContingencyTable,
   type MaxContingencyTableRequest,
   type MaxContingencyTableResponse,
 } from "@/api/contingency.ts";
@@ -309,9 +308,13 @@ function getMatrixCellStyle(value: number): {
 }
 
 function calculateArbitrage() {
+  errorMessage.value = "";
   const threshold = form.prob_event_x_yes + form.prob_event_y_yes;
-  const roi_target = (1 / threshold) - 1;
-
+  if (!Number.isFinite(threshold) || threshold <= 0) {
+    errorMessage.value = "Probabilities must sum to a value greater than 0.";
+    return;
+  }
+  const roi_target = 1 / threshold - 1;
   form.guard_bet = formatDecimal(form.prob_event_x_yes * form.capital * (1 + roi_target));
 }
 
@@ -320,6 +323,18 @@ function calculateBreakEven() {
 }
 
 function calculateContingencyMatrix(): number[][] {
+  errorMessage.value = "";
+  if (form.guard_bet > form.capital) {
+    errorMessage.value = "Bet A must be less than or equal to capital.";
+    result.value = null;
+    return [];
+  }
+  if (form.prob_event_x_yes <= 0 || form.prob_event_y_yes <= 0) {
+    errorMessage.value = "Probabilities must be greater than 0.";
+    result.value = null;
+    return [];
+  }
+
   const sharesA = form.guard_bet / form.prob_event_x_yes;
   const sharesB = money_maker.value / form.prob_event_y_yes;
 
