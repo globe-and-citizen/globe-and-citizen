@@ -8,12 +8,13 @@ import {
   SIGN_IN_URL,
   SIGN_UP_URL,
 } from "./constants";
-import * as interceptorWasm from "layer8-interceptor-production";
+import * as interceptorWasm from "l8-intercept";
 import { traceUser } from "./user";
 
-const layer8Enabled = import.meta.env.VITE_API_BASE_URL.includes(
-  "globeandcitizenreverseproxy"
-);
+// const layer8Enabled = import.meta.env.VITE_API_BASE_URL.includes(
+//   "globeandcitizenreverseproxy"
+// );
+const layer8Enabled = import.meta.env.VITE_LAYER8_ENABLED === 'true';
 
 export async function interceptorFetch(
   url: string,
@@ -90,7 +91,6 @@ export async function fetchWithAuth(
 export async function signIn(
   data: Record<string, unknown>
 ): Promise<SignInResponse> {
-  const authStore = useAuthStore();
   try {
     const response = await interceptorFetch(`${API_BASE_URL}${SIGN_IN_URL}`, {
       method: "POST",
@@ -117,44 +117,51 @@ export async function signIn(
           : "Sign-in failed"
       );
     }
-    if (
+
+    return await setSignedInUser(responseData);
+  } catch (error) {
+    console.error("Sign-in failed:", error);
+    throw error;
+  }
+}
+
+export async function setSignedInUser(responseData: SignInResponse | { data: string }) {
+  const authStore = useAuthStore();
+
+  if (
       typeof responseData.data === "object" &&
       responseData.data !== null &&
       "token" in responseData.data &&
       "user" in responseData.data
-    ) {
-      authStore.setToken(responseData.data.token);
-      authStore.setUser(responseData.data.user);
-      authStore.setRefreshToken(responseData.data.refresh_token);
-      const redirectUrl = sessionStorage.getItem("redirectAfterLogin");
-      if (redirectUrl) {
-        window.location.href = redirectUrl;
-        sessionStorage.removeItem("redirectAfterLogin");
-      } else {
-        window.location.href = "/";
-      }
-
-      // Trace user location after sign-in
-      try {
-        const userLocation = await traceUser();
-        if (userLocation?.country_long) {
-          authStore.setTrackedLocation(userLocation.country_long);
-        }
-      } catch (err) {
-        console.error("Failed to trace user after sign-in", err);
-      }
-
-      return responseData as SignInResponse;
+  ) {
+    authStore.setToken(responseData.data.token);
+    authStore.setUser(responseData.data.user);
+    authStore.setRefreshToken(responseData.data.refresh_token);
+    const redirectUrl = sessionStorage.getItem("redirectAfterLogin");
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
+      sessionStorage.removeItem("redirectAfterLogin");
     } else {
-      throw new Error(
-        typeof responseData.data === "string"
-          ? responseData.data
-          : "Sign-in failed"
-      );
+      window.location.href = "/";
     }
-  } catch (error) {
-    console.error("Sign-in failed:", error);
-    throw error;
+
+    // Trace user location after sign-in
+    try {
+      const userLocation = await traceUser();
+      if (userLocation?.country_long) {
+        authStore.setTrackedLocation(userLocation.country_long);
+      }
+    } catch (err) {
+      console.error("Failed to trace user after sign-in", err);
+    }
+
+    return responseData as SignInResponse;
+  } else {
+    throw new Error(
+        typeof responseData.data === "string"
+            ? responseData.data
+            : "Sign-in failed"
+    );
   }
 }
 

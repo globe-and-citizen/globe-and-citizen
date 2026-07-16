@@ -98,9 +98,8 @@ const { data: allPosts } = useQuery<AllNewsResponseType>({
 });
 
 const filteredPosts = computed(() => {
-  return allPosts.value?.data.posts
-    .filter((post) => post.author !== "")
-    .slice(0, 2);
+    const posts = allPosts.value?.data?.posts ?? [];
+    return posts.filter((post) => post.author !== "").slice(0, 2);
 });
 
 const { data: whatOurReadersSay1 } = useQuery<Post>({

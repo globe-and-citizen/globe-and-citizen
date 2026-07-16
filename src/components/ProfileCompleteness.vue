@@ -110,7 +110,7 @@ const layer8BaseUrl = isProd
 const { data: loginUrl } = useQuery({
   queryKey: ["layer8LoginUrl"],
   queryFn: async () => {
-    const response = await getLayer8LoginUrl();
+    const response = await getLayer8LoginUrl(false);
 
     return response as { data: { auth_url: string } };
   },
@@ -134,7 +134,7 @@ const { data: userData } = useQuery({
 
 const { mutate } = useMutation({
   mutationFn: async (code: string) => {
-    await layer8Callback(code);
+    await layer8Callback(false, code, state.value);
   },
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ["user"] });
@@ -174,6 +174,24 @@ const profileDetails = computed(() => [
 
 const loginUrlData = computed(() => loginUrl?.value?.data?.auth_url);
 
+const state = computed(() => {
+    const auth_url = loginUrl?.value?.data?.auth_url;
+
+    if (!auth_url) {
+        console.error("Auth URL is missing in the response.");
+        return ""
+    }
+
+    try {
+        const parsed = new URL(auth_url);
+        const params = parsed.searchParams;
+        return params.get("state") ?? ""
+    } catch (err) {
+        console.warn("Failed to parse auth_url:", err);
+        return ""
+    }
+});
+
 const openExternalLink = (url: string) => {
   const windowFeatures =
     "width=800,height=800,resizable=yes,scrollbars=yes,status=yes";
@@ -183,7 +201,7 @@ const openExternalLink = (url: string) => {
   const listener = (event: MessageEvent) => {
     console.log("event origin", event.origin);
     if (event.origin !== layer8BaseUrl) return;
-    if (event.data?.redr) {
+    if (event.data?.redirect_uri) {
       window.removeEventListener("message", listener);
       mutate(event.data.code);
       if (popupWindow && !popupWindow.closed) {
