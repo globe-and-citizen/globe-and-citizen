@@ -46,10 +46,7 @@
             <Button @click="handlePreviewCombinedData">
               Preview Combined Data
             </Button>
-            <Button
-              variant="outline"
-              @click="handleDownloadCombinedCompareCsv"
-            >
+            <Button variant="outline" @click="handleDownloadCombinedCompareCsv">
               Export to CSV
             </Button>
             <Button
@@ -227,61 +224,72 @@
 
             <div class="grid gap-2">
               <Label>Market/Event URL</Label>
-              <div class="flex gap-2">
-                <Input
-                  :model-value="activeLeg.marketUrl"
-                  type="text"
-                  placeholder="https://polymarket.com/event/... or /market/..."
-                  @update:model-value="
-                    (value) =>
-                      updateActiveLegField('marketUrl', String(value ?? ''))
-                  "
-                  @keydown.enter.prevent="loadLeg(activeLegIndex)"
-                />
-                <Button
-                  :disabled="activeLeg.loading || !activeLeg.marketUrl.trim()"
-                  @click="loadLeg(activeLegIndex)"
-                >
-                  <span v-if="activeLeg.loading">Loading...</span>
-                  <span v-else>Load</span>
-                </Button>
-              </div>
+              <Input
+                :model-value="activeLeg.marketUrl"
+                type="text"
+                readonly
+                placeholder="https://polymarket.com/event/... or /market/..."
+              />
               <p v-if="activeLeg.error" class="text-sm text-red-600">
                 {{ activeLeg.error }}
               </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
               <div class="grid gap-2">
-                <Label>Market</Label>
-                <Select
-                  :model-value="activeLeg.selectedMarketId"
-                  :disabled="getMarketSelectOptions(activeLeg).length === 0"
-                  @update:model-value="
-                    (value) => {
-                      updateActiveLegField(
-                        'selectedMarketId',
-                        String(value ?? ''),
-                      );
-                      onMarketChange(activeLegIndex);
-                    }
-                  "
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select market" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem
-                        v-for="market in getMarketSelectOptions(activeLeg)"
-                        :key="market.id"
-                        :value="market.id"
+                <Label>Markets</Label>
+                <div class="grid gap-2 rounded-lg border p-3 bg-muted/20">
+                  <div class="flex items-center gap-2">
+                    <Checkbox
+                      :id="`insights-select-all-${activeLegIndex}`"
+                      :model-value="exportSelectAllState(activeLeg)"
+                      :disabled="activeLeg.marketOptions.length === 0"
+                      @update:model-value="
+                        (value) =>
+                          activeLeg && toggleAllExportMarkets(activeLeg, value)
+                      "
+                    />
+                    <Label
+                      :for="`insights-select-all-${activeLegIndex}`"
+                      class="text-sm cursor-pointer"
+                    >
+                      Select All
+                    </Label>
+                  </div>
+
+                  <div
+                    v-if="activeLeg.marketOptions.length > 0"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 pl-2"
+                  >
+                    <div
+                      v-for="(market, marketIdx) in activeLeg.marketOptions"
+                      :key="market.id"
+                      class="flex items-center gap-2"
+                    >
+                      <Checkbox
+                        :id="`insights-market-${activeLegIndex}-${marketIdx}`"
+                        :model-value="
+                          activeLeg.exportSelectedMarkets.includes(market.id)
+                        "
+                        @update:model-value="
+                          (value) =>
+                            activeLeg &&
+                            toggleExportMarket(activeLeg, market.id, value)
+                        "
+                      />
+                      <Label
+                        :for="`insights-market-${activeLegIndex}-${marketIdx}`"
+                        class="text-sm cursor-pointer"
                       >
                         {{ market.title }}
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                      </Label>
+                    </div>
+                  </div>
+
+                  <p v-else class="text-xs text-muted-foreground">
+                    Select a market or event to view available markets.
+                  </p>
+                </div>
               </div>
 
               <div class="grid gap-2">
@@ -368,70 +376,6 @@
                       <SelectItem value="monthly">Monthly</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-
-                <div class="grid gap-2">
-                  <div class="flex items-center justify-between gap-2">
-                    <Label>Markets</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      class="h-7 px-2 text-xs"
-                      @click="toggleExportMarketList"
-                    >
-                      {{
-                        showExportMarketList ? "Hide list" : "Select markets"
-                      }}
-                    </Button>
-                  </div>
-                  <p class="text-xs text-muted-foreground">
-                    Selected market:
-                    {{ activeLegSelectedMarketLabel(activeLeg) }}
-                  </p>
-                  <div v-if="showExportMarketList" class="grid gap-2">
-                    <div class="flex items-center gap-2">
-                      <Checkbox
-                        :id="`insights-select-all-${activeLegIndex}`"
-                        :model-value="exportSelectAllState(activeLeg)"
-                        @update:model-value="
-                          (value) =>
-                            activeLeg &&
-                            toggleAllExportMarkets(activeLeg, value)
-                        "
-                      />
-                      <Label
-                        :for="`insights-select-all-${activeLegIndex}`"
-                        class="text-sm cursor-pointer"
-                      >
-                        Select All
-                      </Label>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2">
-                      <div
-                        v-for="(market, marketIdx) in activeLeg.marketOptions"
-                        :key="market.id"
-                        class="flex items-center gap-2"
-                      >
-                        <Checkbox
-                          :id="`insights-market-${activeLegIndex}-${marketIdx}`"
-                          :model-value="
-                            activeLeg.exportSelectedMarkets.includes(market.id)
-                          "
-                          @update:model-value="
-                            (value) =>
-                              activeLeg &&
-                              toggleExportMarket(activeLeg, market.id, value)
-                          "
-                        />
-                        <Label
-                          :for="`insights-market-${activeLegIndex}-${marketIdx}`"
-                          class="text-sm cursor-pointer"
-                        >
-                          {{ market.title }}
-                        </Label>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -1005,7 +949,6 @@ const props = defineProps<{
   quickAddMarketUrl: string;
   canQuickAddMarket: boolean;
   canAddMoreInsightsMarkets: boolean;
-  showExportMarketList: boolean;
   marketSearchDialogOpen: boolean;
   marketSearchQuery: string;
   marketSearchLoading: boolean;
@@ -1034,8 +977,6 @@ const props = defineProps<{
   onMarketChange: (index: number) => void;
   onOutcomeChange: (index: number) => void;
   onInsightsOutcomeSelectionChange: (index: number) => void;
-  toggleExportMarketList: () => void;
-  activeLegSelectedMarketLabel: (leg: LegState) => string;
   exportSelectAllState: (leg: LegState) => CheckboxModelValue;
   toggleAllExportMarkets: (leg: LegState, value: CheckboxModelValue) => void;
   toggleExportMarket: (
@@ -1045,9 +986,7 @@ const props = defineProps<{
   ) => void;
   handlePreviewChart: (leg: LegState) => void | Promise<void>;
   handleDownloadExport: (leg: LegState) => void;
-  handleSendSingleMarketToJupyterLite: (
-    leg: LegState,
-  ) => void | Promise<void>;
+  handleSendSingleMarketToJupyterLite: (leg: LegState) => void | Promise<void>;
   runMarketSearch: () => void;
   selectSearchEvent: (event: PolymarketGammaSearchEvent) => void;
   handleSearchImageError: (event: Event) => void;

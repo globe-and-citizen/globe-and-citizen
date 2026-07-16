@@ -50,7 +50,6 @@
         :active-leg-loading="activeLeg?.loading ?? false"
         :can-quick-add-market="canQuickAddMarket"
         :can-add-more-insights-markets="canAddMoreInsightsMarkets"
-        :show-export-market-list="showExportMarketList"
         :market-search-loading="marketSearchLoading"
         :market-search-loading-more="marketSearchLoadingMore"
         :market-search-error="marketSearchError"
@@ -83,8 +82,6 @@
         :on-market-change="onMarketChange"
         :on-outcome-change="onOutcomeChange"
         :on-insights-outcome-selection-change="onInsightsOutcomeSelectionChange"
-        :toggle-export-market-list="toggleExportMarketList"
-        :active-leg-selected-market-label="activeLegSelectedMarketLabel"
         :export-select-all-state="exportSelectAllState"
         :toggle-all-export-markets="toggleAllExportMarkets"
         :toggle-export-market="toggleExportMarket"
@@ -205,7 +202,6 @@
           :active-leg-loading="activeLeg?.loading ?? false"
           :can-quick-add-market="canQuickAddMarket"
           :can-add-more-insights-markets="canAddMoreInsightsMarkets"
-          :show-export-market-list="showExportMarketList"
           :market-search-loading="marketSearchLoading"
           :market-search-loading-more="marketSearchLoadingMore"
           :market-search-error="marketSearchError"
@@ -242,8 +238,6 @@
           :on-insights-outcome-selection-change="
             onInsightsOutcomeSelectionChange
           "
-          :toggle-export-market-list="toggleExportMarketList"
-          :active-leg-selected-market-label="activeLegSelectedMarketLabel"
           :export-select-all-state="exportSelectAllState"
           :toggle-all-export-markets="toggleAllExportMarkets"
           :toggle-export-market="toggleExportMarket"
@@ -576,7 +570,6 @@ const chartPreviewTitle = ref("Generated Chart");
 const chartPreviewSeries = ref<ScatterSeries[]>([]);
 const activeLegIndex = ref<number>(0);
 const quickAddMarketUrl = ref<string>("");
-const showExportMarketList = ref(false);
 
 const marketSearchDialogOpen = ref(false);
 const marketSearchQuery = ref("");
@@ -811,20 +804,9 @@ function legStatusText(leg: LegState): string {
   return leg.selectedOutcomeName || "Ready";
 }
 
-function activeLegSelectedMarketLabel(leg: LegState): string {
-  const selected = leg.marketOptions.find((m) => m.id === leg.selectedMarketId);
-  if (selected?.title?.trim()) return selected.title.trim();
-  return "No market selected";
-}
-
-function toggleExportMarketList() {
-  showExportMarketList.value = !showExportMarketList.value;
-}
-
 function selectLeg(index: number) {
   if (index < 0 || index >= legs.value.length) return;
   activeLegIndex.value = index;
-  showExportMarketList.value = false;
   const leg = legs.value[index];
   if (!isInsightsMode.value && leg?.marketUrl) {
     quickAddMarketUrl.value = leg.marketUrl;
@@ -842,7 +824,6 @@ function appendInsightsLeg(url = ""): number {
   const nextIndex = legs.value.length;
   legs.value.push(createInsightsLeg(url));
   activeLegIndex.value = nextIndex;
-  showExportMarketList.value = false;
   return nextIndex;
 }
 
@@ -1734,8 +1715,6 @@ watch(
     chartPreviewDialogOpen.value = false;
     chartPreviewTitle.value = "Generated Chart";
     chartPreviewSeries.value = [];
-    showExportMarketList.value = false;
-
     const resetToDefaults = () => {
       step.value = 1;
       legsCount.value = 1;
@@ -2196,6 +2175,9 @@ async function loadLeg(index: number) {
     // Constrain chart/export date pickers so users can't select earlier than the event start.
     const minDate = extractEventStartDateMin(data);
     leg.minDate = minDate;
+    if (!leg.exportToDate) {
+      leg.exportToDate = formatIsoTodayUtc();
+    }
     if (minDate) {
       if (!leg.exportFromDate || isBeforeIsoDate(leg.exportFromDate, minDate)) {
         leg.exportFromDate = minDate;
