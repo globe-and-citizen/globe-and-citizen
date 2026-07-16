@@ -7,3 +7,9 @@ declare module "@vue/runtime-dom" {
     [key: `data-${string}`]: string | number | boolean | undefined;
   }
 }
+
+export {};
+
+declare global {
+  var replacementFetch: typeof fetch | undefined;
+}

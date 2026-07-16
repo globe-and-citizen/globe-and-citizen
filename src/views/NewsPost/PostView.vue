@@ -144,7 +144,7 @@
                                                     <p
                                                         class="underline underline-offset-4 decoration-primary-red font-lato text-base font-medium"
                                                     >
-                                                        Viewpoint
+                                                        Prediction
                                                     </p>
                                                     <RouterLink
                                                         :to="`/profile/${opinion.user.username}`"
