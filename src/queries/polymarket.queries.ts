@@ -38,15 +38,23 @@ export const useMarketData = (
   queryId = "default",
 ) => {
   return useQuery({
-    queryKey: computed(() => ["marketData", queryId, endpoint]),
+    queryKey: computed(() => ["marketData", queryId, toValue(endpoint)]),
     queryFn: async () => {
-      // Query params: passed as URL query string (?url=xxx)
-      const queryParams = { url: toValue(endpoint) };
+      try {
+        // Query params: passed as URL query string (?url=xxx)
+        const queryParams = { url: toValue(endpoint) };
 
-      const { data } = await statsApiClient.get<
-        PolymarketEvent | PolymarketMarket
-      >("/polymarket/market-data", { params: queryParams });
-      return data || [];
+        const { data } = await statsApiClient.get<
+          PolymarketEvent | PolymarketMarket
+        >("/v1/polymarket/market-data", {
+          params: queryParams,
+        });
+
+        return data;
+      } catch (error) {
+        console.error("Failed to fetch market data:", error);
+        throw error; // Important: let Vue Query know it failed
+      }
     },
     // refetchInterval: 10000,
     enabled: computed(() => !!toValue(endpoint)),

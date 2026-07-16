@@ -11,7 +11,7 @@
         >
           <component :is="logo" />
           <span class="font-libre font-medium text-xl tracking-[-1.5px]"
-            >Globe & Citizen</span
+            >Homepage</span
           >
         </RouterLink>
 
@@ -21,68 +21,16 @@
           class="hidden lg:flex items-center gap-6 font-semibold text-base font-lato"
         >
           <RouterLink
-            to="/top-headlines"
+            to="/markets"
             active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
             class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
-            >Top Headlines</RouterLink
+            >Markets</RouterLink
           >
           <RouterLink
-            to="/all-news?category=all-news"
+            to="/predictions"
             active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
             class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
-            >News feed</RouterLink
-          >
-          <RouterLink
-            to="/about-us"
-            active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
-            class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
-            >About us</RouterLink
-          >
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <button
-                class="inline-flex items-center gap-2 py-2 px-[8.5px] pb-1.5 border-b-1 transition-colors cursor-pointer"
-                :class="
-                  isServicesRoute
-                    ? 'text-red-500 border-b-red-500'
-                    : 'text-black-100 border-b-transparent hover:border-b-black-100'
-                "
-              >
-                Tools
-                <svg
-                  class="h-4 w-4"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" class="w-64">
-              <DropdownMenuItem
-                v-for="item in serviceMenuItems"
-                :key="item.url"
-                :class="
-                  route.path === item.url
-                    ? 'bg-accent text-accent-foreground'
-                    : ''
-                "
-                @select="router.push(item.url)"
-              >
-                {{ item.title }}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <RouterLink
-            to="/become-a-contributor"
-            active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
-            class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
-            >Become a contributor</RouterLink
+            >Predictions</RouterLink
           >
         </nav>
       </div>
@@ -94,9 +42,9 @@
           v-if="headerState === 'no-user' || headerState === 'no-user-search'"
         >
           <div class="hidden md:flex items-center gap-4">
-            <RouterLink to="/sign-up" class="w-fit">
-              <Button variant="secondary" title="Sign up" size="medium" />
-            </RouterLink>
+<!--            <RouterLink to="/sign-up" class="w-fit">-->
+<!--              <Button variant="secondary" title="Sign up" size="medium" />-->
+<!--            </RouterLink>-->
             <RouterLink to="/sign-in" class="w-fit">
               <Button variant="primary" title="Sign in" size="medium" />
             </RouterLink>
@@ -257,52 +205,38 @@
             class="flex flex-col gap-4 font-semibold text-base font-lato mb-6"
           >
             <RouterLink
-              to="/top-headlines"
+              to="/markets"
               active-class="text-red-500"
               class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
               @click="closeMobileMenu"
-              >Top Headlines</RouterLink
+              >Markets</RouterLink
             >
             <RouterLink
-              to="/all-news?category=all-news"
+              to="/predictions"
               active-class="text-red-500"
               class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
               @click="closeMobileMenu"
-              >News feed</RouterLink
+              >Predictions</RouterLink
             >
-            <RouterLink
-              to="/about-us"
-              active-class="text-red-500"
-              class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
-              @click="closeMobileMenu"
-              >About us</RouterLink
-            >
-            <RouterLink
-              to="/become-a-contributor"
-              active-class="text-red-500"
-              class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
-              @click="closeMobileMenu"
-              >Become a contributor</RouterLink
-            >
-            <div class="rounded-md border border-gray-200 overflow-hidden">
-              <div
-                class="px-4 py-3 text-xs font-semibold uppercase tracking-[0.24em] text-gray-500 bg-gray-50"
-              >
-                Services
-              </div>
-              <div class="flex flex-col">
-                <RouterLink
-                  v-for="item in serviceMenuItems"
-                  :key="item.url"
-                  :to="item.url"
-                  class="text-black-100 py-3 px-4 rounded-none hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300"
-                  active-class="text-red-500 border-l-red-500 bg-red-50/50"
-                  @click="closeMobileMenu"
-                >
-                  {{ item.title }}
-                </RouterLink>
-              </div>
-            </div>
+<!--            <div class="rounded-md border border-gray-200 overflow-hidden">-->
+<!--              <div-->
+<!--                class="px-4 py-3 text-xs font-semibold uppercase tracking-[0.24em] text-gray-500 bg-gray-50"-->
+<!--              >-->
+<!--                Services-->
+<!--              </div>-->
+<!--              <div class="flex flex-col">-->
+<!--                <RouterLink-->
+<!--                  v-for="item in serviceMenuItems"-->
+<!--                  :key="item.url"-->
+<!--                  :to="item.url"-->
+<!--                  class="text-black-100 py-3 px-4 rounded-none hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300"-->
+<!--                  active-class="text-red-500 border-l-red-500 bg-red-50/50"-->
+<!--                  @click="closeMobileMenu"-->
+<!--                >-->
+<!--                  {{ item.title }}-->
+<!--                </RouterLink>-->
+<!--              </div>-->
+<!--            </div>-->
           </nav>
 
           <!-- Mobile Auth Buttons -->
@@ -310,12 +244,12 @@
             v-if="headerState === 'no-user' || headerState === 'no-user-search'"
           >
             <div class="flex flex-col gap-3 border-t pt-4">
-              <RouterLink
-                to="/sign-up"
-                class="text-center py-3 px-4 border border-black rounded-md text-base font-lato text-black-100 font-semibold hover:bg-gray-50"
-                @click="closeMobileMenu"
-                >Sign up</RouterLink
-              >
+<!--              <RouterLink-->
+<!--                to="/sign-up"-->
+<!--                class="text-center py-3 px-4 border border-black rounded-md text-base font-lato text-black-100 font-semibold hover:bg-gray-50"-->
+<!--                @click="closeMobileMenu"-->
+<!--                >Sign up</RouterLink-->
+<!--              >-->
               <RouterLink
                 to="/sign-in"
                 class="text-center bg-black font-lato font-semibold text-white px-4 py-3 rounded-md text-base hover:opacity-90"
@@ -401,27 +335,27 @@
       </div>
     </Transition>
 
-    <!-- Filters Bar -->
-    <div v-if="showFilterBar" class="w-full">
-      <nav
-        class="gc-container flex items-center gap-6 overflow-x-auto text-base font-lato font-semibold px-4 md:px-0"
-      >
-        <RouterLink
-          :to="{ path: '/all-news', query: { category: 'all-news' } }"
-          :class="{ 'text-red-500': currentCategory === 'all-news' }"
-          class="py-3 text-gray-800 whitespace-nowrap hover:text-red-500 border-b-2 border-transparent"
-        >
-          News
-        </RouterLink>
-        <RouterLink
-          :to="{ path: '/all-news', query: { category: 'opinions' } }"
-          :class="{ 'text-red-500': currentCategory === 'opinions' }"
-          class="py-3 text-gray-800 whitespace-nowrap hover:text-red-500 border-b-2 border-transparent"
-        >
-          Opinions
-        </RouterLink>
-      </nav>
-    </div>
+<!--    &lt;!&ndash; Filters Bar &ndash;&gt;-->
+<!--    <div v-if="showFilterBar" class="w-full">-->
+<!--      <nav-->
+<!--        class="gc-container flex items-center gap-6 overflow-x-auto text-base font-lato font-semibold px-4 md:px-0"-->
+<!--      >-->
+<!--        <RouterLink-->
+<!--          :to="{ path: '/predictions', query: { category: 'all-news' } }"-->
+<!--          :class="{ 'text-red-500': currentCategory === 'all-news' }"-->
+<!--          class="py-3 text-gray-800 whitespace-nowrap hover:text-red-500 border-b-2 border-transparent"-->
+<!--        >-->
+<!--          News-->
+<!--        </RouterLink>-->
+<!--        <RouterLink-->
+<!--          :to="{ path: '/predictions', query: { category: 'opinions' } }"-->
+<!--          :class="{ 'text-red-500': currentCategory === 'opinions' }"-->
+<!--          class="py-3 text-gray-800 whitespace-nowrap hover:text-red-500 border-b-2 border-transparent"-->
+<!--        >-->
+<!--          Opinions-->
+<!--        </RouterLink>-->
+<!--      </nav>-->
+<!--    </div>-->
   </header>
 </template>
 
@@ -438,22 +372,15 @@ import { getUser } from "@/api/user.ts";
 import type { UserType } from "@/models/Auth";
 import Button from "@/components/Button.vue";
 import { useNewOpinionStore } from "@/store/newOpinionStore.ts";
-import { serviceMenuItems } from "@/composables/menuItems";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 
 type HeaderState = "default" | "no-user" | "no-user-search" | "logged-in";
 const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
-const showFilterBar = computed(() => {
-  return route.path === "/all-news";
-});
+// const showFilterBar = computed(() => {
+//   return route.path === "/predictions";
+// });
 const storeUsername = computed(() =>
   authStore.user?.username ? authStore.user.username : "",
 );
@@ -474,12 +401,9 @@ const profilePictureUrl = computed(() => {
   return userData.value?.profile_picture_url;
 });
 
-const currentCategory = computed(
-  () => route.query.category as string | undefined,
-);
-const isServicesRoute = computed(() =>
-  serviceMenuItems.some((item) => route.path === item.url),
-);
+// const currentCategory = computed(
+//   () => route.query.category as string | undefined,
+// );
 
 const isMobileMenuOpen = ref(false);
 
@@ -538,6 +462,9 @@ const navigateToCreateOpinion = () => {
 
   router.push({
     name: "WriteOpinionView",
+      params: {
+          id: postId.value,
+      },
   });
 };
 

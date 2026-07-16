@@ -25,7 +25,7 @@
           <p
             class="text-primary-red underline decoration-red-20 underline-offset-4 font-lato font-semibold text-heading-h6 pb-1"
           >
-            Viewpoint
+            Predictions
           </p>
           <RouterLink
             v-for="value in whatOurReadersSay1?.entries"
@@ -62,7 +62,7 @@
           <p
             class="text-primary-red underline decoration-red-20 underline-offset-4 font-lato font-semibold text-heading-h6 pb-1"
           >
-            Viewpoint
+            Predictions
           </p>
           <RouterLink
             v-for="value in whatOurReadersSay2?.entries"

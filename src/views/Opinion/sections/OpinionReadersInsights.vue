@@ -9,7 +9,7 @@
     <div
       class="max-w-[850px] mx-auto pt-6 lg:pt-9 pb-6 font-lato px-6 md:px-8 lg:px-0"
     >
-      <p class="font-semibold">Viewpoint’s Overview</p>
+      <p class="font-semibold">Prediction’s Overview</p>
       <div class="flex justify-between flex-wrap gap-4">
         <!-- ACCURACY -->
         <div class="flex gap-2 items-center mt-2">

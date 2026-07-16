@@ -35,52 +35,6 @@
                     </p>
                 </div>
 
-                <!-- Form -->
-                <form class="space-y-4" @submit="onSubmit">
-                    <input
-                        v-model="username"
-                        type="text"
-                        placeholder="Username"
-                        class="w-full border border-gray-300 rounded px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                    />
-                    <input
-                        v-model="password"
-                        type="password"
-                        placeholder="Password"
-                        class="w-full border border-gray-300 rounded px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                    />
-
-                    <p v-if="errorMessage" class="text-red-600 text-sm mt-2">
-                        {{ errorMessage }}
-                    </p>
-
-                    <button
-                        type="submit"
-                        class="w-full bg-black flex items-center justify-center gap-2 text-white py-3 rounded font-bold mt-4 text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
-                        :disabled="isPending"
-                    >
-                        <component :is="Layer8Icon"/>
-                        <span v-if="isPending">Joining...</span>
-                        <span v-else> Sign in</span>
-                    </button>
-
-                    <div class="flex items-center my-4">
-                        <div class="flex-grow h-px bg-gray-300"></div>
-                        <span class="px-2 text-sm text-gray-500">or</span>
-                        <div class="flex-grow h-px bg-gray-300"></div>
-                    </div>
-
-                    <p class="text-sm text-center mt-4 text-gray-600">
-                        Don't have an account?
-                        <RouterLink
-                            to="/sign-up"
-                            class="text-black font-medium underline hover:no-underline"
-                        >Sign up now
-                        </RouterLink
-                        >
-                    </p>
-                </form>
-
                 <button
                     type="button"
                     class="w-full bg-black flex items-center justify-center gap-2 text-white py-3 rounded font-bold mt-4 text-base disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-800 transition-colors"
@@ -91,6 +45,10 @@
                     <span v-if="isLayer8LoginUrlPending || isLayer8CallbackPending">Signing in...</span>
                     <span v-else>Sign in with Layer8</span>
                 </button>
+
+                <p v-if="errorMessage" class="text-red-600 text-sm mt-2">
+                    {{ errorMessage }}
+                </p>
             </div>
         </div>
     </div>
@@ -100,54 +58,12 @@
 import {ref} from "vue";
 import {useMutation, useQueryClient} from "@tanstack/vue-query";
 import bgImg from "../assets/images/sign-in-img.png";
-import {useRouter} from "vue-router";
-import axios from "axios";
 import Layer8Icon from "../assets/icons/layer8.svg";
-import type {SignInResponse} from "../models/Auth";
-
-import {signIn} from "../api/auth";
 import {getLayer8LoginUrl, layer8Callback} from "@/api/layer8.ts";
 
-const router = useRouter();
-// Form state
-const username = ref("");
-const password = ref("");
 const errorMessage = ref("");
 const queryClient = useQueryClient();
 const state = ref("");
-
-// Mutation for sign-in
-const {mutate: signInMutation, isPending} = useMutation({
-    mutationFn: async (data: { username: string; password: string }) =>
-        signIn(data),
-    onSuccess: (response: SignInResponse) => {
-        if (
-            typeof response.data === "string" &&
-            response.data === "Invalid credentials"
-        ) {
-            errorMessage.value = "Username or password is incorrect.";
-        } else if (typeof response.data === "object" && "token" in response.data) {
-            errorMessage.value = "";
-            axios.defaults.headers.common[
-                "Authorization"
-                ] = `Bearer ${response.data.token}`;
-            router.push("/");
-            queryClient.invalidateQueries({queryKey: ["user"]});
-        } else {
-            errorMessage.value = "Sign-in failed. Please try again.";
-        }
-    },
-    onError: () => {
-        errorMessage.value = "Sign-in failed. Please try again.";
-    },
-});
-
-// Handle form submit
-function onSubmit(e: Event) {
-    e.preventDefault();
-    errorMessage.value = "";
-    signInMutation({username: username.value, password: password.value});
-}
 
 const isProd = import.meta.env.PROD;
 const layer8BaseUrl = isProd

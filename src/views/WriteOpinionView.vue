@@ -5,10 +5,10 @@
         <!-- Header -->
         <div class="pb-4 font-lato">
           <h1 class="text-2xl font-bold text-black-100 dark:text-white">
-            You are writing a viewpoint
+            You are writing a prediction
           </h1>
           <p class="text-sm text-black-60 font-medium mt-3 leading-[1]">
-            Your viewpoint reflects your personal opinion on the following
+            Your prediction reflects your personal opinion on the following
             article. Please make sure your response is original, respectful, and
             based on your own perspective. Avoid copying from other sources —
             this is your chance to express your unique thoughts and reflections.
@@ -44,7 +44,7 @@
               for="title"
               class="text-base font-semibold text-black-100 dark:text-gray-300 flex items-center gap-1"
             >
-              Viewpoint title <span class="text-red-500">*</span>
+              Prediction title <span class="text-red-500">*</span>
             </Label>
 
             <div class="relative">
@@ -76,7 +76,7 @@
               for="content"
               class="text-base font-semibold text-black-100 dark:text-gray-300 flex items-center gap-1"
             >
-              Viewpoint text <span class="text-red-500">*</span>
+              Prediction text <span class="text-red-500">*</span>
             </Label>
 
             <div
@@ -96,7 +96,7 @@
               v-if="validationErrors.content"
               class="absolute top-full left-0 mt-1 text-xs text-red-500"
             >
-              Viewpoint text is required.
+              Prediction text is required.
             </div>
           </div>
 
@@ -190,7 +190,7 @@
                 type: 'submit',
               }"
             >
-              Submit Opinion
+              Submit Prediction
             </Button>
           </div>
         </form>

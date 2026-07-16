@@ -5,7 +5,7 @@
       class="!w-fit hover:text-red-500 hover:border-b-red-500"
       :variant="'tertiary'"
       :title="'See all'"
-      url="/all-news"
+      url="/markets"
     />
   </div>
   <div

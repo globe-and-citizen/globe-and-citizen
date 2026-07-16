@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from "vue";
-import { syncQueuedNotebookFilesToJupyterLite } from "@/composables/jupyterLiteStorage";
+import { syncQueuedNotebookFilesToJupyterLite } from "@/composables/jupyterLiteStorage.ts";
 
 type Mode = "lab" | "repl";
 
