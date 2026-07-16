@@ -7864,6 +7864,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"l8-intercept@npm:^0.4.3":
+  version: 0.4.3
+  resolution: "l8-intercept@npm:0.4.3"
+  checksum: 10c0/c290ae6d8c972bb6e0706749fb8faf5de16adb491668fcf77a37f601a2a3d7e6a7172509b0ad812f6bca1d168c8497c0bb1d4e38351d6de62e930eef63f71b55
+  languageName: node
+  linkType: hard
+
 "lambda-local@npm:^2.2.0":
   version: 2.2.0
   resolution: "lambda-local@npm:2.2.0"
@@ -7884,13 +7891,6 @@ __metadata:
     picocolors: "npm:^1.1.1"
     shell-quote: "npm:^1.8.3"
   checksum: 10c0/b1aad04eef3a675aa35e82498bedaaeb790b9a02834a9cff79987dd7c6f5d92fd8f79ff7a8a4cd61681e0d462069de30d0bc65b41a936a7e3d700a4fdac1090e
-  languageName: node
-  linkType: hard
-
-"layer8-interceptor-production@npm:^0.4.0":
-  version: 0.4.0
-  resolution: "layer8-interceptor-production@npm:0.4.0"
-  checksum: 10c0/200bce196d7b26eda2b1a0b8a1063cb79fe10bf64707e5b756f73a2f92db60f7fbdcf2157ca7c7a9e7e9773328477e87ed0082cf29482a91418467db988b968f
   languageName: node
   linkType: hard
 
@@ -8685,7 +8685,7 @@ __metadata:
     ethers: "npm:^5.7.2"
     globals: "npm:^16.1.0"
     idb: "npm:^8.0.3"
-    layer8-interceptor-production: "npm:^0.4.0"
+    l8-intercept: "npm:^0.4.3"
     leaflet: "npm:^1.9.4"
     lightgallery: "npm:^2.9.0"
     pinia: "npm:^3.0.2"
