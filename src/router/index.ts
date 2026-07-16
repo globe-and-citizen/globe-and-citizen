@@ -8,8 +8,8 @@ import AdvertisementView from "../views/AdvertisementView.vue";
 import PostView from "../views/NewsPost/PostView.vue";
 import OpinionView from "../views/Opinion/OpinionView.vue";
 import ProfilePageView from "../views/ProfilePageView.vue";
-import { createRouter, createWebHistory } from "vue-router";
-import { useAuthStore } from "../store/authStore";
+import {createRouter, createWebHistory} from "vue-router";
+import {useAuthStore} from "../store/authStore";
 import PublicLayout from "../layouts/PublicLayout.vue";
 import AdminLayout from "../layouts/AdminLayout.vue";
 import AdminDashboard from "@/views/AdminPanel/AdminDashboard.vue";
@@ -22,69 +22,72 @@ import PublicView from "@/views/UserProfile/PublicView.vue";
 import ProfileSettingsView from "@/views/UserProfile/ProfileSettingsView.vue";
 import MobileProfileMenuView from "@/views/UserProfile/MobileProfileMenuView.vue";
 import UserOpinionsView from "@/views/UserProfile/UserOpinionsView.vue";
-import TopHeadlines from "@/views/TopHeadlines.vue";
+import Markets from "@/views/Markets.vue";
 import CreateArticle from "@/views/UserProfile/CreateArticle.vue";
 import UserNewsView from "@/views/UserProfile/UserNewsView.vue";
-import AllNewsView from "@/views/AllNewsView.vue";
+import PredictionsView from "@/views/PredictionsView.vue";
 import ChangePasswordView from "@/views/UserProfile/ChangePasswordView.vue";
-import PolymarketPriceTracker from "@/views/PolymarketPriceTracker.vue";
-import PolymarketAnalytics from "@/views/PolymarketAnalytics.vue";
-import CorrelationGraphView from "@/views/CorrelationGraphView.vue";
-import ServicesPageView from "@/views/ServicesPageView.vue";
+import PolymarketPriceTracker from "@/views/UserProfile/PolymarketPriceTracker.vue";
+import PolymarketAnalytics from "@/views/UserProfile/PolymarketAnalytics.vue";
+// import CorrelationGraphView from "@/views/UserProfile/CorrelationGraphView.vue";
+// import ServicesPageView from "@/views/ServicesPageView.vue";
 // import LiveFeedView from "@/views/LiveNewsFeed/LiveFeedView.vue";
-import MaxContingencyTableView from "@/views/MaxContingencyTableView.vue";
+import MaxContingencyTableView from "@/views/UserProfile/MaxContingencyTableView.vue";
+import NotebooksView from "@/views/UserProfile/NotebooksView.vue";
+import HistoricalCorrelationGraphView from "@/views/UserProfile/HistoricalCorrelationGraphView.vue";
+
 const routes = [
   {
     path: "/",
     component: PublicLayout,
     children: [
-      { path: "", component: HomeView },
-      {
-        path: "",
-        component: ServicesPageView,
-        children: [
-          {
-            path: "polymarket-price-tracker",
-            name: "PolymarketPriceTrackerView",
-            component: PolymarketPriceTracker,
-            meta: { requiresAuth: true },
-          },
-          {
-            path: "polymarket-analytics",
-            name: "PolymarketAnalyticsView",
-            component: PolymarketAnalytics,
-            meta: { requiresAuth: true },
-          },
-          {
-            path: "correlation-graph",
-            name: "CorrelationGraphView",
-            component: CorrelationGraphView,
-            meta: { requiresAuth: true, fullWidth: true },
-          },
-          {
-            path: "max-contingency-table",
-            name: "MaxContingencyTableView",
-            component: MaxContingencyTableView,
-            meta: { requiresAuth: true, fullWidth: true },
-          },
-          {
-            path: "notebooks",
-            name: "NotebooksView",
-            component: () => import("@/views/NotebooksView.vue"),
-            meta: { requiresAuth: true, fullWidth: true },
-          },
-        ],
-      },
+      {path: "", component: HomeView},
+      // {
+      //   path: "",
+      //   component: ServicesPageView,
+      //   children: [
+      //     {
+      //       path: "polymarket-price-tracker",
+      //       name: "PolymarketPriceTrackerView",
+      //       component: PolymarketPriceTracker,
+      //       meta: { requiresAuth: true },
+      //     },
+      //     {
+      //       path: "polymarket-analytics",
+      //       name: "PolymarketAnalyticsView",
+      //       component: PolymarketAnalytics,
+      //       meta: { requiresAuth: true },
+      //     },
+      //     {
+      //       path: "correlation-graph",
+      //       name: "CorrelationGraphView",
+      //       component: CorrelationGraphView,
+      //       meta: { requiresAuth: true, fullWidth: true },
+      //     },
+      //     {
+      //       path: "max-contingency-table",
+      //       name: "MaxContingencyTableView",
+      //       component: MaxContingencyTableView,
+      //       meta: { requiresAuth: true, fullWidth: true },
+      //     },
+      //     {
+      //       path: "notebooks",
+      //       name: "NotebooksView",
+      //       component: () => import("@/views/UserProfile/NotebooksView.vue"),
+      //       meta: { requiresAuth: true, fullWidth: true },
+      //     },
+      //   ],
+      // },
       {
         path: "trending",
         component: TrendingView,
       },
-      { path: "about-us", component: AboutView },
-      { path: "top-headlines", component: TopHeadlines },
-      { path: "all-news", component: AllNewsView },
-      { path: "become-a-contributor", component: BecomeAContributorView },
-      { path: "sign-in", component: SignInView },
-      { path: "sign-up", component: SignUpView },
+      {path: "about-us", component: AboutView},
+      {path: "markets", component: Markets},
+      {path: "predictions", component: PredictionsView, name: "PredictionsPage"},
+      {path: "become-a-contributor", component: BecomeAContributorView},
+      {path: "sign-in", component: SignInView},
+      {path: "sign-up", component: SignUpView},
       {
         path: "post/:id",
         name: "PostView",
@@ -96,7 +99,7 @@ const routes = [
         name: "WriteOpinionView",
         component: WriteOpinionView,
         props: true,
-        meta: { requiresAuth: true },
+        meta: {requiresAuth: true},
       },
       {
         path: "post/:id/:opinionId",
@@ -116,7 +119,7 @@ const routes = [
         component: () => import("@/views/OpinionStatsView.vue"),
         props: true,
       },
-      { path: "advertisement/:id", component: AdvertisementView },
+      {path: "advertisement/:id", component: AdvertisementView},
       {
         path: "profile",
         component: ProfilePageView,
@@ -125,56 +128,60 @@ const routes = [
             path: "",
             redirect: "/profile/public-view",
           },
-          { path: "public-view", component: PublicView },
-          { path: ":id", component: PublicView },
-          { path: "profile-menu", component: MobileProfileMenuView },
-          { path: "profile-settings", component: ProfileSettingsView },
-          { path: "change-password", component: ChangePasswordView },
-          { path: "saved-articles", component: PublicView },
-          { path: "subscriptions", component: PublicView },
-          { path: "notifications", component: PublicView },
-          { path: "my-articles", component: UserOpinionsView },
-          { path: "articles", component: UserNewsView },
-          { path: "create", component: CreateArticle },
-          { path: "my-comments", component: PublicView },
+          {path: "public-view", component: PublicView},
+          {path: ":id", component: PublicView},
+          {path: "profile-menu", component: MobileProfileMenuView},
+          {path: "profile-settings", component: ProfileSettingsView},
+          {path: "change-password", component: ChangePasswordView},
+          {path: "saved-articles", component: PublicView},
+          {path: "subscriptions", component: PublicView},
+          {path: "notifications", component: PublicView},
+          {path: "my-articles", component: UserOpinionsView},
+          {path: "articles", component: UserNewsView},
+          {path: "create", component: CreateArticle},
+          {path: "my-comments", component: PublicView},
           {
             path: "polymarket-price-tracker",
-            redirect: "/polymarket-price-tracker",
+            component: PolymarketPriceTracker,
           },
           {
             path: "polymarket-analytics",
-            redirect: "/polymarket-analytics",
+            component: PolymarketAnalytics,
           },
+          // {
+          //   path: "correlation-graph",
+          //   component: CorrelationGraphView,
+          // },
           {
             path: "correlation-graph",
-            redirect: "/correlation-graph",
+            component: HistoricalCorrelationGraphView,
           },
           {
             path: "notebooks",
-            redirect: "/notebooks",
+            component: NotebooksView,
           },
           {
             path: "max-contingency-table",
-            redirect: "/max-contingency-table",
+            component: MaxContingencyTableView,
           },
         ],
       },
-      { path: "all-news", component: AllNewsView, name: "AllNewsPage" },
+      // { path: "predictions", component: PredictionsView, name: "PredictionsPage" },
     ],
   },
   {
     path: "/admin",
     component: AdminLayout,
-    meta: { requiresAdmin: true },
+    meta: {requiresAdmin: true},
     children: [
       {
         path: "",
         redirect: "/admin/home",
       },
-      { path: "home", component: AdminDashboard },
-      { path: "users", component: UsersManagement },
-      { path: "news-processor", component: NewsManagement },
-      { path: "posted-news", component: PostedNews },
+      {path: "home", component: AdminDashboard},
+      {path: "users", component: UsersManagement},
+      {path: "news-processor", component: NewsManagement},
+      {path: "posted-news", component: PostedNews},
       // { path: "search", component: SearchView },
       // { path: "settings", component: SettingsView },
     ],
@@ -195,17 +202,17 @@ router.beforeEach((to, _, next) => {
   const featureFlag = to.meta.requiresFeatureFlag as string | undefined;
   if (featureFlag) {
     if (to.query[featureFlag] !== "true") {
-      return next({ path: "/profile" });
+      return next({path: "/profile"});
     }
   }
 
   if (isLoggedIn && (to.path === "/sign-in" || to.path === "/sign-up")) {
-    next({ path: "/" });
+    next({path: "/"});
   } else if (to.matched.some((record) => record.meta.requiresAdmin)) {
     if (!isLoggedIn) {
-      next({ path: "/sign-in" });
+      next({path: "/sign-in"});
     } else if (!isAdmin) {
-      next({ path: "/" });
+      next({path: "/"});
     } else {
       next();
     }
@@ -214,13 +221,13 @@ router.beforeEach((to, _, next) => {
       next();
     } else {
       // Redirect to sign-in if the user is not authenticated
-      next({ path: "/sign-in" });
+      next({path: "/sign-in"});
     }
   } else if (
     (!isLoggedIn && to.path === "/profile") ||
     (!isLoggedIn && to.path?.startsWith("/profile/"))
   ) {
-    next({ path: "/sign-in" });
+    next({path: "/sign-in"});
   } else {
     next();
   }

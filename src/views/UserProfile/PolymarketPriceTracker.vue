@@ -295,7 +295,7 @@
 </template>
 
 <script setup lang="ts">
-import { deleteAlert, fetchAlerts, type AlertOperator } from "@/api/polymarket";
+import { deleteAlert, fetchAlerts, type AlertOperator } from "@/api/polymarket.ts";
 import { computed, onMounted, ref } from "vue";
 import PolymarketAlertWizardModal from "@/components/PolymarketAlertWizardModal.vue";
 import { Button } from "@/components/ui/button";

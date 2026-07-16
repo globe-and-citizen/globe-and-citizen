@@ -44,25 +44,6 @@ export type FetchNewsApiSource = {
   url: string;
 };
 
-export type FetchNewsApiSourcesResponse = {
-  data: { status: string; sources: FetchNewsApiSource[] };
-};
-
-export async function fetchNewsApiSources(): Promise<FetchNewsApiSourcesResponse> {
-  try {
-    const response = await interceptorFetch(`${API_BASE_URL}/sources`);
-    if (!response) {
-      throw new Error(`Error fetching news sources`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching news sources:", error);
-    throw error;
-  }
-}
-
 export type NewsApiSummaryPayload = {
   author: string | null;
   content: string | null;

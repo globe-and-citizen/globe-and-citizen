@@ -9,7 +9,7 @@
     <Button
       size="small"
       class="px-6 py-3"
-      title="Share your viewpoint"
+      title="Share your prediction"
       @click="$router.push(`/post/${postSlug}/write`)"
     />
   </div>

@@ -6,7 +6,7 @@
       <div
         class="underline font-lato underline-offset-4 decoration-primary-red text-heading-h6 font-semibold mb-4"
       >
-        Viewpoint by {{ post?.author }}
+        Prediction by {{ post?.author }}
       </div>
       <h1 class="text-3xl font-bold mb-2"></h1>
       <RouterLink :to="`/profile/${post?.user.username}`">
