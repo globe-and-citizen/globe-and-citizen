@@ -84,6 +84,7 @@ export const profileMenuItems = [
     icon: analyticsGraph,
     title: "CSV Builder",
     url: "/csv-builder",
+    summary: "Build downloadable CSV datasets from Polymarket market history.",
   },
   // {
   //     section: "Tools",
@@ -96,18 +97,21 @@ export const profileMenuItems = [
     icon: correlationGraph,
     title: "Price Correlation graph",
     url: "/correlation-graph",
+    summary: "Compare historical price relationships between selected Polymarket outcomes.",
   },
   {
     section: "Tools",
     icon: table,
     title: "Max contingency table",
     url: "/max-contingency-table",
+    summary: "Analyze outcome combinations using maximum contingency table calculations.",
   },
   {
     section: "Tools",
     icon: jupyter,
     title: "Notebooks",
     url: "/notebooks",
+    summary: "Open JupyterLite notebooks for deeper market data analysis.",
   },
 ];
 
