@@ -43,41 +43,20 @@
 
         <div class="grid gap-2">
           <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
-            <Button
-              :disabled="isCombinedCompareChartDisabled"
-              @click="handleViewCombinedCompareChart"
-            >
-              <span v-if="compareChartLoading">Loading...</span>
-              <span v-else>{{ insightsGenerateChartLabel }}</span>
+            <Button @click="handlePreviewCombinedData">
+              Preview Combined Data
             </Button>
             <Button
               variant="outline"
-              :disabled="compareChartLoading || compareChartDataLength === 0"
-              @click="openCombinedCompareChartPreview"
-            >
-              Preview Generated Chart
-            </Button>
-            <Button
-              variant="outline"
-              :disabled="compareChartLoading || compareChartDataLength === 0"
               @click="handleDownloadCombinedCompareCsv"
             >
               Export to CSV
             </Button>
             <Button
               variant="outline"
-              :disabled="compareChartLoading || compareChartDataLength < 2"
-              @click="handleSendToBetaRegression"
-            >
-              Run Beta Regression
-            </Button>
-            <Button
-              variant="outline"
-              :disabled="isCompareNotebookActionDisabled"
               @click="handleCombinedCompareNotebookAction"
             >
-              <span v-if="compareSaveLoading">Sending...</span>
-              <span v-else>{{ compareNotebookActionLabel }}</span>
+              Send to JupyterLite
             </Button>
           </div>
 
@@ -170,14 +149,6 @@
             <Button variant="outline" @click="openMarketSearchDialog">
               Open Search
             </Button>
-
-            <div class="text-xs text-muted-foreground">
-              {{ legs.length }} market{{ legs.length === 1 ? "" : "s" }}
-              added
-              <span v-if="isCompareInsightsMode">
-                for cross-event comparison
-              </span>
-            </div>
           </div>
 
           <div class="max-h-[58vh] overflow-y-auto p-3 space-y-2">
@@ -465,33 +436,26 @@
               </div>
 
               <div class="border rounded-lg p-3 bg-muted/20 grid gap-3">
-                <div class="font-semibold">Price Insights Actions</div>
+                <div class="font-semibold">
+                  Single Market Functions Download
+                </div>
 
                 <div class="grid gap-2">
                   <div class="flex flex-col sm:flex-row gap-2">
-                    <Button
-                      :disabled="activeLeg.chartLoading"
-                      @click="handleViewChart(activeLeg)"
-                    >
-                      <span v-if="activeLeg.chartLoading">Loading...</span>
-                      <span v-else>Generate Chart</span>
+                    <Button @click="handlePreviewChart(activeLeg)">
+                      Preview Chart
                     </Button>
                     <Button
                       variant="outline"
-                      :disabled="
-                        activeLeg.chartLoading ||
-                        activeLeg.chartData.length === 0
-                      "
-                      @click="openLegChartPreview(activeLeg)"
-                    >
-                      Preview Generated Chart
-                    </Button>
-                    <Button
-                      :disabled="activeLeg.exportLoading"
                       @click="handleDownloadExport(activeLeg)"
                     >
-                      <span v-if="activeLeg.exportLoading">Downloading...</span>
-                      <span v-else>Download (.csv)</span>
+                      Download CSV
+                    </Button>
+                    <Button
+                      variant="outline"
+                      @click="handleSendSingleMarketToJupyterLite(activeLeg)"
+                    >
+                      Send to JupyterLite
                     </Button>
                   </div>
 
@@ -501,6 +465,17 @@
 
                   <p v-if="activeLeg.exportError" class="text-sm text-red-600">
                     {{ activeLeg.exportError }}
+                  </p>
+
+                  <p v-if="singleMarketSaveError" class="text-sm text-red-600">
+                    {{ singleMarketSaveError }}
+                  </p>
+
+                  <p
+                    v-if="singleMarketSaveSuccessPath"
+                    class="text-sm text-green-700"
+                  >
+                    Saved to JupyterLite: {{ singleMarketSaveSuccessPath }}
                   </p>
                 </div>
               </div>
@@ -1013,13 +988,7 @@ const props = defineProps<{
   compareToDate: string;
   compareMinDate: string;
   compareFrequency: string;
-  isCombinedCompareChartDisabled: boolean;
-  compareChartLoading: boolean;
-  insightsGenerateChartLabel: string;
-  compareChartDataLength: number;
-  isCompareNotebookActionDisabled: boolean;
   compareSaveLoading: boolean;
-  compareNotebookActionLabel: string;
   compareFilenameDialogOpen: boolean;
   compareFilenameInput: string;
   compareFilenameError: string | null;
@@ -1027,6 +996,8 @@ const props = defineProps<{
   compareChartError: string | null;
   compareSaveError: string | null;
   compareSaveSuccessPath: string;
+  singleMarketSaveError: string | null;
+  singleMarketSaveSuccessPath: string;
   legs: LegState[];
   activeLegIndex: number;
   activeLeg: LegState | null;
@@ -1044,11 +1015,9 @@ const props = defineProps<{
   searchEventResults: SearchEventCardItem[];
   selectedSearchEvent: PolymarketGammaSearchEvent | null;
   defaultCombinedCompareNotebookFilename: () => string;
-  handleViewCombinedCompareChart: () => void;
-  openCombinedCompareChartPreview: () => void;
-  handleDownloadCombinedCompareCsv: () => void;
-  handleSendToBetaRegression: () => void;
-  handleCombinedCompareNotebookAction: () => void;
+  handlePreviewCombinedData: () => void | Promise<void>;
+  handleDownloadCombinedCompareCsv: () => void | Promise<void>;
+  handleCombinedCompareNotebookAction: () => void | Promise<void>;
   handleCompareFilenamePrimaryAction: () => void;
   openMarketSearchDialog: () => void;
   closeMarketSearchDialog: () => void;
@@ -1074,9 +1043,11 @@ const props = defineProps<{
     marketId: string,
     value: CheckboxModelValue,
   ) => void;
-  handleViewChart: (leg: LegState) => void;
-  openLegChartPreview: (leg: LegState) => void;
+  handlePreviewChart: (leg: LegState) => void | Promise<void>;
   handleDownloadExport: (leg: LegState) => void;
+  handleSendSingleMarketToJupyterLite: (
+    leg: LegState,
+  ) => void | Promise<void>;
   runMarketSearch: () => void;
   selectSearchEvent: (event: PolymarketGammaSearchEvent) => void;
   handleSearchImageError: (event: Event) => void;

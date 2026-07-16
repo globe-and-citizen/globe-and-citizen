@@ -36,18 +36,14 @@
         :has-insights-chart-actions="hasInsightsChartActions"
         :insights-chart-panel-title="insightsChartPanelTitle"
         :compare-min-date="compareMinDate"
-        :is-combined-compare-chart-disabled="isCombinedCompareChartDisabled"
-        :compare-chart-loading="compareChartLoading"
-        :insights-generate-chart-label="insightsGenerateChartLabel"
-        :compare-chart-data-length="compareChartData.length"
-        :is-compare-notebook-action-disabled="isCompareNotebookActionDisabled"
         :compare-save-loading="compareSaveLoading"
-        :compare-notebook-action-label="compareNotebookActionLabel"
         :compare-filename-error="compareFilenameError"
         :compare-can-go-to-notebooks="compareCanGoToNotebooks"
         :compare-chart-error="compareChartError"
         :compare-save-error="compareSaveError"
         :compare-save-success-path="compareSaveSuccessPath"
+        :single-market-save-error="singleMarketSaveError"
+        :single-market-save-success-path="singleMarketSaveSuccessPath"
         :legs="legs"
         :active-leg-index="activeLegIndex"
         :active-leg="activeLeg"
@@ -64,10 +60,8 @@
         :default-combined-compare-notebook-filename="
           defaultCombinedCompareNotebookFilename
         "
-        :handle-view-combined-compare-chart="handleViewCombinedCompareChart"
-        :open-combined-compare-chart-preview="openCombinedCompareChartPreview"
+        :handle-preview-combined-data="handlePreviewCombinedData"
         :handle-download-combined-compare-csv="handleDownloadCombinedCompareCsv"
-        :handle-send-to-beta-regression="handleSendToBetaRegression"
         :handle-combined-compare-notebook-action="
           handleCombinedCompareNotebookAction
         "
@@ -94,9 +88,11 @@
         :export-select-all-state="exportSelectAllState"
         :toggle-all-export-markets="toggleAllExportMarkets"
         :toggle-export-market="toggleExportMarket"
-        :handle-view-chart="handleViewChart"
-        :open-leg-chart-preview="openLegChartPreview"
+        :handle-preview-chart="handlePreviewChart"
         :handle-download-export="handleDownloadExport"
+        :handle-send-single-market-to-jupyter-lite="
+          handleSendSingleMarketToJupyterLite
+        "
         :run-market-search="runMarketSearch"
         :select-search-event="selectSearchEvent"
         :handle-search-image-error="handleSearchImageError"
@@ -195,18 +191,14 @@
           :has-insights-chart-actions="hasInsightsChartActions"
           :insights-chart-panel-title="insightsChartPanelTitle"
           :compare-min-date="compareMinDate"
-          :is-combined-compare-chart-disabled="isCombinedCompareChartDisabled"
-          :compare-chart-loading="compareChartLoading"
-          :insights-generate-chart-label="insightsGenerateChartLabel"
-          :compare-chart-data-length="compareChartData.length"
-          :is-compare-notebook-action-disabled="isCompareNotebookActionDisabled"
           :compare-save-loading="compareSaveLoading"
-          :compare-notebook-action-label="compareNotebookActionLabel"
           :compare-filename-error="compareFilenameError"
           :compare-can-go-to-notebooks="compareCanGoToNotebooks"
           :compare-chart-error="compareChartError"
           :compare-save-error="compareSaveError"
           :compare-save-success-path="compareSaveSuccessPath"
+          :single-market-save-error="singleMarketSaveError"
+          :single-market-save-success-path="singleMarketSaveSuccessPath"
           :legs="legs"
           :active-leg-index="activeLegIndex"
           :active-leg="activeLeg"
@@ -223,12 +215,10 @@
           :default-combined-compare-notebook-filename="
             defaultCombinedCompareNotebookFilename
           "
-          :handle-view-combined-compare-chart="handleViewCombinedCompareChart"
-          :open-combined-compare-chart-preview="openCombinedCompareChartPreview"
+          :handle-preview-combined-data="handlePreviewCombinedData"
           :handle-download-combined-compare-csv="
             handleDownloadCombinedCompareCsv
           "
-          :handle-send-to-beta-regression="handleSendToBetaRegression"
           :handle-combined-compare-notebook-action="
             handleCombinedCompareNotebookAction
           "
@@ -257,9 +247,11 @@
           :export-select-all-state="exportSelectAllState"
           :toggle-all-export-markets="toggleAllExportMarkets"
           :toggle-export-market="toggleExportMarket"
-          :handle-view-chart="handleViewChart"
-          :open-leg-chart-preview="openLegChartPreview"
+          :handle-preview-chart="handlePreviewChart"
           :handle-download-export="handleDownloadExport"
+          :handle-send-single-market-to-jupyter-lite="
+            handleSendSingleMarketToJupyterLite
+          "
           :run-market-search="runMarketSearch"
           :select-search-event="selectSearchEvent"
           :handle-search-image-error="handleSearchImageError"
@@ -561,9 +553,6 @@ const insightsChartPanelTitle = computed(() =>
     ? "Combined Comparison Chart"
     : "Chart and Notebook Export",
 );
-const insightsGenerateChartLabel = computed(() =>
-  isCompareInsightsMode.value ? "Generate Combined Chart" : "Generate Chart",
-);
 
 const compareFromDate = ref<string>("");
 const compareToDate = ref<string>("");
@@ -575,6 +564,9 @@ const compareChartError = ref<string | null>(null);
 const compareSaveLoading = ref<boolean>(false);
 const compareSaveError = ref<string | null>(null);
 const compareSaveSuccessPath = ref<string>("");
+const singleMarketSaveLoading = ref(false);
+const singleMarketSaveError = ref<string | null>(null);
+const singleMarketSaveSuccessPath = ref("");
 
 const compareFilenameDialogOpen = ref<boolean>(false);
 const compareFilenameInput = ref<string>("");
@@ -599,26 +591,9 @@ const searchOutcomeSelectionByMarketKey = ref<
   Record<string, SearchOutcomeSelection>
 >({});
 
-const isCombinedCompareChartDisabled = computed(() => {
-  if (compareChartLoading.value) return true;
-  if (!hasInsightsChartActions.value) return true;
-  // Disable if any selected event/market is still loading or hasn't loaded yet.
-  return legs.value.some(
-    (leg) => leg.loading || (leg.marketOptions?.length ?? 0) === 0,
-  );
-});
-
 const compareCanGoToNotebooks = computed(
   () => compareSaveSuccessPath.value.trim().length > 0,
 );
-const compareNotebookActionLabel = computed(() =>
-  compareCanGoToNotebooks.value ? "Go to notebooks" : "Send to Jupyter",
-);
-const isCompareNotebookActionDisabled = computed(() => {
-  if (compareSaveLoading.value) return true;
-  if (compareCanGoToNotebooks.value) return false;
-  return compareChartLoading.value || compareChartData.value.length === 0;
-});
 
 const activeLeg = computed(() => legs.value[activeLegIndex.value] ?? null);
 const canAddMoreInsightsMarkets = computed(
@@ -1362,15 +1337,13 @@ function selectOutcomesForSelection(
   return [outcomes[0]];
 }
 
-async function handleViewCombinedCompareChart() {
-  if (compareChartLoading.value) return;
-
+async function generateCombinedCompareData(): Promise<boolean> {
   compareChartError.value = null;
   compareChartData.value = [];
   compareSaveError.value = null;
   compareSaveSuccessPath.value = "";
 
-  if (!hasInsightsChartActions.value) return;
+  if (!hasInsightsChartActions.value) return false;
 
   const fromTs = compareFromDate.value
     ? unixSecondsFromDateInput(compareFromDate.value, false)
@@ -1381,7 +1354,7 @@ async function handleViewCombinedCompareChart() {
 
   if (toTs !== null && fromTs && toTs < fromTs) {
     compareChartError.value = "To date must be after From date.";
-    return;
+    return false;
   }
 
   const frequency = normalizeExportFrequency(compareFrequency.value);
@@ -1413,7 +1386,7 @@ async function handleViewCombinedCompareChart() {
 
   if (prepared.length === 0) {
     compareChartError.value = "Load markets first (or check selections).";
-    return;
+    return false;
   }
 
   compareChartLoading.value = true;
@@ -1462,20 +1435,42 @@ async function handleViewCombinedCompareChart() {
         failedCount > 0
           ? "No data returned (some requests failed)."
           : "No data returned for the selected range.";
-      return;
+      return false;
     }
 
     compareChartData.value = series;
     if (failedCount > 0) {
       compareChartError.value = `Chart displayed, but ${failedCount} request(s) failed.`;
     }
+    return true;
   } catch (err) {
     console.error("Failed to load combined compare chart:", err);
     compareChartError.value =
       err instanceof Error ? err.message : "Failed to load chart data.";
+    return false;
   } finally {
     compareChartLoading.value = false;
   }
+}
+
+let combinedDataGenerationPromise: Promise<boolean> | null = null;
+
+function ensureCombinedCompareData(): Promise<boolean> {
+  if (combinedDataGenerationPromise) return combinedDataGenerationPromise;
+
+  const generation = generateCombinedCompareData();
+  combinedDataGenerationPromise = generation;
+  void generation.finally(() => {
+    if (combinedDataGenerationPromise === generation) {
+      combinedDataGenerationPromise = null;
+    }
+  });
+  return generation;
+}
+
+async function handlePreviewCombinedData() {
+  if (!(await ensureCombinedCompareData())) return;
+  openCombinedCompareChartPreview();
 }
 
 function buildCombinedCompareExportJson(): string {
@@ -1555,14 +1550,10 @@ function buildCombinedCompareCsv(series: ScatterSeries[]): string {
   return [header, ...rows].join("\n");
 }
 
-function handleDownloadCombinedCompareCsv() {
+async function handleDownloadCombinedCompareCsv() {
   compareSaveError.value = null;
 
-  if (compareChartLoading.value) return;
-  if (compareChartData.value.length === 0) {
-    compareSaveError.value = `Generate the ${isCompareInsightsMode.value ? "combined " : ""}chart first.`;
-    return;
-  }
+  if (!(await ensureCombinedCompareData())) return;
 
   const csvText = buildCombinedCompareCsv(compareChartData.value);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -1570,28 +1561,6 @@ function handleDownloadCombinedCompareCsv() {
     ? "polymarket-combined-compare"
     : "polymarket-market-chart";
   downloadCsv(`${prefix}_${stamp}.csv`, csvText);
-}
-
-function handleSendToBetaRegression() {
-  compareSaveError.value = null;
-
-  if (compareChartLoading.value) return;
-  if (compareChartData.value.length < 2) {
-    compareSaveError.value =
-      "Generate a chart with at least 2 markets to use Beta Regression.";
-    return;
-  }
-
-  const csvText = buildCombinedCompareCsv(compareChartData.value);
-  const seriesNames = compareChartData.value.map((s) => s.name);
-  void router.push({
-    path: "/beta-regression",
-    state: {
-      csvText,
-      xColumn: seriesNames[0],
-      yColumn: seriesNames[1],
-    },
-  });
 }
 
 function defaultCombinedCompareNotebookFilename(): string {
@@ -1625,7 +1594,7 @@ async function performSendCombinedCompareChartToNotebooks(
   compareSaveSuccessPath.value = "";
 
   if (compareChartData.value.length === 0) {
-    compareSaveError.value = `Generate the ${isCompareInsightsMode.value ? "combined " : ""}chart first.`;
+    compareSaveError.value = "Combined data is unavailable. Try again.";
     return;
   }
 
@@ -1671,7 +1640,7 @@ function handleSendCombinedCompareChartToNotebooks() {
   compareSaveSuccessPath.value = "";
 
   if (compareChartData.value.length === 0) {
-    compareSaveError.value = `Generate the ${isCompareInsightsMode.value ? "combined " : ""}chart first.`;
+    compareSaveError.value = "Combined data is unavailable. Try again.";
     return;
   }
 
@@ -1684,11 +1653,8 @@ function goToNotebooks() {
   void router.push("/notebooks");
 }
 
-function handleCombinedCompareNotebookAction() {
-  if (compareCanGoToNotebooks.value) {
-    goToNotebooks();
-    return;
-  }
+async function handleCombinedCompareNotebookAction() {
+  if (!(await ensureCombinedCompareData())) return;
   handleSendCombinedCompareChartToNotebooks();
 }
 
@@ -2873,15 +2839,17 @@ async function handleDownloadExport(leg: LegState) {
   }
 }
 
-async function handleViewChart(leg: LegState) {
-  if (leg.chartLoading) return;
-
+async function generateSingleMarketChartData(
+  leg: LegState,
+): Promise<boolean> {
   leg.chartError = null;
   leg.chartData = [];
+  singleMarketSaveError.value = null;
+  singleMarketSaveSuccessPath.value = "";
 
   if (leg.marketOptions.length === 0) {
     leg.chartError = "Load a Polymarket URL first to get markets.";
-    return;
+    return false;
   }
 
   const marketIds =
@@ -2891,7 +2859,7 @@ async function handleViewChart(leg: LegState) {
 
   if (marketIds.length === 0) {
     leg.chartError = "Select at least one market (or Select All).";
-    return;
+    return false;
   }
 
   const fromTs = leg.exportFromDate
@@ -2903,7 +2871,7 @@ async function handleViewChart(leg: LegState) {
 
   if (toTs !== null && fromTs && toTs < fromTs) {
     leg.chartError = "To date must be after From date.";
-    return;
+    return false;
   }
 
   const frequency = normalizeExportFrequency(leg.exportFrequency);
@@ -3011,7 +2979,7 @@ async function handleViewChart(leg: LegState) {
         failedCount > 0
           ? "No data returned (some requests failed)."
           : "No data returned for the selected range.";
-      return;
+      return false;
     }
 
     leg.chartData = chartSeries;
@@ -3027,12 +2995,108 @@ async function handleViewChart(leg: LegState) {
         );
       leg.chartError = `Chart displayed, but ${parts.join("; ")}.`;
     }
+    return true;
   } catch (err) {
     console.error("Failed to load chart data:", err);
     leg.chartError =
       err instanceof Error ? err.message : "Failed to load chart data.";
+    return false;
   } finally {
     leg.chartLoading = false;
+  }
+}
+
+const singleMarketGenerationPromises = new WeakMap<
+  LegState,
+  Promise<boolean>
+>();
+
+function ensureSingleMarketChartData(leg: LegState): Promise<boolean> {
+  const existing = singleMarketGenerationPromises.get(leg);
+  if (existing) return existing;
+
+  const generation = generateSingleMarketChartData(leg);
+  singleMarketGenerationPromises.set(leg, generation);
+  void generation.finally(() => {
+    if (singleMarketGenerationPromises.get(leg) === generation) {
+      singleMarketGenerationPromises.delete(leg);
+    }
+  });
+  return generation;
+}
+
+async function handlePreviewChart(leg: LegState) {
+  if (!(await ensureSingleMarketChartData(leg))) return;
+  openLegChartPreview(leg);
+}
+
+function buildSingleMarketExportJson(leg: LegState): string {
+  const payload = {
+    type: "polymarket_market_chart",
+    generated_at: new Date().toISOString(),
+    market_url: leg.marketUrl || null,
+    selected_market_id: leg.selectedMarketId || null,
+    selected_outcome_id: leg.selectedOutcomeId || null,
+    selected_outcome_name: leg.selectedOutcomeName || null,
+    range: {
+      from_date: leg.exportFromDate || null,
+      to_date: leg.exportToDate || null,
+      frequency: leg.exportFrequency || "daily",
+    },
+    series: leg.chartData.map((series) => ({
+      name: series.name,
+      points: (series.data ?? []).map((point) => ({
+        t: point.timestamp,
+        p: point.price,
+      })),
+    })),
+  };
+
+  return JSON.stringify(payload, null, 2);
+}
+
+function defaultSingleMarketNotebookFilename(leg: LegState): string {
+  const selectedMarketTitle = leg.marketOptions.find(
+    (market) => market.id === leg.selectedMarketId,
+  )?.title;
+  const label = selectedMarketTitle || leg.title || "polymarket-market";
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return buildSafeJsonFilename(`${label}-${stamp}`);
+}
+
+async function handleSendSingleMarketToJupyterLite(leg: LegState) {
+  if (singleMarketSaveLoading.value) return;
+
+  singleMarketSaveError.value = null;
+  singleMarketSaveSuccessPath.value = "";
+
+  if (!(await ensureSingleMarketChartData(leg))) {
+    singleMarketSaveError.value =
+      leg.chartError || "Single-market data is unavailable. Try again.";
+    return;
+  }
+
+  singleMarketSaveLoading.value = true;
+  try {
+    const filename = defaultSingleMarketNotebookFilename(leg);
+    const path = `data/${filename}`;
+
+    await queueTextFileForNotebooks({
+      path,
+      content: buildSingleMarketExportJson(leg),
+      mimetype: "application/json",
+    });
+
+    const sync = await syncQueuedNotebookFilesToJupyterLite();
+    singleMarketSaveSuccessPath.value = sync.skippedBecauseNotInitialized
+      ? `${path} (queued)`
+      : path;
+  } catch (err) {
+    console.error("Failed to save single-market data to JupyterLite:", err);
+    singleMarketSaveError.value =
+      err instanceof Error ? err.message : "Failed to save to JupyterLite.";
+  } finally {
+    singleMarketSaveLoading.value = false;
   }
 }
 
