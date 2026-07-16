@@ -117,11 +117,11 @@
           <div class="border-b px-4 py-4 grid gap-3">
             <div>
               <div class="text-sm font-semibold text-foreground">
-                Selected Markets
+                Selected Events
               </div>
               <p class="text-xs text-muted-foreground mt-1">
-                Paste a Polymarket URL or open search, then preview charts or
-                export data to notebooks.
+                Add Polymarket events, then choose their markets in the CSV
+                workspace.
               </p>
             </div>
 
@@ -153,7 +153,7 @@
               v-if="legs.length === 0"
               class="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground"
             >
-              Add a market to start charting, exporting, or sending data to
+              Add an event to start charting, exporting, or sending data to
               JupyterLite.
             </div>
 
@@ -218,7 +218,7 @@
               <div
                 class="text-xs uppercase tracking-wide text-muted-foreground"
               >
-                {{ activeLegLoading ? "Loading" : "Active market" }}
+                {{ activeLegLoading ? "Loading" : "Active event" }}
               </div>
             </div>
 
@@ -430,7 +430,7 @@
             v-else
             class="border rounded-xl border-dashed p-8 text-center text-muted-foreground"
           >
-            Add a market from the left rail to preview history, export CSV, or
+            Add an event from the left rail to preview history, export CSV, or
             queue JSON for JupyterLite.
           </div>
         </div>
@@ -568,10 +568,9 @@
         class="w-[92vw] max-w-[1200px] max-h-[85vh] overflow-hidden flex flex-col"
       >
         <DialogHeader>
-          <DialogTitle>Search Polymarket Markets</DialogTitle>
+          <DialogTitle>Search Polymarket Events</DialogTitle>
           <DialogDescription>
-            Search events, then choose a market to load into the analytics
-            workspace.
+            Add events here, then choose their markets in the CSV workspace.
           </DialogDescription>
         </DialogHeader>
 
@@ -580,7 +579,7 @@
             <Input
               v-model="marketSearchQueryModel"
               type="text"
-              placeholder="Search markets..."
+              placeholder="Search events..."
               @keydown.enter.prevent="runMarketSearch"
             />
             <Button
@@ -598,228 +597,140 @@
             v-else-if="marketSearchQuery.trim() && !marketSearchLoading"
             class="text-sm text-muted-foreground"
           >
-            Showing {{ searchEventResults.length }} event{{
-              searchEventResults.length === 1 ? "" : "s"
+            Showing {{ filteredSearchEventResults.length }} event{{
+              filteredSearchEventResults.length === 1 ? "" : "s"
             }}
           </p>
 
-          <div class="grid gap-4 min-h-0 lg:grid-cols-[320px_minmax(0,1fr)]">
-            <div
-              class="border rounded-lg overflow-hidden min-h-0 flex flex-col"
+          <div
+            class="flex items-center justify-between gap-4 rounded-lg border bg-muted/20 px-4 py-3"
+          >
+            <div>
+              <Label for="open-events-only" class="text-sm font-medium">
+                Open Events Only
+              </Label>
+              <p class="mt-0.5 text-xs text-muted-foreground">
+                Hide closed or inactive events.
+              </p>
+            </div>
+            <button
+              id="open-events-only"
+              type="button"
+              role="switch"
+              aria-label="Open Events Only"
+              :aria-checked="showOpenEventsOnly"
+              class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              :class="
+                showOpenEventsOnly
+                  ? 'bg-primary'
+                  : 'bg-muted-foreground/30'
+              "
+              @click="showOpenEventsOnly = !showOpenEventsOnly"
             >
-              <div class="border-b px-4 py-3 text-sm font-medium">Events</div>
-              <div class="flex-1 overflow-y-auto p-3 space-y-2">
+              <span
+                class="pointer-events-none block h-5 w-5 rounded-full bg-background shadow-sm transition-transform"
+                :class="showOpenEventsOnly ? 'translate-x-5' : 'translate-x-0.5'"
+              />
+            </button>
+          </div>
+
+          <div
+            class="border rounded-lg overflow-hidden min-h-0 flex flex-col"
+          >
+            <div class="border-b px-4 py-3 text-sm font-medium">Events</div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-3">
+              <div
+                v-if="marketSearchLoading"
+                class="text-sm text-muted-foreground"
+              >
+                Loading events...
+              </div>
+
+              <div
+                v-for="event in filteredSearchEventResults"
+                :key="event.id"
+                class="w-full rounded-lg border p-4 transition-colors"
+                :class="
+                  isSearchEventSelected(event.event)
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border'
+                "
+              >
                 <div
-                  v-if="marketSearchLoading"
-                  class="text-sm text-muted-foreground"
+                  class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  Loading events...
-                </div>
-                <button
-                  v-for="event in searchEventResults"
-                  :key="event.id"
-                  type="button"
-                  class="w-full rounded-lg border p-3 text-left transition-colors"
-                  :class="
-                    selectedSearchEvent?.id === event.id
-                      ? 'border-primary bg-muted/30'
-                      : 'border-border hover:bg-muted/20'
-                  "
-                  @click="selectSearchEvent(event.event)"
-                >
-                  <div class="flex items-start gap-3">
+                  <div class="flex min-w-0 items-start gap-4">
                     <img
                       :src="event.image"
                       :alt="event.title"
-                      class="w-10 h-10 rounded-lg object-cover border"
+                      class="h-16 w-16 shrink-0 rounded-lg border object-cover"
                       @error="handleSearchImageError"
                     />
                     <div class="min-w-0 flex-1">
-                      <div class="text-sm font-medium line-clamp-2">
+                      <div class="text-base font-semibold leading-6">
                         {{ event.title }}
                       </div>
-                      <div class="mt-1 text-xs text-muted-foreground">
-                        {{ event.subtitle }}
-                      </div>
-                      <div class="mt-2 text-xs font-semibold text-foreground">
-                        {{ event.chanceText }}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-
-                <div
-                  v-if="!marketSearchLoading && searchEventResults.length === 0"
-                  class="text-sm text-muted-foreground"
-                >
-                  Search for an event to view its markets.
-                </div>
-
-                <div v-if="marketSearchPagination?.hasMore" class="pt-2">
-                  <Button
-                    variant="outline"
-                    class="w-full"
-                    :disabled="marketSearchLoadingMore"
-                    @click="loadMoreMarketSearchResults"
-                  >
-                    {{
-                      marketSearchLoadingMore
-                        ? "Loading..."
-                        : "Load more events"
-                    }}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="border rounded-lg overflow-hidden min-h-0 flex flex-col"
-            >
-              <div
-                class="border-b px-4 py-3 flex items-center justify-between gap-3"
-              >
-                <div>
-                  <div class="text-sm font-medium">
-                    {{ selectedSearchEvent?.title ?? "Markets" }}
-                  </div>
-                  <p class="text-xs text-muted-foreground mt-1">
-                    {{ selectedSearchEvent?.markets?.length ?? 0 }} market{{
-                      (selectedSearchEvent?.markets?.length ?? 0) === 1
-                        ? ""
-                        : "s"
-                    }}
-                    available
-                  </p>
-                </div>
-              </div>
-
-              <div class="flex-1 overflow-y-auto p-4 space-y-3">
-                <div
-                  v-if="!selectedSearchEvent"
-                  class="h-full flex items-center justify-center text-sm text-muted-foreground"
-                >
-                  Select an event to view and add its markets.
-                </div>
-
-                <div
-                  v-for="market in selectedSearchEvent?.markets ?? []"
-                  :key="market.id"
-                  class="rounded-lg border p-4 grid gap-3"
-                  :class="
-                    isSearchMarketSelected(selectedSearchEvent, market)
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border'
-                  "
-                >
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                      <div class="text-sm font-semibold line-clamp-2">
-                        {{
-                          (market.groupItemTitle ?? "").trim() ||
-                          market.question ||
-                          "Market"
-                        }}
-                      </div>
-                      <p
-                        class="mt-1 text-xs text-muted-foreground line-clamp-2"
-                      >
-                        {{
-                          computeChance(market).subtitle ||
-                          selectedSearchEvent?.title ||
-                          ""
-                        }}
+                      <p class="mt-1 text-sm text-muted-foreground">
+                        {{ event.subtitle }} available in the CSV workspace
                       </p>
                       <a
-                        :href="toPolymarketMarketUrl(market)"
+                        :href="toPolymarketEventUrl(event.event)"
                         target="_blank"
                         rel="noreferrer"
                         class="mt-2 inline-block text-xs text-primary underline-offset-4 hover:underline"
                       >
-                        Open on Polymarket
+                        Open event on Polymarket
                       </a>
                     </div>
-
-                    <div
-                      class="text-sm font-semibold whitespace-nowrap text-right"
-                    >
-                      <div>{{ computeChance(market).text }}</div>
-                      <div
-                        v-if="
-                          isSearchMarketSelected(selectedSearchEvent, market)
-                        "
-                        class="mt-1 text-xs font-medium text-primary"
-                      >
-                        Selected
-                      </div>
-                    </div>
                   </div>
 
-                  <div class="h-2 rounded-full bg-muted overflow-hidden">
-                    <div
-                      class="h-full bg-primary"
-                      :style="{ width: computeChance(market).pct + '%' }"
-                    />
-                  </div>
-
-                  <div
-                    class="grid gap-2 sm:grid-cols-[minmax(0,220px)_auto] sm:items-end"
+                  <Button
+                    v-if="isSearchEventSelected(event.event)"
+                    variant="outline"
+                    class="shrink-0"
+                    @click="handleRemoveSearchEvent(event.event)"
                   >
-                    <div class="grid gap-1">
-                      <Label class="text-xs">Outcome</Label>
-                      <Select
-                        :model-value="
-                          getSearchOutcomeSelection(selectedSearchEvent, market)
-                        "
-                        @update:model-value="
-                          (value) =>
-                            selectedSearchEvent &&
-                            setSearchOutcomeSelection(
-                              selectedSearchEvent,
-                              market,
-                              String(value ?? ''),
-                            )
-                        "
-                      >
-                        <SelectTrigger class="h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="yes">Yes</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
-                          <SelectItem value="both">Yes and No</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div class="flex justify-end gap-2">
-                      <Button
-                        v-if="
-                          isSearchMarketSelected(selectedSearchEvent, market)
-                        "
-                        variant="outline"
-                        @click="
-                          selectedSearchEvent &&
-                          handleRemoveSearchMarket(selectedSearchEvent, market)
-                        "
-                      >
-                        Remove
-                      </Button>
-                      <Button
-                        v-else
-                        :disabled="
-                          (!canAddMoreInsightsMarkets && isInsightsMode) ||
-                          !selectedSearchEvent
-                        "
-                        @click="
-                          selectedSearchEvent &&
-                          handleAssignSearchMarket(selectedSearchEvent, market)
-                        "
-                      >
-                        Add market
-                      </Button>
-                    </div>
-                  </div>
+                    Remove Event
+                  </Button>
+                  <Button
+                    v-else
+                    class="shrink-0"
+                    :disabled="
+                      !canAddMoreInsightsMarkets || !isInsightsMode
+                    "
+                    @click="handleAssignSearchEvent(event.event)"
+                  >
+                    Add Event
+                  </Button>
                 </div>
+              </div>
+
+              <div
+                v-if="
+                  !marketSearchLoading && filteredSearchEventResults.length === 0
+                "
+                class="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground"
+              >
+                {{
+                  showOpenEventsOnly && searchEventResults.length > 0
+                    ? "No open events found."
+                    : "Search for an event to add it to the CSV workspace."
+                }}
+              </div>
+
+              <div v-if="marketSearchPagination?.hasMore" class="pt-2">
+                <Button
+                  variant="outline"
+                  class="w-full"
+                  :disabled="marketSearchLoadingMore"
+                  @click="loadMoreMarketSearchResults"
+                >
+                  {{
+                    marketSearchLoadingMore
+                      ? "Loading..."
+                      : "Load more events"
+                  }}
+                </Button>
               </div>
             </div>
           </div>
@@ -830,11 +741,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type {
   PolymarketGammaPagination,
   PolymarketGammaSearchEvent,
-  PolymarketGammaSearchMarket,
 } from "@/api/polymarket";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -901,16 +811,8 @@ type SearchEventCardItem = {
   id: string;
   title: string;
   subtitle: string;
-  chancePct: number;
-  chanceText: string;
   image: string;
   event: PolymarketGammaSearchEvent;
-};
-
-type MarketChanceInfo = {
-  pct: number;
-  text: string;
-  subtitle: string;
 };
 
 type MutableLegField =
@@ -956,7 +858,6 @@ const props = defineProps<{
   marketSearchError: string | null;
   marketSearchPagination: PolymarketGammaPagination | null;
   searchEventResults: SearchEventCardItem[];
-  selectedSearchEvent: PolymarketGammaSearchEvent | null;
   defaultCombinedCompareNotebookFilename: () => string;
   handlePreviewCombinedData: () => void | Promise<void>;
   handleDownloadCombinedCompareCsv: () => void | Promise<void>;
@@ -988,31 +889,13 @@ const props = defineProps<{
   handleDownloadExport: (leg: LegState) => void;
   handleSendSingleMarketToJupyterLite: (leg: LegState) => void | Promise<void>;
   runMarketSearch: () => void;
-  selectSearchEvent: (event: PolymarketGammaSearchEvent) => void;
   handleSearchImageError: (event: Event) => void;
-  isSearchMarketSelected: (
-    event: PolymarketGammaSearchEvent | null,
-    market: PolymarketGammaSearchMarket,
-  ) => boolean;
-  computeChance: (market: PolymarketGammaSearchMarket) => MarketChanceInfo;
-  toPolymarketMarketUrl: (market: PolymarketGammaSearchMarket) => string;
-  getSearchOutcomeSelection: (
-    event: PolymarketGammaSearchEvent | null,
-    market: PolymarketGammaSearchMarket,
-  ) => SearchOutcomeSelection;
-  setSearchOutcomeSelection: (
-    event: PolymarketGammaSearchEvent | null,
-    market: PolymarketGammaSearchMarket,
-    value: string,
-  ) => void;
-  handleRemoveSearchMarket: (
+  isSearchEventSelected: (event: PolymarketGammaSearchEvent) => boolean;
+  toPolymarketEventUrl: (event: PolymarketGammaSearchEvent) => string;
+  handleRemoveSearchEvent: (event: PolymarketGammaSearchEvent) => void;
+  handleAssignSearchEvent: (
     event: PolymarketGammaSearchEvent,
-    market: PolymarketGammaSearchMarket,
-  ) => void;
-  handleAssignSearchMarket: (
-    event: PolymarketGammaSearchEvent,
-    market: PolymarketGammaSearchMarket,
-  ) => void;
+  ) => void | Promise<void>;
   loadMoreMarketSearchResults: () => void;
 }>();
 
@@ -1060,6 +943,15 @@ const quickAddMarketUrlModel = computed({
 const marketSearchQueryModel = computed({
   get: () => props.marketSearchQuery,
   set: (value: string) => emit("update:marketSearchQuery", value),
+});
+
+const showOpenEventsOnly = ref(false);
+
+const filteredSearchEventResults = computed(() => {
+  if (!showOpenEventsOnly.value) return props.searchEventResults;
+  return props.searchEventResults.filter(
+    ({ event }) => event.closed !== true && event.active !== false,
+  );
 });
 
 function onMarketSearchDialogOpenUpdate(open: boolean) {

@@ -55,7 +55,6 @@
         :market-search-error="marketSearchError"
         :market-search-pagination="marketSearchPagination"
         :search-event-results="searchEventResults"
-        :selected-search-event="selectedSearchEvent"
         :default-combined-compare-notebook-filename="
           defaultCombinedCompareNotebookFilename
         "
@@ -91,15 +90,11 @@
           handleSendSingleMarketToJupyterLite
         "
         :run-market-search="runMarketSearch"
-        :select-search-event="selectSearchEvent"
         :handle-search-image-error="handleSearchImageError"
-        :is-search-market-selected="isSearchMarketSelected"
-        :compute-chance="computeChance"
-        :to-polymarket-market-url="toPolymarketMarketUrl"
-        :get-search-outcome-selection="getSearchOutcomeSelection"
-        :set-search-outcome-selection="setSearchOutcomeSelection"
-        :handle-remove-search-market="handleRemoveSearchMarket"
-        :handle-assign-search-market="handleAssignSearchMarket"
+        :is-search-event-selected="isSearchEventSelected"
+        :to-polymarket-event-url="toPolymarketEventUrl"
+        :handle-remove-search-event="handleRemoveSearchEvent"
+        :handle-assign-search-event="handleAssignSearchEvent"
         :load-more-market-search-results="loadMoreMarketSearchResults"
       />
 
@@ -207,7 +202,6 @@
           :market-search-error="marketSearchError"
           :market-search-pagination="marketSearchPagination"
           :search-event-results="searchEventResults"
-          :selected-search-event="selectedSearchEvent"
           :default-combined-compare-notebook-filename="
             defaultCombinedCompareNotebookFilename
           "
@@ -247,15 +241,11 @@
             handleSendSingleMarketToJupyterLite
           "
           :run-market-search="runMarketSearch"
-          :select-search-event="selectSearchEvent"
           :handle-search-image-error="handleSearchImageError"
-          :is-search-market-selected="isSearchMarketSelected"
-          :compute-chance="computeChance"
-          :to-polymarket-market-url="toPolymarketMarketUrl"
-          :get-search-outcome-selection="getSearchOutcomeSelection"
-          :set-search-outcome-selection="setSearchOutcomeSelection"
-          :handle-remove-search-market="handleRemoveSearchMarket"
-          :handle-assign-search-market="handleAssignSearchMarket"
+          :is-search-event-selected="isSearchEventSelected"
+          :to-polymarket-event-url="toPolymarketEventUrl"
+          :handle-remove-search-event="handleRemoveSearchEvent"
+          :handle-assign-search-event="handleAssignSearchEvent"
           :load-more-market-search-results="loadMoreMarketSearchResults"
         />
 
@@ -366,7 +356,6 @@ import {
   searchPolymarketPublic,
   type PolymarketGammaPagination,
   type PolymarketGammaSearchEvent,
-  type PolymarketGammaSearchMarket,
   updateAlert,
 } from "@/api/polymarket";
 import PriceScatterChart, {
@@ -404,8 +393,6 @@ type SearchEventCardItem = {
   id: string;
   title: string;
   subtitle: string;
-  chancePct: number;
-  chanceText: string;
   image: string;
   event: PolymarketGammaSearchEvent;
 };
@@ -579,10 +566,6 @@ const marketSearchError = ref<string | null>(null);
 const marketSearchPagination = ref<PolymarketGammaPagination | null>(null);
 const marketSearchCurrentPage = ref(1);
 const marketSearchEvents = ref<PolymarketGammaSearchEvent[]>([]);
-const selectedSearchEvent = ref<PolymarketGammaSearchEvent | null>(null);
-const searchOutcomeSelectionByMarketKey = ref<
-  Record<string, SearchOutcomeSelection>
->({});
 
 const compareCanGoToNotebooks = computed(
   () => compareSaveSuccessPath.value.trim().length > 0,
@@ -607,20 +590,11 @@ const searchEventResults = computed<SearchEventCardItem[]>(() => {
     seen.add(ev.id);
 
     const markets = ev.markets ?? [];
-    let best = { pct: 0, text: "—" };
-    for (const market of markets) {
-      const chance = computeChance(market);
-      if (chance.text !== "—" && chance.pct >= best.pct) {
-        best = { pct: chance.pct, text: chance.text };
-      }
-    }
 
     items.push({
       id: ev.id,
       title: (ev.title ?? "Untitled event").trim(),
       subtitle: `${markets.length} market${markets.length === 1 ? "" : "s"}`,
-      chancePct: best.text === "—" ? 0 : best.pct,
-      chanceText: best.text,
       image: (ev.icon || ev.image || DEFAULT_FALLBACK_IMAGE).toString().trim(),
       event: ev,
     });
@@ -658,38 +632,12 @@ function createEmptyLeg(): LegState {
   };
 }
 
-function normalizeSearchOutcomeSelection(
-  value: string,
-): SearchOutcomeSelection {
-  const v = (value ?? "").trim().toLowerCase();
-  if (v === "no") return "no";
-  if (v === "both") return "both";
-  return "yes";
-}
-
 function searchOutcomeSelectionLabel(
   selection: SearchOutcomeSelection,
 ): string {
   if (selection === "no") return "No";
   if (selection === "both") return "Yes and No";
   return "Yes";
-}
-
-function searchMarketKey(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-): string {
-  const eventId = String(event?.id ?? "").trim();
-  const marketId = String(market.id ?? "").trim();
-  return `${eventId}:${marketId}`;
-}
-
-function getSearchOutcomeSelection(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-): SearchOutcomeSelection {
-  const key = searchMarketKey(event, market);
-  return searchOutcomeSelectionByMarketKey.value[key] ?? "yes";
 }
 
 function normalizeCompareInputs(): CompareMarketInput[] {
@@ -706,72 +654,6 @@ function normalizeCompareInputs(): CompareMarketInput[] {
     .slice(0, MAX_COMPARE_INSIGHTS_MARKETS);
 }
 
-function safeJsonArray(value?: string) {
-  if (!value) return null;
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function computeChance(market: PolymarketGammaSearchMarket) {
-  const directPriceCandidates = [
-    market.lastTradePrice,
-    market.bestBid,
-    market.bestAsk,
-  ].filter(
-    (value) =>
-      Number.isFinite(value) &&
-      (value as number) >= 0 &&
-      (value as number) <= 1,
-  ) as number[];
-
-  const preferred =
-    directPriceCandidates.length > 0 ? directPriceCandidates[0] : null;
-
-  const pricesRaw = safeJsonArray(market.outcomePrices);
-  const outcomesRaw = safeJsonArray(market.outcomes);
-
-  const prices = (pricesRaw ?? [])
-    .map((value) => Number(value))
-    .filter((value) => Number.isFinite(value) && value >= 0 && value <= 1);
-
-  const outcomes = (outcomesRaw ?? []).filter(
-    (value) => typeof value === "string",
-  ) as string[];
-
-  const yesIdx = outcomes.findIndex(
-    (value) => value.trim().toLowerCase() === "yes",
-  );
-  const yesPrice =
-    yesIdx >= 0 && Number.isFinite(prices[yesIdx]) ? prices[yesIdx] : null;
-
-  const chosen =
-    preferred ??
-    yesPrice ??
-    (prices.length > 0
-      ? prices.reduce((max, value) => (value > max ? value : max), prices[0])
-      : null);
-
-  const groupTitle = (market.groupItemTitle ?? "").trim();
-
-  if (chosen === null) {
-    return { pct: 0, text: "—", subtitle: groupTitle };
-  }
-
-  const pct = Math.round(chosen * 100);
-  const subtitle = groupTitle || (yesIdx >= 0 ? "Yes" : "");
-  return { pct, text: `${pct}%`, subtitle };
-}
-
-function toPolymarketMarketUrl(market: PolymarketGammaSearchMarket) {
-  const slug = (market.slug ?? "").trim();
-  if (!slug) return "https://polymarket.com";
-  return `https://polymarket.com/market/${encodeURIComponent(slug)}`;
-}
-
 function toPolymarketEventUrl(event: PolymarketGammaSearchEvent | null) {
   const slug = (event?.slug ?? "").trim();
   if (!slug) return "https://polymarket.com";
@@ -781,6 +663,9 @@ function toPolymarketEventUrl(event: PolymarketGammaSearchEvent | null) {
 function legDisplayTitle(leg: LegState, index: number): string {
   const explicit = (leg.compareLabel ?? "").trim();
   if (explicit) return explicit;
+  if (isInsightsMode.value && (leg.title ?? "").trim()) {
+    return leg.title.trim();
+  }
   const market = leg.marketOptions.find(
     (item) => item.id === leg.selectedMarketId,
   );
@@ -857,45 +742,19 @@ function setLegField(index: number, field: MutableLegField, value: string) {
   leg[field] = value;
 }
 
-async function assignSearchMarketToLeg(
-  event: PolymarketGammaSearchEvent,
-  market: PolymarketGammaSearchMarket,
-  outcomeSelection: SearchOutcomeSelection,
-) {
-  const marketId = String(market.id ?? "").trim();
-  if (!marketId) return false;
+async function handleAssignSearchEvent(event: PolymarketGammaSearchEvent) {
+  if (!isInsightsMode.value || !canAddMoreInsightsMarkets.value) return;
+  if (isSearchEventSelected(event)) return;
 
-  let targetIndex = activeLegIndex.value;
-  if (isInsightsMode.value) {
-    if (!canAddMoreInsightsMarkets.value) return false;
-    targetIndex = appendInsightsLeg();
-  } else if (!activeLeg.value) {
-    return false;
-  }
-
+  const eventUrl = toPolymarketEventUrl(event);
+  const targetIndex = appendInsightsLeg(eventUrl);
   const leg = legs.value[targetIndex];
-  if (!leg) return false;
+  if (!leg) return;
 
-  leg.marketUrl = toPolymarketEventUrl(event);
-  leg.selectedMarketId = marketId;
-  leg.insightsOutcomeSelection = outcomeSelection;
-  const marketKey = searchMarketKey(event, market);
-  searchOutcomeSelectionByMarketKey.value = {
-    ...searchOutcomeSelectionByMarketKey.value,
-    [marketKey]: outcomeSelection,
-  };
-  leg.exportSelectedMarkets = [marketId];
-  leg.compareLabel = `${
-    (market.groupItemTitle ?? "").trim() || (market.question ?? "Market").trim()
-  } — ${(event.title ?? "Event").trim()} [${searchOutcomeSelectionLabel(
-    outcomeSelection,
-  )}]`;
-  activeLegIndex.value = targetIndex;
-  quickAddMarketUrl.value = leg.marketUrl;
+  leg.compareLabel = (event.title ?? "Event").trim() || "Event";
+  quickAddMarketUrl.value = eventUrl;
 
   await loadLeg(targetIndex);
-  setSearchOutcomeSelection(event, market, outcomeSelection);
-  return true;
 }
 
 async function handleQuickAddMarket() {
@@ -925,32 +784,18 @@ function closeMarketSearchDialog() {
   marketSearchDialogOpen.value = false;
 }
 
-function findInsightsLegIndexForMarket(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-) {
+function findInsightsLegIndexForEvent(event: PolymarketGammaSearchEvent) {
   if (!isInsightsMode.value) return -1;
-  const marketId = String(market.id ?? "").trim();
-  if (!marketId) return -1;
   const eventUrl = toPolymarketEventUrl(event);
-  return legs.value.findIndex(
-    (leg) =>
-      leg.selectedMarketId === marketId && leg.marketUrl.trim() === eventUrl,
-  );
+  return legs.value.findIndex((leg) => leg.marketUrl.trim() === eventUrl);
 }
 
-function isSearchMarketSelected(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-) {
-  return findInsightsLegIndexForMarket(event, market) !== -1;
+function isSearchEventSelected(event: PolymarketGammaSearchEvent) {
+  return findInsightsLegIndexForEvent(event) !== -1;
 }
 
-function handleRemoveSearchMarket(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-) {
-  const legIndex = findInsightsLegIndexForMarket(event, market);
+function handleRemoveSearchEvent(event: PolymarketGammaSearchEvent) {
+  const legIndex = findInsightsLegIndexForEvent(event);
   if (legIndex === -1) return;
   removeLeg(legIndex);
 }
@@ -982,61 +827,6 @@ function openCombinedCompareChartPreview() {
   );
 }
 
-async function handleAssignSearchMarket(
-  event: PolymarketGammaSearchEvent,
-  market: PolymarketGammaSearchMarket,
-) {
-  const outcomeSelection = getSearchOutcomeSelection(event, market);
-  await assignSearchMarketToLeg(event, market, outcomeSelection);
-}
-
-function setSearchOutcomeSelection(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-  value: string,
-) {
-  const selection = normalizeSearchOutcomeSelection(value);
-  const key = searchMarketKey(event, market);
-  searchOutcomeSelectionByMarketKey.value = {
-    ...searchOutcomeSelectionByMarketKey.value,
-    [key]: selection,
-  };
-
-  const legIndex = findInsightsLegIndexForMarket(event, market);
-  if (legIndex === -1) return;
-  const leg = legs.value[legIndex];
-  if (!leg) return;
-
-  leg.insightsOutcomeSelection = selection;
-
-  if (!leg.selectedMarketId || leg.marketOptions.length === 0) return;
-  const selectedMarket = leg.marketOptions.find(
-    (item) => item.id === leg.selectedMarketId,
-  );
-  if (!selectedMarket) return;
-
-  const yesOutcome = selectedMarket.outcomes.find(
-    (item) => normalizeOutcomeNameForMatch(item.name) === "yes",
-  );
-  const noOutcome = selectedMarket.outcomes.find(
-    (item) => normalizeOutcomeNameForMatch(item.name) === "no",
-  );
-
-  const preferred =
-    selection === "no"
-      ? (noOutcome ?? yesOutcome ?? selectedMarket.outcomes[0])
-      : (yesOutcome ?? noOutcome ?? selectedMarket.outcomes[0]);
-
-  if (preferred) {
-    leg.selectedOutcomeId = preferred.id;
-    leg.selectedOutcomeName = preferred.name;
-  }
-}
-
-function selectSearchEvent(event: PolymarketGammaSearchEvent) {
-  selectedSearchEvent.value = event;
-}
-
 function mergeSearchEvents(
   existing: PolymarketGammaSearchEvent[],
   incoming: PolymarketGammaSearchEvent[],
@@ -1057,7 +847,6 @@ async function fetchMarketSearchPage(opts: { page: number; append: boolean }) {
     marketSearchEvents.value = [];
     marketSearchPagination.value = null;
     marketSearchCurrentPage.value = 1;
-    selectedSearchEvent.value = null;
     marketSearchError.value = null;
     return;
   }
@@ -1082,17 +871,6 @@ async function fetchMarketSearchPage(opts: { page: number; append: boolean }) {
       : nextEvents;
     marketSearchPagination.value = response.pagination ?? null;
     marketSearchCurrentPage.value = opts.page;
-
-    if (marketSearchEvents.value.length === 0) {
-      selectedSearchEvent.value = null;
-    } else if (
-      !selectedSearchEvent.value ||
-      !marketSearchEvents.value.some(
-        (event) => event.id === selectedSearchEvent.value?.id,
-      )
-    ) {
-      selectedSearchEvent.value = marketSearchEvents.value[0] ?? null;
-    }
   } catch (err) {
     console.error("Failed to search Polymarket markets:", err);
     marketSearchError.value = "Could not load results. Try again.";
@@ -1100,7 +878,6 @@ async function fetchMarketSearchPage(opts: { page: number; append: boolean }) {
       marketSearchEvents.value = [];
       marketSearchPagination.value = null;
       marketSearchCurrentPage.value = 1;
-      selectedSearchEvent.value = null;
     }
   } finally {
     marketSearchLoading.value = false;
@@ -1728,8 +1505,6 @@ watch(
       marketSearchPagination.value = null;
       marketSearchCurrentPage.value = 1;
       marketSearchEvents.value = [];
-      selectedSearchEvent.value = null;
-      searchOutcomeSelectionByMarketKey.value = {};
       operator.value = "lt";
       singleOperator.value = "gte";
       threshold.value = 0.95;
