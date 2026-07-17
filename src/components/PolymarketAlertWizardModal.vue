@@ -365,8 +365,9 @@ import PriceScatterChart, {
 import PolymarketAlertWizardConfigStep from "@/components/PolymarketAlertWizardConfigStep.vue";
 import PolymarketAlertWizardSelectLegsStep from "@/components/PolymarketAlertWizardSelectLegsStep.vue";
 import PolymarketAlertWizardReviewStep from "@/components/PolymarketAlertWizardReviewStep.vue";
+import { buildAlignedPolymarketCsv } from "@/lib/polymarketCsv";
 import {
-  buildSafeJsonFilename,
+  buildSafeCsvFilename,
   queueTextFileForNotebooks,
   syncQueuedNotebookFilesToJupyterLite,
 } from "@/composables/jupyterLiteStorage";
@@ -1022,16 +1023,84 @@ watch(
   { immediate: true },
 );
 
-function buildCompareSeriesName(leg: LegState): string {
-  const explicit = (leg.compareLabel ?? "").trim();
-  if (explicit) return explicit;
+type MarketColumnInput = {
+  eventName: string;
+  marketId: string;
+  marketName: string;
+  outcomeId: string;
+  outcomeName: string;
+};
 
-  const market = leg.marketOptions.find((m) => m.id === leg.selectedMarketId);
-  const marketTitle = (market?.title ?? "").trim();
-  const eventTitle = (leg.title ?? "").trim();
+function assignMarketColumnTitles<T extends MarketColumnInput>(
+  items: T[],
+): Array<T & { columnTitle: string }> {
+  const baseTitles = items.map(
+    (item) => `${item.eventName} - ${item.marketName}`,
+  );
+  const baseTitleCounts = new Map<string, number>();
+  for (const title of baseTitles) {
+    baseTitleCounts.set(title, (baseTitleCounts.get(title) ?? 0) + 1);
+  }
 
-  if (marketTitle && eventTitle) return `${marketTitle} — ${eventTitle}`;
-  return marketTitle || eventTitle || "Market";
+  const candidates = items.map((item, index) => {
+    const baseTitle =
+      baseTitles[index] ?? `${item.eventName} - ${item.marketName}`;
+    return baseTitleCounts.get(baseTitle) === 1
+      ? baseTitle
+      : `${baseTitle} (${item.outcomeName})`;
+  });
+  const candidateCounts = new Map<string, number>();
+  for (const candidate of candidates) {
+    candidateCounts.set(candidate, (candidateCounts.get(candidate) ?? 0) + 1);
+  }
+
+  const preliminaryTitles = items.map((item, index) => {
+    const candidate =
+      candidates[index] ?? `${item.eventName} - ${item.marketName}`;
+    return {
+      item,
+      title:
+        candidateCounts.get(candidate) === 1
+          ? candidate
+          : `${candidate} [${item.marketId}]`,
+    };
+  });
+  const preliminaryCounts = new Map<string, number>();
+  for (const entry of preliminaryTitles) {
+    preliminaryCounts.set(
+      entry.title,
+      (preliminaryCounts.get(entry.title) ?? 0) + 1,
+    );
+  }
+
+  const seenTitles = new Map<string, number>();
+  return preliminaryTitles.map(({ item, title }) => {
+    const occurrence = (seenTitles.get(title) ?? 0) + 1;
+    seenTitles.set(title, occurrence);
+    const columnTitle =
+      preliminaryCounts.get(title) === 1 ? title : `${title} #${occurrence}`;
+    return { ...item, columnTitle };
+  });
+}
+
+function eventNameForLeg(leg: LegState): string {
+  return (
+    (leg.compareLabel ?? "").trim() || leg.title.trim() || "Polymarket Event"
+  );
+}
+
+function createMarketColumnInput(
+  leg: LegState,
+  market: MarketOption,
+  outcome: OutcomeOption,
+): MarketColumnInput {
+  return {
+    eventName: eventNameForLeg(leg),
+    marketId: market.id,
+    marketName: market.title.trim() || market.id,
+    outcomeId: outcome.id,
+    outcomeName: outcome.name,
+  };
 }
 
 function findOutcomeByName(
@@ -1117,7 +1186,7 @@ async function generateCombinedCompareData(): Promise<boolean> {
 
   const frequency = normalizeExportFrequency(compareFrequency.value);
 
-  const prepared = legs.value
+  const preparedInputs = legs.value
     .flatMap((leg) => {
       const market = leg.marketOptions.find(
         (m) => m.id === leg.selectedMarketId,
@@ -1132,15 +1201,12 @@ async function generateCombinedCompareData(): Promise<boolean> {
         true,
       );
 
-      return selectedOutcomes.map((outcome) => ({
-        seriesName: `${buildCompareSeriesName(leg)} (${outcome.name})`,
-        outcomeId: outcome.id,
-      }));
+      return selectedOutcomes.map((outcome) =>
+        createMarketColumnInput(leg, market, outcome),
+      );
     })
-    .filter((item) => Boolean(item.outcomeId)) as Array<{
-    seriesName: string;
-    outcomeId: string;
-  }>;
+    .filter((item) => Boolean(item.outcomeId));
+  const prepared = assignMarketColumnTitles(preparedInputs);
 
   if (prepared.length === 0) {
     compareChartError.value = "Load markets first (or check selections).";
@@ -1169,6 +1235,7 @@ async function generateCombinedCompareData(): Promise<boolean> {
 
       if (r.status === "rejected") {
         failedCount += 1;
+        series.push({ name: meta.columnTitle, data: [] });
         continue;
       }
 
@@ -1183,7 +1250,7 @@ async function generateCombinedCompareData(): Promise<boolean> {
       }));
 
       series.push({
-        name: meta.seriesName,
+        name: meta.columnTitle,
         data,
       });
     }
@@ -1231,89 +1298,12 @@ async function handlePreviewCombinedData() {
   openCombinedCompareChartPreview();
 }
 
-function buildCombinedCompareExportJson(): string {
-  const payload = {
-    type: isCompareInsightsMode.value
-      ? "polymarket_combined_compare"
-      : "polymarket_market_chart",
-    generated_at: new Date().toISOString(),
-    range: {
-      from_date: compareFromDate.value || null,
-      to_date: compareToDate.value || null,
-      frequency: compareFrequency.value || "daily",
-    },
-    // Store in a notebook-friendly shape.
-    // Each series becomes `{ name, points: [{t,p}] }`.
-    series: compareChartData.value.map((s) => ({
-      name: s.name,
-      points: (s.data ?? []).map((pt) => ({
-        t: pt.timestamp,
-        p: pt.price,
-      })),
-    })),
-  };
-
-  return JSON.stringify(payload, null, 2);
-}
-
-function buildCombinedCompareCsv(series: ScatterSeries[]): string {
-  const timestamps = new Set<number>();
-  const valuesBySeries = new Map<string, Map<number, number>>();
-
-  for (const s of series) {
-    const name = (s.name ?? "").trim() || "Series";
-    const map = new Map<number, number>();
-    for (const point of s.data ?? []) {
-      const ts = Number(point.timestamp);
-      const price = Number(point.price);
-      if (!Number.isFinite(ts) || !Number.isFinite(price)) continue;
-      timestamps.add(ts);
-      map.set(ts, price);
-    }
-    valuesBySeries.set(name, map);
-  }
-
-  const sortedTimestamps = Array.from(timestamps).sort((a, b) => a - b);
-  const seriesNames = Array.from(valuesBySeries.keys());
-
-  const header = [
-    csvQuote("Date (UTC)"),
-    csvQuote("Timestamp (UTC)"),
-    ...seriesNames.map((name) => csvQuote(name)),
-  ].join(",");
-
-  const rows: string[] = [];
-  for (const ts of sortedTimestamps) {
-    const dateStr = new Date(ts * 1000)
-      .toISOString()
-      .replace("T", " ")
-      .slice(0, 16);
-    const mmddyyyy = `${dateStr.slice(5, 7)}-${dateStr.slice(
-      8,
-      10,
-    )}-${dateStr.slice(0, 4)} ${dateStr.slice(11, 16)}`;
-
-    const values = seriesNames.map((name) => {
-      const v = valuesBySeries.get(name)?.get(ts);
-      return v === undefined ? "" : String(v);
-    });
-
-    rows.push(
-      [csvQuote(mmddyyyy), csvQuote(String(ts)), ...values.map(csvQuote)].join(
-        ",",
-      ),
-    );
-  }
-
-  return [header, ...rows].join("\n");
-}
-
 async function handleDownloadCombinedCompareCsv() {
   compareSaveError.value = null;
 
   if (!(await ensureCombinedCompareData())) return;
 
-  const csvText = buildCombinedCompareCsv(compareChartData.value);
+  const csvText = buildAlignedPolymarketCsv(compareChartData.value);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const prefix = isCompareInsightsMode.value
     ? "polymarket-combined-compare"
@@ -1326,10 +1316,10 @@ function defaultCombinedCompareNotebookFilename(): string {
     ? "polymarket-compare"
     : "polymarket-chart";
   const base = `${prefix}-${new Date().toISOString().slice(0, 10)}`;
-  return buildSafeJsonFilename(base);
+  return buildSafeCsvFilename(base);
 }
 
-function normalizeJsonFilename(
+function normalizeCsvFilename(
   input: string,
   fallbackFilename: string,
 ): string {
@@ -1338,9 +1328,9 @@ function normalizeJsonFilename(
 
   // Disallow directories; keep only the last path segment.
   const justName = candidate.split(/[/\\]/).pop() ?? "";
-  const noExt = justName.replace(/\.json$/i, "").trim();
+  const noExt = justName.replace(/\.csv$/i, "").trim();
   if (!noExt) throw new Error("Filename cannot be empty.");
-  return buildSafeJsonFilename(noExt);
+  return buildSafeCsvFilename(noExt);
 }
 
 async function performSendCombinedCompareChartToNotebooks(
@@ -1359,7 +1349,7 @@ async function performSendCombinedCompareChartToNotebooks(
   const fallback = defaultCombinedCompareNotebookFilename();
   let filename: string;
   try {
-    filename = normalizeJsonFilename(filenameInput, fallback);
+    filename = normalizeCsvFilename(filenameInput, fallback);
   } catch (err) {
     compareFilenameError.value =
       err instanceof Error ? err.message : "Invalid filename.";
@@ -1372,8 +1362,8 @@ async function performSendCombinedCompareChartToNotebooks(
 
     await queueTextFileForNotebooks({
       path,
-      content: buildCombinedCompareExportJson(),
-      mimetype: "application/json",
+      content: buildAlignedPolymarketCsv(compareChartData.value),
+      mimetype: "text/csv",
     });
 
     // Best-effort: if JupyterLite already initialized, sync immediately.
@@ -1408,7 +1398,9 @@ function handleSendCombinedCompareChartToNotebooks() {
 }
 
 function goToNotebooks() {
-  void router.push("/notebooks");
+  void router.push("/profile/jupyterlite").catch((err) => {
+    console.error("Failed to navigate to JupyterLite:", err);
+  });
 }
 
 async function handleCombinedCompareNotebookAction() {
@@ -2280,10 +2272,6 @@ function unixSecondsFromDateInput(dateStr: string, endOfDay: boolean): number {
   return Math.floor(ms / 1000);
 }
 
-function csvQuote(value: unknown): string {
-  return `"${String(value ?? "").replace(/"/g, '""')}"`;
-}
-
 function downloadCsv(filename: string, csvText: string) {
   const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -2428,16 +2416,9 @@ async function handleDownloadExport(leg: LegState) {
     const desiredOutcomeName = leg.selectedOutcomeName;
     const desiredOutcomeIdForActiveMarket = leg.selectedOutcomeId;
 
-    const requests: Array<{
-      marketId: string;
-      marketTitle: string;
-      outcomeId: string;
-      outcomeName: string;
-      columnTitle: string;
-    }> = [];
+    const requestInputs: MarketColumnInput[] = [];
 
     let skippedCount = 0;
-    const titleCount = new Map<string, number>();
 
     for (const marketId of marketIds) {
       const market = leg.marketOptions.find((m) => m.id === marketId);
@@ -2461,18 +2442,11 @@ async function handleDownloadExport(leg: LegState) {
       }
 
       for (const outcome of outcomes) {
-        const baseTitle = `${market.title ?? marketId} (${outcome.name})`;
-        const count = (titleCount.get(baseTitle) ?? 0) + 1;
-        titleCount.set(baseTitle, count);
-        requests.push({
-          marketId,
-          marketTitle: market.title ?? marketId,
-          outcomeId: outcome.id,
-          outcomeName: outcome.name,
-          columnTitle: count === 1 ? baseTitle : `${baseTitle} [${marketId}]`,
-        });
+        requestInputs.push(createMarketColumnInput(leg, market, outcome));
       }
     }
+
+    const requests = assignMarketColumnTitles(requestInputs);
 
     const results = await Promise.allSettled(
       requests.map(async (req) => {
@@ -2488,23 +2462,23 @@ async function handleDownloadExport(leg: LegState) {
       }),
     );
 
-    // Build Polymarket-style pivot export:
-    // Date (UTC), Timestamp (UTC), <Market Title 1>, <Market Title 2>, ...
-    const desiredTitles = requests.map((req) => req.columnTitle);
-
-    const seriesByTitle = new Map<string, Map<number, number>>();
-    const timestamps = new Set<number>();
+    const alignedSeries: ScatterSeries[] = requests.map((request) => ({
+      name: request.columnTitle,
+      data: [],
+    }));
 
     let failedCount = 0;
     // `skippedCount` = markets where no suitable outcomes were found.
 
-    for (const r of results) {
+    for (let index = 0; index < results.length; index++) {
+      const r = results[index];
+      const targetSeries = alignedSeries[index];
+      if (!r || !targetSeries) continue;
+
       if (r.status === "rejected") {
         failedCount += 1;
         continue;
       }
-
-      const { columnTitle } = r.value;
 
       let history = Array.isArray(r.value.history) ? r.value.history : [];
       if (fromTs) {
@@ -2516,20 +2490,13 @@ async function handleDownloadExport(leg: LegState) {
 
       history = downsampleHistory(history, frequency);
 
-      let series = seriesByTitle.get(columnTitle);
-      if (!series) {
-        series = new Map<number, number>();
-        seriesByTitle.set(columnTitle, series);
-      }
-
-      for (const pt of history) {
-        // pt.t is the labeled bucket timestamp in seconds (UTC).
-        timestamps.add(pt.t);
-        series.set(pt.t, pt.p);
-      }
+      targetSeries.data = history.map((point) => ({
+        timestamp: point.t,
+        price: point.p,
+      }));
     }
 
-    if (timestamps.size === 0) {
+    if (alignedSeries.every((series) => series.data.length === 0)) {
       leg.exportError =
         failedCount > 0
           ? "No data returned (some requests failed)."
@@ -2537,41 +2504,7 @@ async function handleDownloadExport(leg: LegState) {
       return;
     }
 
-    const sortedTimestamps = Array.from(timestamps).sort((a, b) => a - b);
-
-    const header = [
-      csvQuote("Date (UTC)"),
-      csvQuote("Timestamp (UTC)"),
-      ...desiredTitles.map((t) => csvQuote(t)),
-    ].join(",");
-
-    const rows: string[] = [];
-    for (const ts of sortedTimestamps) {
-      const dateStr = new Date(ts * 1000)
-        .toISOString()
-        .replace("T", " ")
-        .slice(0, 16);
-      // Convert YYYY-MM-DD HH:mm -> MM-DD-YYYY HH:mm
-      const mmddyyyy = `${dateStr.slice(5, 7)}-${dateStr.slice(
-        8,
-        10,
-      )}-${dateStr.slice(0, 4)} ${dateStr.slice(11, 16)}`;
-
-      const values = desiredTitles.map((title) => {
-        const v = seriesByTitle.get(title)?.get(ts);
-        return v === undefined ? "" : String(v);
-      });
-
-      rows.push(
-        [
-          csvQuote(mmddyyyy),
-          csvQuote(String(ts)),
-          ...values.map(csvQuote),
-        ].join(","),
-      );
-    }
-
-    const csvText = [header, ...rows].join("\n");
+    const csvText = buildAlignedPolymarketCsv(alignedSeries);
 
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     downloadCsv(`polymarket-price-history_${stamp}.csv`, csvText);
@@ -2638,16 +2571,9 @@ async function generateSingleMarketChartData(
     const desiredOutcomeName = leg.selectedOutcomeName;
     const desiredOutcomeIdForActiveMarket = leg.selectedOutcomeId;
 
-    const requests: Array<{
-      marketId: string;
-      marketTitle: string;
-      outcomeId: string;
-      outcomeName: string;
-      seriesName: string;
-    }> = [];
+    const requestInputs: MarketColumnInput[] = [];
 
     let skippedCount = 0;
-    const titleCount = new Map<string, number>();
 
     for (const marketId of marketIds) {
       const market = leg.marketOptions.find((m) => m.id === marketId);
@@ -2670,18 +2596,11 @@ async function generateSingleMarketChartData(
       }
 
       for (const outcome of outcomes) {
-        const baseTitle = `${market.title ?? marketId} (${outcome.name})`;
-        const count = (titleCount.get(baseTitle) ?? 0) + 1;
-        titleCount.set(baseTitle, count);
-        requests.push({
-          marketId,
-          marketTitle: market.title ?? marketId,
-          outcomeId: outcome.id,
-          outcomeName: outcome.name,
-          seriesName: count === 1 ? baseTitle : `${baseTitle} [${marketId}]`,
-        });
+        requestInputs.push(createMarketColumnInput(leg, market, outcome));
       }
     }
+
+    const requests = assignMarketColumnTitles(requestInputs);
 
     const results = await Promise.allSettled(
       requests.map(async (req) => {
@@ -2696,16 +2615,21 @@ async function generateSingleMarketChartData(
       }),
     );
 
-    const chartSeries: ScatterSeries[] = [];
+    const chartSeries: ScatterSeries[] = requests.map((request) => ({
+      name: request.columnTitle,
+      data: [],
+    }));
     let failedCount = 0;
 
-    for (const r of results) {
+    for (let index = 0; index < results.length; index++) {
+      const r = results[index];
+      const targetSeries = chartSeries[index];
+      if (!r || !targetSeries) continue;
+
       if (r.status === "rejected") {
         failedCount += 1;
         continue;
       }
-
-      const { seriesName } = r.value;
 
       let history = Array.isArray(r.value.history) ? r.value.history : [];
       if (fromTs) {
@@ -2717,15 +2641,10 @@ async function generateSingleMarketChartData(
 
       history = downsampleHistory(history, frequency);
 
-      const data: PriceDataPoint[] = history.map((pt) => ({
+      targetSeries.data = history.map((pt) => ({
         timestamp: pt.t,
         price: pt.p,
       }));
-
-      chartSeries.push({
-        name: seriesName,
-        data,
-      });
     }
 
     if (
@@ -2787,38 +2706,13 @@ async function handlePreviewChart(leg: LegState) {
   openLegChartPreview(leg);
 }
 
-function buildSingleMarketExportJson(leg: LegState): string {
-  const payload = {
-    type: "polymarket_market_chart",
-    generated_at: new Date().toISOString(),
-    market_url: leg.marketUrl || null,
-    selected_market_id: leg.selectedMarketId || null,
-    selected_outcome_id: leg.selectedOutcomeId || null,
-    selected_outcome_name: leg.selectedOutcomeName || null,
-    range: {
-      from_date: leg.exportFromDate || null,
-      to_date: leg.exportToDate || null,
-      frequency: leg.exportFrequency || "daily",
-    },
-    series: leg.chartData.map((series) => ({
-      name: series.name,
-      points: (series.data ?? []).map((point) => ({
-        t: point.timestamp,
-        p: point.price,
-      })),
-    })),
-  };
-
-  return JSON.stringify(payload, null, 2);
-}
-
 function defaultSingleMarketNotebookFilename(leg: LegState): string {
   const selectedMarketTitle = leg.marketOptions.find(
     (market) => market.id === leg.selectedMarketId,
   )?.title;
   const label = selectedMarketTitle || leg.title || "polymarket-market";
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
-  return buildSafeJsonFilename(`${label}-${stamp}`);
+  return buildSafeCsvFilename(`${label}-${stamp}`);
 }
 
 async function handleSendSingleMarketToJupyterLite(leg: LegState) {
@@ -2840,8 +2734,8 @@ async function handleSendSingleMarketToJupyterLite(leg: LegState) {
 
     await queueTextFileForNotebooks({
       path,
-      content: buildSingleMarketExportJson(leg),
-      mimetype: "application/json",
+      content: buildAlignedPolymarketCsv(leg.chartData),
+      mimetype: "text/csv",
     });
 
     const sync = await syncQueuedNotebookFilesToJupyterLite();

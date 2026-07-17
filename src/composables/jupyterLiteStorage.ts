@@ -281,7 +281,7 @@ export async function syncQueuedNotebookFilesToJupyterLite(
   };
 }
 
-export function buildSafeJsonFilename(base: string): string {
+function buildSafeFilename(base: string, extension: "json" | "csv"): string {
   const raw = (base ?? "").trim() || "data";
   const safe = raw
     .toLowerCase()
@@ -289,5 +289,13 @@ export function buildSafeJsonFilename(base: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
 
-  return `${safe || "data"}.json`;
+  return `${safe || "data"}.${extension}`;
+}
+
+export function buildSafeJsonFilename(base: string): string {
+  return buildSafeFilename(base, "json");
+}
+
+export function buildSafeCsvFilename(base: string): string {
+  return buildSafeFilename(base, "csv");
 }

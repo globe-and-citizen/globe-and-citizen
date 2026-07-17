@@ -60,7 +60,7 @@
           <Dialog v-model:open="compareFilenameDialogOpenModel">
             <DialogContent class="sm:max-w-[520px]">
               <DialogHeader>
-                <DialogTitle>Send to Jupyter</DialogTitle>
+                <DialogTitle>Send to JupyterLite</DialogTitle>
                 <DialogDescription>
                   Choose a filename for the exported data.
                 </DialogDescription>
@@ -93,7 +93,7 @@
                 >
                   <span v-if="compareSaveLoading">Sending...</span>
                   <span v-else>{{
-                    compareCanGoToNotebooks ? "Go to notebooks" : "Send"
+                    compareCanGoToNotebooks ? "Go to JupyterLite" : "Send"
                   }}</span>
                 </Button>
               </DialogFooter>
@@ -431,7 +431,7 @@
             class="border rounded-xl border-dashed p-8 text-center text-muted-foreground"
           >
             Add an event from the left rail to preview history, export CSV, or
-            queue JSON for JupyterLite.
+            queue CSV for JupyterLite.
           </div>
         </div>
       </div>
