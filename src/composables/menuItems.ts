@@ -97,20 +97,22 @@ export const profileMenuItems = [
     icon: correlationGraph,
     title: "Price Correlation graph",
     url: "/correlation-graph",
-    summary: "Compare historical price relationships between selected Polymarket outcomes.",
+    summary:
+      "Compare historical price relationships between selected Polymarket outcomes.",
   },
   {
     section: "Tools",
     icon: table,
     title: "Max contingency table",
     url: "/max-contingency-table",
-    summary: "Analyze outcome combinations using maximum contingency table calculations.",
+    summary:
+      "Analyze outcome combinations using maximum contingency table calculations.",
   },
   {
     section: "Tools",
     icon: jupyter,
-    title: "Notebooks",
-    url: "/notebooks",
+    title: "JupyterLite",
+    url: "/jupyterlite",
     summary: "Open JupyterLite notebooks for deeper market data analysis.",
   },
 ];
@@ -139,8 +141,8 @@ export const serviceMenuItems = [
   {
     section: "Services",
     icon: journals,
-    title: "Notebooks",
-    url: "/notebooks",
+    title: "JupyterLite",
+    url: "/jupyterlite",
   },
 ];
 

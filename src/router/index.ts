@@ -154,7 +154,7 @@ const routes = [
             component: HistoricalCorrelationGraphView,
           },
           {
-            path: "notebooks",
+            path: "jupyterlite",
             component: NotebooksView,
           },
           {
