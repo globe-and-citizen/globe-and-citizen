@@ -3,8 +3,6 @@ import statsApiClient from "@/lib/statsApi";
 import type { PolymarketMarket } from "@/types/";
 import type { MaybeRefOrGetter } from "vue";
 import { toValue, computed } from "vue";
-import axios from "axios"; // Import axios directly, without the apiClient instance
-import { SAFE_API_KEY } from "@/constants";
 
 interface PolymarketEvent {
   markets: PolymarketMarket[];
@@ -58,47 +56,5 @@ export const useMarketData = (
     },
     // refetchInterval: 10000,
     enabled: computed(() => !!toValue(endpoint)),
-  });
-};
-
-/**
- * Fetch Safe Wallet balances (Native and ERC-20)
- * Uses direct axios call to the Safe Transaction Service API
- *
- * @endpoint GET https://api.safe.global/tx-service/{chainName}/api/v2/safes/{safeAddress}/balances/
- * @params { safeAddress: string, chainName: string } - URL path parameters
- * @queryParams none
- * @body none
- */
-export const useSafeBalances = (
-  safeAddress: MaybeRefOrGetter<string | null>,
-  chainName: MaybeRefOrGetter<string | null> = "pol",
-) => {
-  return useQuery({
-    // Add chainName to the queryKey so different networks cache separately
-    queryKey: ["safeBalances", safeAddress, chainName],
-    queryFn: async () => {
-      const address = toValue(safeAddress);
-      const chain = toValue(chainName);
-
-      if (!address) throw new Error("Safe address is required");
-      if (!chain)
-        throw new Error("Chain name is required (e.g., eth, polygon)");
-
-      // Construct the URL using the safe.global public API
-      const url = `https://api.safe.global/tx-service/${chain}/api/v2/safes/${address}/balances/`;
-
-      // Call axios directly
-      const { data } = await axios.get<SafeBalancesResponse>(url, {
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer: ${SAFE_API_KEY}`,
-        },
-      });
-      return data.results;
-    },
-    // Only enabled if both address and chain are provided
-    enabled: () => !!toValue(safeAddress) && !!toValue(chainName),
-    refetchInterval: 30000, // Refresh every 30 seconds
   });
 };
