@@ -72,3 +72,18 @@ export function selectPolymarketOutcomes(
     (outcome): outcome is PolymarketOutcomeOption => Boolean(outcome),
   );
 }
+
+export function selectDefaultPolymarketOutcome(
+  market: PolymarketMarketOption,
+): PolymarketOutcomeOption | null {
+  const outcomes = market.outcomes ?? [];
+  if (outcomes.length === 0) return null;
+  const defaultId = market.defaultOutcomeId?.trim();
+  if (defaultId) {
+    return outcomes.find((item) => item.id === defaultId) ?? outcomes[0] ?? null;
+  }
+  const yesOutcome = outcomes.find(
+    (item) => normalizePolymarketOutcomeName(item.name) === "yes",
+  );
+  return yesOutcome ?? outcomes[0] ?? null;
+}

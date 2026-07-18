@@ -302,25 +302,6 @@ const deleteRow = () => {
   editor.value?.chain().focus().deleteRow().run();
 };
 
-// const toggleHeaderColumn = () => {
-//   editor.value?.chain().focus().toggleHeaderColumn().run();
-// };
-
-// const toggleHeaderRow = () => {
-//   editor.value?.chain().focus().toggleHeaderRow().run();
-// };
-
-// const toggleHeaderCell = () => {
-//   editor.value?.chain().focus().toggleHeaderCell().run();
-// };
-
-// const mergeCells = () => {
-//   editor.value?.chain().focus().mergeCells().run();
-// };
-
-// const splitCell = () => {
-//   editor.value?.chain().focus().splitCell().run();
-// };
 </script>
 
 <template>
@@ -693,24 +674,6 @@ const deleteRow = () => {
         />
       </div>
 
-      <!-- Font Family
-      <div
-        class="flex gap-1 border-r border-gray-300 dark:border-gray-600 pr-2 mr-2"
-      >
-        <select
-          class="px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-          @change="(e: Event) => setFontFamily((e.target as HTMLSelectElement).value)"
-        >
-          <option value="">Default Font</option>
-          <option value="Arial">Arial</option>
-          <option value="Helvetica">Helvetica</option>
-          <option value="Times New Roman">Times New Roman</option>
-          <option value="Courier New">Courier New</option>
-          <option value="Georgia">Georgia</option>
-          <option value="Verdana">Verdana</option>
-        </select>
-      </div> -->
-
       <!-- Undo/Redo -->
       <div class="flex gap-1">
         <button
@@ -917,36 +880,4 @@ svg {
   border-radius: 2px;
 }
 
-/* Dark mode styles */
-/* .dark :deep(.ProseMirror) {
-  background: #111827;
-  color: #e5e7eb;
-}
-
-.dark :deep(.ProseMirror blockquote) {
-  border-left-color: #4b5563;
-  color: #9ca3af;
-}
-
-.dark :deep(.ProseMirror code) {
-  background-color: #374151;
-  color: #e5e7eb;
-}
-
-.dark :deep(.ProseMirror pre) {
-  background-color: #374151;
-}
-
-.dark :deep(.ProseMirror mark) {
-  background-color: #451a03;
-  color: #fbbf24;
-}
-
-.dark :deep(.ProseMirror table th) {
-  background-color: #374151;
-}
-
-.dark :deep(.ProseMirror table td, .dark .ProseMirror table th) {
-  border-color: #4b5563;
-} */
 </style>

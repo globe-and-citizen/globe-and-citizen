@@ -1,11 +1,4 @@
-import { ref, type Ref } from "vue";
-import { buildAlignedPolymarketCsv } from "@/lib/polymarketCsv";
-import type { ScatterSeries } from "@/components/Charts/PriceScatterChart.vue";
-import {
-  buildSafeCsvFilename,
-  queueTextFileForNotebooks,
-  syncQueuedNotebookFilesToJupyterLite,
-} from "@/composables/jupyterLiteStorage";
+import { buildSafeCsvFilename } from "@/composables/jupyterLiteStorage";
 
 export function downloadPolymarketCsv(filename: string, csvText: string) {
   const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" });
@@ -46,50 +39,4 @@ export function createPolymarketGenerationGuard<T extends object>() {
     });
     return pending;
   };
-}
-
-export function usePolymarketNotebookExport() {
-  const loading = ref(false);
-  const error = ref<string | null>(null);
-  const successPath = ref("");
-
-  async function save(
-    series: Ref<ScatterSeries[]> | ScatterSeries[],
-    filename: string,
-  ): Promise<boolean> {
-    if (loading.value) return false;
-    loading.value = true;
-    error.value = null;
-    successPath.value = "";
-
-    try {
-      const data = Array.isArray(series) ? series : series.value;
-      const path = `data/${buildSafeCsvFilename(filename.replace(/\.csv$/i, ""))}`;
-      await queueTextFileForNotebooks({
-        path,
-        content: buildAlignedPolymarketCsv(data),
-        mimetype: "text/csv",
-      });
-      const sync = await syncQueuedNotebookFilesToJupyterLite();
-      successPath.value = sync.skippedBecauseNotInitialized
-        ? `${path} (queued)`
-        : path;
-      return true;
-    } catch (cause) {
-      console.error("Failed to save Polymarket data to JupyterLite:", cause);
-      error.value =
-        cause instanceof Error ? cause.message : "Failed to save to notebooks.";
-      return false;
-    } finally {
-      loading.value = false;
-    }
-  }
-
-  function reset() {
-    loading.value = false;
-    error.value = null;
-    successPath.value = "";
-  }
-
-  return { loading, error, successPath, save, reset };
 }
