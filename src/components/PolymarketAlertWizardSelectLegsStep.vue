@@ -43,48 +43,24 @@
 
         <div class="grid gap-2">
           <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
-            <Button
-              :disabled="isCombinedCompareChartDisabled"
-              @click="handleViewCombinedCompareChart"
-            >
-              <span v-if="compareChartLoading">Loading...</span>
-              <span v-else>{{ insightsGenerateChartLabel }}</span>
+            <Button @click="handlePreviewCombinedData">
+              Preview Combined Data
             </Button>
-            <Button
-              variant="outline"
-              :disabled="compareChartLoading || compareChartDataLength === 0"
-              @click="openCombinedCompareChartPreview"
-            >
-              Preview Generated Chart
-            </Button>
-            <Button
-              variant="outline"
-              :disabled="compareChartLoading || compareChartDataLength === 0"
-              @click="handleDownloadCombinedCompareCsv"
-            >
+            <Button variant="outline" @click="handleDownloadCombinedCompareCsv">
               Export to CSV
             </Button>
             <Button
               variant="outline"
-              :disabled="compareChartLoading || compareChartDataLength < 2"
-              @click="handleSendToBetaRegression"
-            >
-              Run Beta Regression
-            </Button>
-            <Button
-              variant="outline"
-              :disabled="isCompareNotebookActionDisabled"
               @click="handleCombinedCompareNotebookAction"
             >
-              <span v-if="compareSaveLoading">Sending...</span>
-              <span v-else>{{ compareNotebookActionLabel }}</span>
+              Send to JupyterLite
             </Button>
           </div>
 
           <Dialog v-model:open="compareFilenameDialogOpenModel">
             <DialogContent class="sm:max-w-[520px]">
               <DialogHeader>
-                <DialogTitle>Send to Jupyter</DialogTitle>
+                <DialogTitle>Send to JupyterLite</DialogTitle>
                 <DialogDescription>
                   Choose a filename for the exported data.
                 </DialogDescription>
@@ -117,7 +93,7 @@
                 >
                   <span v-if="compareSaveLoading">Sending...</span>
                   <span v-else>{{
-                    compareCanGoToNotebooks ? "Go to notebooks" : "Send"
+                    compareCanGoToNotebooks ? "Go to JupyterLite" : "Send"
                   }}</span>
                 </Button>
               </DialogFooter>
@@ -141,11 +117,11 @@
           <div class="border-b px-4 py-4 grid gap-3">
             <div>
               <div class="text-sm font-semibold text-foreground">
-                Selected Markets
+                Selected Events
               </div>
               <p class="text-xs text-muted-foreground mt-1">
-                Paste a Polymarket URL or open search, then preview charts or
-                export data to notebooks.
+                Add Polymarket events, then choose their markets in the CSV
+                workspace.
               </p>
             </div>
 
@@ -170,14 +146,6 @@
             <Button variant="outline" @click="openMarketSearchDialog">
               Open Search
             </Button>
-
-            <div class="text-xs text-muted-foreground">
-              {{ legs.length }} market{{ legs.length === 1 ? "" : "s" }}
-              added
-              <span v-if="isCompareInsightsMode">
-                for cross-event comparison
-              </span>
-            </div>
           </div>
 
           <div class="max-h-[58vh] overflow-y-auto p-3 space-y-2">
@@ -185,7 +153,7 @@
               v-if="legs.length === 0"
               class="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground"
             >
-              Add a market to start charting, exporting, or sending data to
+              Add an event to start charting, exporting, or sending data to
               JupyterLite.
             </div>
 
@@ -250,67 +218,78 @@
               <div
                 class="text-xs uppercase tracking-wide text-muted-foreground"
               >
-                {{ activeLegLoading ? "Loading" : "Active market" }}
+                {{ activeLegLoading ? "Loading" : "Active event" }}
               </div>
             </div>
 
             <div class="grid gap-2">
               <Label>Market/Event URL</Label>
-              <div class="flex gap-2">
-                <Input
-                  :model-value="activeLeg.marketUrl"
-                  type="text"
-                  placeholder="https://polymarket.com/event/... or /market/..."
-                  @update:model-value="
-                    (value) =>
-                      updateActiveLegField('marketUrl', String(value ?? ''))
-                  "
-                  @keydown.enter.prevent="loadLeg(activeLegIndex)"
-                />
-                <Button
-                  :disabled="activeLeg.loading || !activeLeg.marketUrl.trim()"
-                  @click="loadLeg(activeLegIndex)"
-                >
-                  <span v-if="activeLeg.loading">Loading...</span>
-                  <span v-else>Load</span>
-                </Button>
-              </div>
+              <Input
+                :model-value="activeLeg.marketUrl"
+                type="text"
+                readonly
+                placeholder="https://polymarket.com/event/... or /market/..."
+              />
               <p v-if="activeLeg.error" class="text-sm text-red-600">
                 {{ activeLeg.error }}
               </p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
               <div class="grid gap-2">
-                <Label>Market</Label>
-                <Select
-                  :model-value="activeLeg.selectedMarketId"
-                  :disabled="getMarketSelectOptions(activeLeg).length === 0"
-                  @update:model-value="
-                    (value) => {
-                      updateActiveLegField(
-                        'selectedMarketId',
-                        String(value ?? ''),
-                      );
-                      onMarketChange(activeLegIndex);
-                    }
-                  "
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select market" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem
-                        v-for="market in getMarketSelectOptions(activeLeg)"
-                        :key="market.id"
-                        :value="market.id"
+                <Label>Markets</Label>
+                <div class="grid gap-2 rounded-lg border p-3 bg-muted/20">
+                  <div class="flex items-center gap-2">
+                    <Checkbox
+                      :id="`insights-select-all-${activeLegIndex}`"
+                      :model-value="exportSelectAllState(activeLeg)"
+                      :disabled="activeLeg.marketOptions.length === 0"
+                      @update:model-value="
+                        (value) =>
+                          activeLeg && toggleAllExportMarkets(activeLeg, value)
+                      "
+                    />
+                    <Label
+                      :for="`insights-select-all-${activeLegIndex}`"
+                      class="text-sm cursor-pointer"
+                    >
+                      Select All
+                    </Label>
+                  </div>
+
+                  <div
+                    v-if="activeLeg.marketOptions.length > 0"
+                    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 pl-2"
+                  >
+                    <div
+                      v-for="(market, marketIdx) in activeLeg.marketOptions"
+                      :key="market.id"
+                      class="flex items-center gap-2"
+                    >
+                      <Checkbox
+                        :id="`insights-market-${activeLegIndex}-${marketIdx}`"
+                        :model-value="
+                          activeLeg.exportSelectedMarkets.includes(market.id)
+                        "
+                        @update:model-value="
+                          (value) =>
+                            activeLeg &&
+                            toggleExportMarket(activeLeg, market.id, value)
+                        "
+                      />
+                      <Label
+                        :for="`insights-market-${activeLegIndex}-${marketIdx}`"
+                        class="text-sm cursor-pointer"
                       >
                         {{ market.title }}
-                      </SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+                      </Label>
+                    </div>
+                  </div>
+
+                  <p v-else class="text-xs text-muted-foreground">
+                    Select a market or event to view available markets.
+                  </p>
+                </div>
               </div>
 
               <div class="grid gap-2">
@@ -398,100 +377,29 @@
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div class="grid gap-2">
-                  <div class="flex items-center justify-between gap-2">
-                    <Label>Markets</Label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      class="h-7 px-2 text-xs"
-                      @click="toggleExportMarketList"
-                    >
-                      {{
-                        showExportMarketList ? "Hide list" : "Select markets"
-                      }}
-                    </Button>
-                  </div>
-                  <p class="text-xs text-muted-foreground">
-                    Selected market:
-                    {{ activeLegSelectedMarketLabel(activeLeg) }}
-                  </p>
-                  <div v-if="showExportMarketList" class="grid gap-2">
-                    <div class="flex items-center gap-2">
-                      <Checkbox
-                        :id="`insights-select-all-${activeLegIndex}`"
-                        :model-value="exportSelectAllState(activeLeg)"
-                        @update:model-value="
-                          (value) =>
-                            activeLeg &&
-                            toggleAllExportMarkets(activeLeg, value)
-                        "
-                      />
-                      <Label
-                        :for="`insights-select-all-${activeLegIndex}`"
-                        class="text-sm cursor-pointer"
-                      >
-                        Select All
-                      </Label>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 pl-2">
-                      <div
-                        v-for="(market, marketIdx) in activeLeg.marketOptions"
-                        :key="market.id"
-                        class="flex items-center gap-2"
-                      >
-                        <Checkbox
-                          :id="`insights-market-${activeLegIndex}-${marketIdx}`"
-                          :model-value="
-                            activeLeg.exportSelectedMarkets.includes(market.id)
-                          "
-                          @update:model-value="
-                            (value) =>
-                              activeLeg &&
-                              toggleExportMarket(activeLeg, market.id, value)
-                          "
-                        />
-                        <Label
-                          :for="`insights-market-${activeLegIndex}-${marketIdx}`"
-                          class="text-sm cursor-pointer"
-                        >
-                          {{ market.title }}
-                        </Label>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               <div class="border rounded-lg p-3 bg-muted/20 grid gap-3">
-                <div class="font-semibold">Price Insights Actions</div>
+                <div class="font-semibold">
+                  Single Market Functions Download
+                </div>
 
                 <div class="grid gap-2">
                   <div class="flex flex-col sm:flex-row gap-2">
-                    <Button
-                      :disabled="activeLeg.chartLoading"
-                      @click="handleViewChart(activeLeg)"
-                    >
-                      <span v-if="activeLeg.chartLoading">Loading...</span>
-                      <span v-else>Generate Chart</span>
+                    <Button @click="handlePreviewChart(activeLeg)">
+                      Preview Chart
                     </Button>
                     <Button
                       variant="outline"
-                      :disabled="
-                        activeLeg.chartLoading ||
-                        activeLeg.chartData.length === 0
-                      "
-                      @click="openLegChartPreview(activeLeg)"
-                    >
-                      Preview Generated Chart
-                    </Button>
-                    <Button
-                      :disabled="activeLeg.exportLoading"
                       @click="handleDownloadExport(activeLeg)"
                     >
-                      <span v-if="activeLeg.exportLoading">Downloading...</span>
-                      <span v-else>Download (.csv)</span>
+                      Download CSV
+                    </Button>
+                    <Button
+                      variant="outline"
+                      @click="handleSendSingleMarketToJupyterLite(activeLeg)"
+                    >
+                      Send to JupyterLite
                     </Button>
                   </div>
 
@@ -502,6 +410,17 @@
                   <p v-if="activeLeg.exportError" class="text-sm text-red-600">
                     {{ activeLeg.exportError }}
                   </p>
+
+                  <p v-if="singleMarketSaveError" class="text-sm text-red-600">
+                    {{ singleMarketSaveError }}
+                  </p>
+
+                  <p
+                    v-if="singleMarketSaveSuccessPath"
+                    class="text-sm text-green-700"
+                  >
+                    Saved to JupyterLite: {{ singleMarketSaveSuccessPath }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -511,8 +430,8 @@
             v-else
             class="border rounded-xl border-dashed p-8 text-center text-muted-foreground"
           >
-            Add a market from the left rail to preview history, export CSV, or
-            queue JSON for JupyterLite.
+            Add an event from the left rail to preview history, export CSV, or
+            queue CSV for JupyterLite.
           </div>
         </div>
       </div>
@@ -649,10 +568,9 @@
         class="w-[92vw] max-w-[1200px] max-h-[85vh] overflow-hidden flex flex-col"
       >
         <DialogHeader>
-          <DialogTitle>Search Polymarket Markets</DialogTitle>
+          <DialogTitle>Search Polymarket Events</DialogTitle>
           <DialogDescription>
-            Search events, then choose a market to load into the analytics
-            workspace.
+            Add events here, then choose their markets in the CSV workspace.
           </DialogDescription>
         </DialogHeader>
 
@@ -661,7 +579,7 @@
             <Input
               v-model="marketSearchQueryModel"
               type="text"
-              placeholder="Search markets..."
+              placeholder="Search events..."
               @keydown.enter.prevent="runMarketSearch"
             />
             <Button
@@ -679,228 +597,140 @@
             v-else-if="marketSearchQuery.trim() && !marketSearchLoading"
             class="text-sm text-muted-foreground"
           >
-            Showing {{ searchEventResults.length }} event{{
-              searchEventResults.length === 1 ? "" : "s"
+            Showing {{ filteredSearchEventResults.length }} event{{
+              filteredSearchEventResults.length === 1 ? "" : "s"
             }}
           </p>
 
-          <div class="grid gap-4 min-h-0 lg:grid-cols-[320px_minmax(0,1fr)]">
-            <div
-              class="border rounded-lg overflow-hidden min-h-0 flex flex-col"
+          <div
+            class="flex items-center justify-between gap-4 rounded-lg border bg-muted/20 px-4 py-3"
+          >
+            <div>
+              <Label for="open-events-only" class="text-sm font-medium">
+                Open Events Only
+              </Label>
+              <p class="mt-0.5 text-xs text-muted-foreground">
+                Hide closed or inactive events.
+              </p>
+            </div>
+            <button
+              id="open-events-only"
+              type="button"
+              role="switch"
+              aria-label="Open Events Only"
+              :aria-checked="showOpenEventsOnly"
+              class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              :class="
+                showOpenEventsOnly
+                  ? 'bg-primary'
+                  : 'bg-muted-foreground/30'
+              "
+              @click="showOpenEventsOnly = !showOpenEventsOnly"
             >
-              <div class="border-b px-4 py-3 text-sm font-medium">Events</div>
-              <div class="flex-1 overflow-y-auto p-3 space-y-2">
+              <span
+                class="pointer-events-none block h-5 w-5 rounded-full bg-background shadow-sm transition-transform"
+                :class="showOpenEventsOnly ? 'translate-x-5' : 'translate-x-0.5'"
+              />
+            </button>
+          </div>
+
+          <div
+            class="border rounded-lg overflow-hidden min-h-0 flex flex-col"
+          >
+            <div class="border-b px-4 py-3 text-sm font-medium">Events</div>
+            <div class="flex-1 overflow-y-auto p-4 space-y-3">
+              <div
+                v-if="marketSearchLoading"
+                class="text-sm text-muted-foreground"
+              >
+                Loading events...
+              </div>
+
+              <div
+                v-for="event in filteredSearchEventResults"
+                :key="event.id"
+                class="w-full rounded-lg border p-4 transition-colors"
+                :class="
+                  isSearchEventSelected(event.event)
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border'
+                "
+              >
                 <div
-                  v-if="marketSearchLoading"
-                  class="text-sm text-muted-foreground"
+                  class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
                 >
-                  Loading events...
-                </div>
-                <button
-                  v-for="event in searchEventResults"
-                  :key="event.id"
-                  type="button"
-                  class="w-full rounded-lg border p-3 text-left transition-colors"
-                  :class="
-                    selectedSearchEvent?.id === event.id
-                      ? 'border-primary bg-muted/30'
-                      : 'border-border hover:bg-muted/20'
-                  "
-                  @click="selectSearchEvent(event.event)"
-                >
-                  <div class="flex items-start gap-3">
+                  <div class="flex min-w-0 items-start gap-4">
                     <img
                       :src="event.image"
                       :alt="event.title"
-                      class="w-10 h-10 rounded-lg object-cover border"
+                      class="h-16 w-16 shrink-0 rounded-lg border object-cover"
                       @error="handleSearchImageError"
                     />
                     <div class="min-w-0 flex-1">
-                      <div class="text-sm font-medium line-clamp-2">
+                      <div class="text-base font-semibold leading-6">
                         {{ event.title }}
                       </div>
-                      <div class="mt-1 text-xs text-muted-foreground">
-                        {{ event.subtitle }}
-                      </div>
-                      <div class="mt-2 text-xs font-semibold text-foreground">
-                        {{ event.chanceText }}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-
-                <div
-                  v-if="!marketSearchLoading && searchEventResults.length === 0"
-                  class="text-sm text-muted-foreground"
-                >
-                  Search for an event to view its markets.
-                </div>
-
-                <div v-if="marketSearchPagination?.hasMore" class="pt-2">
-                  <Button
-                    variant="outline"
-                    class="w-full"
-                    :disabled="marketSearchLoadingMore"
-                    @click="loadMoreMarketSearchResults"
-                  >
-                    {{
-                      marketSearchLoadingMore
-                        ? "Loading..."
-                        : "Load more events"
-                    }}
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="border rounded-lg overflow-hidden min-h-0 flex flex-col"
-            >
-              <div
-                class="border-b px-4 py-3 flex items-center justify-between gap-3"
-              >
-                <div>
-                  <div class="text-sm font-medium">
-                    {{ selectedSearchEvent?.title ?? "Markets" }}
-                  </div>
-                  <p class="text-xs text-muted-foreground mt-1">
-                    {{ selectedSearchEvent?.markets?.length ?? 0 }} market{{
-                      (selectedSearchEvent?.markets?.length ?? 0) === 1
-                        ? ""
-                        : "s"
-                    }}
-                    available
-                  </p>
-                </div>
-              </div>
-
-              <div class="flex-1 overflow-y-auto p-4 space-y-3">
-                <div
-                  v-if="!selectedSearchEvent"
-                  class="h-full flex items-center justify-center text-sm text-muted-foreground"
-                >
-                  Select an event to view and add its markets.
-                </div>
-
-                <div
-                  v-for="market in selectedSearchEvent?.markets ?? []"
-                  :key="market.id"
-                  class="rounded-lg border p-4 grid gap-3"
-                  :class="
-                    isSearchMarketSelected(selectedSearchEvent, market)
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border'
-                  "
-                >
-                  <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                      <div class="text-sm font-semibold line-clamp-2">
-                        {{
-                          (market.groupItemTitle ?? "").trim() ||
-                          market.question ||
-                          "Market"
-                        }}
-                      </div>
-                      <p
-                        class="mt-1 text-xs text-muted-foreground line-clamp-2"
-                      >
-                        {{
-                          computeChance(market).subtitle ||
-                          selectedSearchEvent?.title ||
-                          ""
-                        }}
+                      <p class="mt-1 text-sm text-muted-foreground">
+                        {{ event.subtitle }} available in the CSV workspace
                       </p>
                       <a
-                        :href="toPolymarketMarketUrl(market)"
+                        :href="toPolymarketEventUrl(event.event)"
                         target="_blank"
                         rel="noreferrer"
                         class="mt-2 inline-block text-xs text-primary underline-offset-4 hover:underline"
                       >
-                        Open on Polymarket
+                        Open event on Polymarket
                       </a>
                     </div>
-
-                    <div
-                      class="text-sm font-semibold whitespace-nowrap text-right"
-                    >
-                      <div>{{ computeChance(market).text }}</div>
-                      <div
-                        v-if="
-                          isSearchMarketSelected(selectedSearchEvent, market)
-                        "
-                        class="mt-1 text-xs font-medium text-primary"
-                      >
-                        Selected
-                      </div>
-                    </div>
                   </div>
 
-                  <div class="h-2 rounded-full bg-muted overflow-hidden">
-                    <div
-                      class="h-full bg-primary"
-                      :style="{ width: computeChance(market).pct + '%' }"
-                    />
-                  </div>
-
-                  <div
-                    class="grid gap-2 sm:grid-cols-[minmax(0,220px)_auto] sm:items-end"
+                  <Button
+                    v-if="isSearchEventSelected(event.event)"
+                    variant="outline"
+                    class="shrink-0"
+                    @click="handleRemoveSearchEvent(event.event)"
                   >
-                    <div class="grid gap-1">
-                      <Label class="text-xs">Outcome</Label>
-                      <Select
-                        :model-value="
-                          getSearchOutcomeSelection(selectedSearchEvent, market)
-                        "
-                        @update:model-value="
-                          (value) =>
-                            selectedSearchEvent &&
-                            setSearchOutcomeSelection(
-                              selectedSearchEvent,
-                              market,
-                              String(value ?? ''),
-                            )
-                        "
-                      >
-                        <SelectTrigger class="h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="yes">Yes</SelectItem>
-                          <SelectItem value="no">No</SelectItem>
-                          <SelectItem value="both">Yes and No</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div class="flex justify-end gap-2">
-                      <Button
-                        v-if="
-                          isSearchMarketSelected(selectedSearchEvent, market)
-                        "
-                        variant="outline"
-                        @click="
-                          selectedSearchEvent &&
-                          handleRemoveSearchMarket(selectedSearchEvent, market)
-                        "
-                      >
-                        Remove
-                      </Button>
-                      <Button
-                        v-else
-                        :disabled="
-                          (!canAddMoreInsightsMarkets && isInsightsMode) ||
-                          !selectedSearchEvent
-                        "
-                        @click="
-                          selectedSearchEvent &&
-                          handleAssignSearchMarket(selectedSearchEvent, market)
-                        "
-                      >
-                        Add market
-                      </Button>
-                    </div>
-                  </div>
+                    Remove Event
+                  </Button>
+                  <Button
+                    v-else
+                    class="shrink-0"
+                    :disabled="
+                      !canAddMoreInsightsMarkets || !isInsightsMode
+                    "
+                    @click="handleAssignSearchEvent(event.event)"
+                  >
+                    Add Event
+                  </Button>
                 </div>
+              </div>
+
+              <div
+                v-if="
+                  !marketSearchLoading && filteredSearchEventResults.length === 0
+                "
+                class="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground"
+              >
+                {{
+                  showOpenEventsOnly && searchEventResults.length > 0
+                    ? "No open events found."
+                    : "Search for an event to add it to the CSV workspace."
+                }}
+              </div>
+
+              <div v-if="marketSearchPagination?.hasMore" class="pt-2">
+                <Button
+                  variant="outline"
+                  class="w-full"
+                  :disabled="marketSearchLoadingMore"
+                  @click="loadMoreMarketSearchResults"
+                >
+                  {{
+                    marketSearchLoadingMore
+                      ? "Loading..."
+                      : "Load more events"
+                  }}
+                </Button>
               </div>
             </div>
           </div>
@@ -911,11 +741,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import type {
   PolymarketGammaPagination,
   PolymarketGammaSearchEvent,
-  PolymarketGammaSearchMarket,
 } from "@/api/polymarket";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -982,16 +811,8 @@ type SearchEventCardItem = {
   id: string;
   title: string;
   subtitle: string;
-  chancePct: number;
-  chanceText: string;
   image: string;
   event: PolymarketGammaSearchEvent;
-};
-
-type MarketChanceInfo = {
-  pct: number;
-  text: string;
-  subtitle: string;
 };
 
 type MutableLegField =
@@ -1013,13 +834,7 @@ const props = defineProps<{
   compareToDate: string;
   compareMinDate: string;
   compareFrequency: string;
-  isCombinedCompareChartDisabled: boolean;
-  compareChartLoading: boolean;
-  insightsGenerateChartLabel: string;
-  compareChartDataLength: number;
-  isCompareNotebookActionDisabled: boolean;
   compareSaveLoading: boolean;
-  compareNotebookActionLabel: string;
   compareFilenameDialogOpen: boolean;
   compareFilenameInput: string;
   compareFilenameError: string | null;
@@ -1027,6 +842,8 @@ const props = defineProps<{
   compareChartError: string | null;
   compareSaveError: string | null;
   compareSaveSuccessPath: string;
+  singleMarketSaveError: string | null;
+  singleMarketSaveSuccessPath: string;
   legs: LegState[];
   activeLegIndex: number;
   activeLeg: LegState | null;
@@ -1034,7 +851,6 @@ const props = defineProps<{
   quickAddMarketUrl: string;
   canQuickAddMarket: boolean;
   canAddMoreInsightsMarkets: boolean;
-  showExportMarketList: boolean;
   marketSearchDialogOpen: boolean;
   marketSearchQuery: string;
   marketSearchLoading: boolean;
@@ -1042,13 +858,10 @@ const props = defineProps<{
   marketSearchError: string | null;
   marketSearchPagination: PolymarketGammaPagination | null;
   searchEventResults: SearchEventCardItem[];
-  selectedSearchEvent: PolymarketGammaSearchEvent | null;
   defaultCombinedCompareNotebookFilename: () => string;
-  handleViewCombinedCompareChart: () => void;
-  openCombinedCompareChartPreview: () => void;
-  handleDownloadCombinedCompareCsv: () => void;
-  handleSendToBetaRegression: () => void;
-  handleCombinedCompareNotebookAction: () => void;
+  handlePreviewCombinedData: () => void | Promise<void>;
+  handleDownloadCombinedCompareCsv: () => void | Promise<void>;
+  handleCombinedCompareNotebookAction: () => void | Promise<void>;
   handleCompareFilenamePrimaryAction: () => void;
   openMarketSearchDialog: () => void;
   closeMarketSearchDialog: () => void;
@@ -1065,8 +878,6 @@ const props = defineProps<{
   onMarketChange: (index: number) => void;
   onOutcomeChange: (index: number) => void;
   onInsightsOutcomeSelectionChange: (index: number) => void;
-  toggleExportMarketList: () => void;
-  activeLegSelectedMarketLabel: (leg: LegState) => string;
   exportSelectAllState: (leg: LegState) => CheckboxModelValue;
   toggleAllExportMarkets: (leg: LegState, value: CheckboxModelValue) => void;
   toggleExportMarket: (
@@ -1074,35 +885,17 @@ const props = defineProps<{
     marketId: string,
     value: CheckboxModelValue,
   ) => void;
-  handleViewChart: (leg: LegState) => void;
-  openLegChartPreview: (leg: LegState) => void;
+  handlePreviewChart: (leg: LegState) => void | Promise<void>;
   handleDownloadExport: (leg: LegState) => void;
+  handleSendSingleMarketToJupyterLite: (leg: LegState) => void | Promise<void>;
   runMarketSearch: () => void;
-  selectSearchEvent: (event: PolymarketGammaSearchEvent) => void;
   handleSearchImageError: (event: Event) => void;
-  isSearchMarketSelected: (
-    event: PolymarketGammaSearchEvent | null,
-    market: PolymarketGammaSearchMarket,
-  ) => boolean;
-  computeChance: (market: PolymarketGammaSearchMarket) => MarketChanceInfo;
-  toPolymarketMarketUrl: (market: PolymarketGammaSearchMarket) => string;
-  getSearchOutcomeSelection: (
-    event: PolymarketGammaSearchEvent | null,
-    market: PolymarketGammaSearchMarket,
-  ) => SearchOutcomeSelection;
-  setSearchOutcomeSelection: (
-    event: PolymarketGammaSearchEvent | null,
-    market: PolymarketGammaSearchMarket,
-    value: string,
-  ) => void;
-  handleRemoveSearchMarket: (
+  isSearchEventSelected: (event: PolymarketGammaSearchEvent) => boolean;
+  toPolymarketEventUrl: (event: PolymarketGammaSearchEvent) => string;
+  handleRemoveSearchEvent: (event: PolymarketGammaSearchEvent) => void;
+  handleAssignSearchEvent: (
     event: PolymarketGammaSearchEvent,
-    market: PolymarketGammaSearchMarket,
-  ) => void;
-  handleAssignSearchMarket: (
-    event: PolymarketGammaSearchEvent,
-    market: PolymarketGammaSearchMarket,
-  ) => void;
+  ) => void | Promise<void>;
   loadMoreMarketSearchResults: () => void;
 }>();
 
@@ -1150,6 +943,15 @@ const quickAddMarketUrlModel = computed({
 const marketSearchQueryModel = computed({
   get: () => props.marketSearchQuery,
   set: (value: string) => emit("update:marketSearchQuery", value),
+});
+
+const showOpenEventsOnly = ref(false);
+
+const filteredSearchEventResults = computed(() => {
+  if (!showOpenEventsOnly.value) return props.searchEventResults;
+  return props.searchEventResults.filter(
+    ({ event }) => event.closed !== true && event.active !== false,
+  );
 });
 
 function onMarketSearchDialogOpenUpdate(open: boolean) {

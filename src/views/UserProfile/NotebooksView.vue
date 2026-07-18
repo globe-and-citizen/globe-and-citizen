@@ -6,7 +6,7 @@
       >
         <div class="space-y-1">
           <h1 class="text-3xl font-bold tracking-tight text-gray-900">
-            Notebooks
+            JupyterLite
           </h1>
           <p class="text-sm text-gray-600">
             Runs fully in your browser via JupyterLite (WebAssembly). Best for
