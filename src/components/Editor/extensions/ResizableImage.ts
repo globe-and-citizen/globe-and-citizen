@@ -41,7 +41,9 @@ const widthAttribute: Attribute = {
 export const ResizableImage = Image.extend({
   addAttributes() {
     return {
-      ...this.parent?.(),
+      ...(
+        this as unknown as { parent: () => Record<string, unknown> }
+      ).parent?.(),
       width: widthAttribute,
     };
   },

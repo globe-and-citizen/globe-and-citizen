@@ -31,7 +31,7 @@
       <div class="flex items-center gap-2 mb-4">
         <img
           :src="
-            post.user?.profile_picture_url ||
+            post?.user?.profile_picture_url ||
             'https://cdn.pixabay.com/photo/2023/02/18/11/00/icon-7797704_960_720.png'
           "
           alt="user image"
@@ -48,7 +48,7 @@
         </p>
         <p class="font-medium text-black-60 font-lato text-xs ml-auto">
           {{
-            post.created_at
+            post?.created_at
               ? dayjs(post.created_at).format("M/D/YY")
               : "Unknown date"
           }}

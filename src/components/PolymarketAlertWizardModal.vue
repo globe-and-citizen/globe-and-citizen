@@ -2,7 +2,6 @@
   <div v-if="embedded" class="grid gap-6">
     <div class="grid gap-6 py-1">
       <!-- Step indicator -->
-      <!-- <div class="text-sm text-muted-foreground">Step {{ step }} of 3</div> -->
 
       <!-- Step 1: Configure -->
       <PolymarketAlertWizardConfigStep
@@ -149,7 +148,6 @@
 
       <div class="grid gap-6 py-4">
         <!-- Step indicator -->
-        <!-- <div class="text-sm text-muted-foreground">Step {{ step }} of 3</div> -->
 
         <!-- Step 1: Configure -->
         <PolymarketAlertWizardConfigStep
