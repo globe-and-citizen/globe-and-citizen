@@ -36,38 +36,30 @@
         :has-insights-chart-actions="hasInsightsChartActions"
         :insights-chart-panel-title="insightsChartPanelTitle"
         :compare-min-date="compareMinDate"
-        :is-combined-compare-chart-disabled="isCombinedCompareChartDisabled"
-        :compare-chart-loading="compareChartLoading"
-        :insights-generate-chart-label="insightsGenerateChartLabel"
-        :compare-chart-data-length="compareChartData.length"
-        :is-compare-notebook-action-disabled="isCompareNotebookActionDisabled"
         :compare-save-loading="compareSaveLoading"
-        :compare-notebook-action-label="compareNotebookActionLabel"
         :compare-filename-error="compareFilenameError"
         :compare-can-go-to-notebooks="compareCanGoToNotebooks"
         :compare-chart-error="compareChartError"
         :compare-save-error="compareSaveError"
         :compare-save-success-path="compareSaveSuccessPath"
+        :single-market-save-error="singleMarketSaveError"
+        :single-market-save-success-path="singleMarketSaveSuccessPath"
         :legs="legs"
         :active-leg-index="activeLegIndex"
         :active-leg="activeLeg"
         :active-leg-loading="activeLeg?.loading ?? false"
         :can-quick-add-market="canQuickAddMarket"
         :can-add-more-insights-markets="canAddMoreInsightsMarkets"
-        :show-export-market-list="showExportMarketList"
         :market-search-loading="marketSearchLoading"
         :market-search-loading-more="marketSearchLoadingMore"
         :market-search-error="marketSearchError"
         :market-search-pagination="marketSearchPagination"
         :search-event-results="searchEventResults"
-        :selected-search-event="selectedSearchEvent"
         :default-combined-compare-notebook-filename="
           defaultCombinedCompareNotebookFilename
         "
-        :handle-view-combined-compare-chart="handleViewCombinedCompareChart"
-        :open-combined-compare-chart-preview="openCombinedCompareChartPreview"
+        :handle-preview-combined-data="handlePreviewCombinedData"
         :handle-download-combined-compare-csv="handleDownloadCombinedCompareCsv"
-        :handle-send-to-beta-regression="handleSendToBetaRegression"
         :handle-combined-compare-notebook-action="
           handleCombinedCompareNotebookAction
         "
@@ -89,24 +81,20 @@
         :on-market-change="onMarketChange"
         :on-outcome-change="onOutcomeChange"
         :on-insights-outcome-selection-change="onInsightsOutcomeSelectionChange"
-        :toggle-export-market-list="toggleExportMarketList"
-        :active-leg-selected-market-label="activeLegSelectedMarketLabel"
         :export-select-all-state="exportSelectAllState"
         :toggle-all-export-markets="toggleAllExportMarkets"
         :toggle-export-market="toggleExportMarket"
-        :handle-view-chart="handleViewChart"
-        :open-leg-chart-preview="openLegChartPreview"
+        :handle-preview-chart="handlePreviewChart"
         :handle-download-export="handleDownloadExport"
+        :handle-send-single-market-to-jupyter-lite="
+          handleSendSingleMarketToJupyterLite
+        "
         :run-market-search="runMarketSearch"
-        :select-search-event="selectSearchEvent"
         :handle-search-image-error="handleSearchImageError"
-        :is-search-market-selected="isSearchMarketSelected"
-        :compute-chance="computeChance"
-        :to-polymarket-market-url="toPolymarketMarketUrl"
-        :get-search-outcome-selection="getSearchOutcomeSelection"
-        :set-search-outcome-selection="setSearchOutcomeSelection"
-        :handle-remove-search-market="handleRemoveSearchMarket"
-        :handle-assign-search-market="handleAssignSearchMarket"
+        :is-search-event-selected="isSearchEventSelected"
+        :to-polymarket-event-url="toPolymarketEventUrl"
+        :handle-remove-search-event="handleRemoveSearchEvent"
+        :handle-assign-search-event="handleAssignSearchEvent"
         :load-more-market-search-results="loadMoreMarketSearchResults"
       />
 
@@ -195,40 +183,32 @@
           :has-insights-chart-actions="hasInsightsChartActions"
           :insights-chart-panel-title="insightsChartPanelTitle"
           :compare-min-date="compareMinDate"
-          :is-combined-compare-chart-disabled="isCombinedCompareChartDisabled"
-          :compare-chart-loading="compareChartLoading"
-          :insights-generate-chart-label="insightsGenerateChartLabel"
-          :compare-chart-data-length="compareChartData.length"
-          :is-compare-notebook-action-disabled="isCompareNotebookActionDisabled"
           :compare-save-loading="compareSaveLoading"
-          :compare-notebook-action-label="compareNotebookActionLabel"
           :compare-filename-error="compareFilenameError"
           :compare-can-go-to-notebooks="compareCanGoToNotebooks"
           :compare-chart-error="compareChartError"
           :compare-save-error="compareSaveError"
           :compare-save-success-path="compareSaveSuccessPath"
+          :single-market-save-error="singleMarketSaveError"
+          :single-market-save-success-path="singleMarketSaveSuccessPath"
           :legs="legs"
           :active-leg-index="activeLegIndex"
           :active-leg="activeLeg"
           :active-leg-loading="activeLeg?.loading ?? false"
           :can-quick-add-market="canQuickAddMarket"
           :can-add-more-insights-markets="canAddMoreInsightsMarkets"
-          :show-export-market-list="showExportMarketList"
           :market-search-loading="marketSearchLoading"
           :market-search-loading-more="marketSearchLoadingMore"
           :market-search-error="marketSearchError"
           :market-search-pagination="marketSearchPagination"
           :search-event-results="searchEventResults"
-          :selected-search-event="selectedSearchEvent"
           :default-combined-compare-notebook-filename="
             defaultCombinedCompareNotebookFilename
           "
-          :handle-view-combined-compare-chart="handleViewCombinedCompareChart"
-          :open-combined-compare-chart-preview="openCombinedCompareChartPreview"
+          :handle-preview-combined-data="handlePreviewCombinedData"
           :handle-download-combined-compare-csv="
             handleDownloadCombinedCompareCsv
           "
-          :handle-send-to-beta-regression="handleSendToBetaRegression"
           :handle-combined-compare-notebook-action="
             handleCombinedCompareNotebookAction
           "
@@ -252,24 +232,20 @@
           :on-insights-outcome-selection-change="
             onInsightsOutcomeSelectionChange
           "
-          :toggle-export-market-list="toggleExportMarketList"
-          :active-leg-selected-market-label="activeLegSelectedMarketLabel"
           :export-select-all-state="exportSelectAllState"
           :toggle-all-export-markets="toggleAllExportMarkets"
           :toggle-export-market="toggleExportMarket"
-          :handle-view-chart="handleViewChart"
-          :open-leg-chart-preview="openLegChartPreview"
+          :handle-preview-chart="handlePreviewChart"
           :handle-download-export="handleDownloadExport"
+          :handle-send-single-market-to-jupyter-lite="
+            handleSendSingleMarketToJupyterLite
+          "
           :run-market-search="runMarketSearch"
-          :select-search-event="selectSearchEvent"
           :handle-search-image-error="handleSearchImageError"
-          :is-search-market-selected="isSearchMarketSelected"
-          :compute-chance="computeChance"
-          :to-polymarket-market-url="toPolymarketMarketUrl"
-          :get-search-outcome-selection="getSearchOutcomeSelection"
-          :set-search-outcome-selection="setSearchOutcomeSelection"
-          :handle-remove-search-market="handleRemoveSearchMarket"
-          :handle-assign-search-market="handleAssignSearchMarket"
+          :is-search-event-selected="isSearchEventSelected"
+          :to-polymarket-event-url="toPolymarketEventUrl"
+          :handle-remove-search-event="handleRemoveSearchEvent"
+          :handle-assign-search-event="handleAssignSearchEvent"
           :load-more-market-search-results="loadMoreMarketSearchResults"
         />
 
@@ -380,7 +356,6 @@ import {
   searchPolymarketPublic,
   type PolymarketGammaPagination,
   type PolymarketGammaSearchEvent,
-  type PolymarketGammaSearchMarket,
   updateAlert,
 } from "@/api/polymarket";
 import PriceScatterChart, {
@@ -390,8 +365,9 @@ import PriceScatterChart, {
 import PolymarketAlertWizardConfigStep from "@/components/PolymarketAlertWizardConfigStep.vue";
 import PolymarketAlertWizardSelectLegsStep from "@/components/PolymarketAlertWizardSelectLegsStep.vue";
 import PolymarketAlertWizardReviewStep from "@/components/PolymarketAlertWizardReviewStep.vue";
+import { buildAlignedPolymarketCsv } from "@/lib/polymarketCsv";
 import {
-  buildSafeJsonFilename,
+  buildSafeCsvFilename,
   queueTextFileForNotebooks,
   syncQueuedNotebookFilesToJupyterLite,
 } from "@/composables/jupyterLiteStorage";
@@ -418,8 +394,6 @@ type SearchEventCardItem = {
   id: string;
   title: string;
   subtitle: string;
-  chancePct: number;
-  chanceText: string;
   image: string;
   event: PolymarketGammaSearchEvent;
 };
@@ -561,9 +535,6 @@ const insightsChartPanelTitle = computed(() =>
     ? "Combined Comparison Chart"
     : "Chart and Notebook Export",
 );
-const insightsGenerateChartLabel = computed(() =>
-  isCompareInsightsMode.value ? "Generate Combined Chart" : "Generate Chart",
-);
 
 const compareFromDate = ref<string>("");
 const compareToDate = ref<string>("");
@@ -575,6 +546,9 @@ const compareChartError = ref<string | null>(null);
 const compareSaveLoading = ref<boolean>(false);
 const compareSaveError = ref<string | null>(null);
 const compareSaveSuccessPath = ref<string>("");
+const singleMarketSaveLoading = ref(false);
+const singleMarketSaveError = ref<string | null>(null);
+const singleMarketSaveSuccessPath = ref("");
 
 const compareFilenameDialogOpen = ref<boolean>(false);
 const compareFilenameInput = ref<string>("");
@@ -584,7 +558,6 @@ const chartPreviewTitle = ref("Generated Chart");
 const chartPreviewSeries = ref<ScatterSeries[]>([]);
 const activeLegIndex = ref<number>(0);
 const quickAddMarketUrl = ref<string>("");
-const showExportMarketList = ref(false);
 
 const marketSearchDialogOpen = ref(false);
 const marketSearchQuery = ref("");
@@ -594,31 +567,10 @@ const marketSearchError = ref<string | null>(null);
 const marketSearchPagination = ref<PolymarketGammaPagination | null>(null);
 const marketSearchCurrentPage = ref(1);
 const marketSearchEvents = ref<PolymarketGammaSearchEvent[]>([]);
-const selectedSearchEvent = ref<PolymarketGammaSearchEvent | null>(null);
-const searchOutcomeSelectionByMarketKey = ref<
-  Record<string, SearchOutcomeSelection>
->({});
-
-const isCombinedCompareChartDisabled = computed(() => {
-  if (compareChartLoading.value) return true;
-  if (!hasInsightsChartActions.value) return true;
-  // Disable if any selected event/market is still loading or hasn't loaded yet.
-  return legs.value.some(
-    (leg) => leg.loading || (leg.marketOptions?.length ?? 0) === 0,
-  );
-});
 
 const compareCanGoToNotebooks = computed(
   () => compareSaveSuccessPath.value.trim().length > 0,
 );
-const compareNotebookActionLabel = computed(() =>
-  compareCanGoToNotebooks.value ? "Go to notebooks" : "Send to Jupyter",
-);
-const isCompareNotebookActionDisabled = computed(() => {
-  if (compareSaveLoading.value) return true;
-  if (compareCanGoToNotebooks.value) return false;
-  return compareChartLoading.value || compareChartData.value.length === 0;
-});
 
 const activeLeg = computed(() => legs.value[activeLegIndex.value] ?? null);
 const canAddMoreInsightsMarkets = computed(
@@ -639,20 +591,11 @@ const searchEventResults = computed<SearchEventCardItem[]>(() => {
     seen.add(ev.id);
 
     const markets = ev.markets ?? [];
-    let best = { pct: 0, text: "—" };
-    for (const market of markets) {
-      const chance = computeChance(market);
-      if (chance.text !== "—" && chance.pct >= best.pct) {
-        best = { pct: chance.pct, text: chance.text };
-      }
-    }
 
     items.push({
       id: ev.id,
       title: (ev.title ?? "Untitled event").trim(),
       subtitle: `${markets.length} market${markets.length === 1 ? "" : "s"}`,
-      chancePct: best.text === "—" ? 0 : best.pct,
-      chanceText: best.text,
       image: (ev.icon || ev.image || DEFAULT_FALLBACK_IMAGE).toString().trim(),
       event: ev,
     });
@@ -690,38 +633,12 @@ function createEmptyLeg(): LegState {
   };
 }
 
-function normalizeSearchOutcomeSelection(
-  value: string,
-): SearchOutcomeSelection {
-  const v = (value ?? "").trim().toLowerCase();
-  if (v === "no") return "no";
-  if (v === "both") return "both";
-  return "yes";
-}
-
 function searchOutcomeSelectionLabel(
   selection: SearchOutcomeSelection,
 ): string {
   if (selection === "no") return "No";
   if (selection === "both") return "Yes and No";
   return "Yes";
-}
-
-function searchMarketKey(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-): string {
-  const eventId = String(event?.id ?? "").trim();
-  const marketId = String(market.id ?? "").trim();
-  return `${eventId}:${marketId}`;
-}
-
-function getSearchOutcomeSelection(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-): SearchOutcomeSelection {
-  const key = searchMarketKey(event, market);
-  return searchOutcomeSelectionByMarketKey.value[key] ?? "yes";
 }
 
 function normalizeCompareInputs(): CompareMarketInput[] {
@@ -738,72 +655,6 @@ function normalizeCompareInputs(): CompareMarketInput[] {
     .slice(0, MAX_COMPARE_INSIGHTS_MARKETS);
 }
 
-function safeJsonArray(value?: string) {
-  if (!value) return null;
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function computeChance(market: PolymarketGammaSearchMarket) {
-  const directPriceCandidates = [
-    market.lastTradePrice,
-    market.bestBid,
-    market.bestAsk,
-  ].filter(
-    (value) =>
-      Number.isFinite(value) &&
-      (value as number) >= 0 &&
-      (value as number) <= 1,
-  ) as number[];
-
-  const preferred =
-    directPriceCandidates.length > 0 ? directPriceCandidates[0] : null;
-
-  const pricesRaw = safeJsonArray(market.outcomePrices);
-  const outcomesRaw = safeJsonArray(market.outcomes);
-
-  const prices = (pricesRaw ?? [])
-    .map((value) => Number(value))
-    .filter((value) => Number.isFinite(value) && value >= 0 && value <= 1);
-
-  const outcomes = (outcomesRaw ?? []).filter(
-    (value) => typeof value === "string",
-  ) as string[];
-
-  const yesIdx = outcomes.findIndex(
-    (value) => value.trim().toLowerCase() === "yes",
-  );
-  const yesPrice =
-    yesIdx >= 0 && Number.isFinite(prices[yesIdx]) ? prices[yesIdx] : null;
-
-  const chosen =
-    preferred ??
-    yesPrice ??
-    (prices.length > 0
-      ? prices.reduce((max, value) => (value > max ? value : max), prices[0])
-      : null);
-
-  const groupTitle = (market.groupItemTitle ?? "").trim();
-
-  if (chosen === null) {
-    return { pct: 0, text: "—", subtitle: groupTitle };
-  }
-
-  const pct = Math.round(chosen * 100);
-  const subtitle = groupTitle || (yesIdx >= 0 ? "Yes" : "");
-  return { pct, text: `${pct}%`, subtitle };
-}
-
-function toPolymarketMarketUrl(market: PolymarketGammaSearchMarket) {
-  const slug = (market.slug ?? "").trim();
-  if (!slug) return "https://polymarket.com";
-  return `https://polymarket.com/market/${encodeURIComponent(slug)}`;
-}
-
 function toPolymarketEventUrl(event: PolymarketGammaSearchEvent | null) {
   const slug = (event?.slug ?? "").trim();
   if (!slug) return "https://polymarket.com";
@@ -813,6 +664,9 @@ function toPolymarketEventUrl(event: PolymarketGammaSearchEvent | null) {
 function legDisplayTitle(leg: LegState, index: number): string {
   const explicit = (leg.compareLabel ?? "").trim();
   if (explicit) return explicit;
+  if (isInsightsMode.value && (leg.title ?? "").trim()) {
+    return leg.title.trim();
+  }
   const market = leg.marketOptions.find(
     (item) => item.id === leg.selectedMarketId,
   );
@@ -836,20 +690,9 @@ function legStatusText(leg: LegState): string {
   return leg.selectedOutcomeName || "Ready";
 }
 
-function activeLegSelectedMarketLabel(leg: LegState): string {
-  const selected = leg.marketOptions.find((m) => m.id === leg.selectedMarketId);
-  if (selected?.title?.trim()) return selected.title.trim();
-  return "No market selected";
-}
-
-function toggleExportMarketList() {
-  showExportMarketList.value = !showExportMarketList.value;
-}
-
 function selectLeg(index: number) {
   if (index < 0 || index >= legs.value.length) return;
   activeLegIndex.value = index;
-  showExportMarketList.value = false;
   const leg = legs.value[index];
   if (!isInsightsMode.value && leg?.marketUrl) {
     quickAddMarketUrl.value = leg.marketUrl;
@@ -867,7 +710,6 @@ function appendInsightsLeg(url = ""): number {
   const nextIndex = legs.value.length;
   legs.value.push(createInsightsLeg(url));
   activeLegIndex.value = nextIndex;
-  showExportMarketList.value = false;
   return nextIndex;
 }
 
@@ -901,45 +743,19 @@ function setLegField(index: number, field: MutableLegField, value: string) {
   leg[field] = value;
 }
 
-async function assignSearchMarketToLeg(
-  event: PolymarketGammaSearchEvent,
-  market: PolymarketGammaSearchMarket,
-  outcomeSelection: SearchOutcomeSelection,
-) {
-  const marketId = String(market.id ?? "").trim();
-  if (!marketId) return false;
+async function handleAssignSearchEvent(event: PolymarketGammaSearchEvent) {
+  if (!isInsightsMode.value || !canAddMoreInsightsMarkets.value) return;
+  if (isSearchEventSelected(event)) return;
 
-  let targetIndex = activeLegIndex.value;
-  if (isInsightsMode.value) {
-    if (!canAddMoreInsightsMarkets.value) return false;
-    targetIndex = appendInsightsLeg();
-  } else if (!activeLeg.value) {
-    return false;
-  }
-
+  const eventUrl = toPolymarketEventUrl(event);
+  const targetIndex = appendInsightsLeg(eventUrl);
   const leg = legs.value[targetIndex];
-  if (!leg) return false;
+  if (!leg) return;
 
-  leg.marketUrl = toPolymarketEventUrl(event);
-  leg.selectedMarketId = marketId;
-  leg.insightsOutcomeSelection = outcomeSelection;
-  const marketKey = searchMarketKey(event, market);
-  searchOutcomeSelectionByMarketKey.value = {
-    ...searchOutcomeSelectionByMarketKey.value,
-    [marketKey]: outcomeSelection,
-  };
-  leg.exportSelectedMarkets = [marketId];
-  leg.compareLabel = `${
-    (market.groupItemTitle ?? "").trim() || (market.question ?? "Market").trim()
-  } — ${(event.title ?? "Event").trim()} [${searchOutcomeSelectionLabel(
-    outcomeSelection,
-  )}]`;
-  activeLegIndex.value = targetIndex;
-  quickAddMarketUrl.value = leg.marketUrl;
+  leg.compareLabel = (event.title ?? "Event").trim() || "Event";
+  quickAddMarketUrl.value = eventUrl;
 
   await loadLeg(targetIndex);
-  setSearchOutcomeSelection(event, market, outcomeSelection);
-  return true;
 }
 
 async function handleQuickAddMarket() {
@@ -969,32 +785,18 @@ function closeMarketSearchDialog() {
   marketSearchDialogOpen.value = false;
 }
 
-function findInsightsLegIndexForMarket(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-) {
+function findInsightsLegIndexForEvent(event: PolymarketGammaSearchEvent) {
   if (!isInsightsMode.value) return -1;
-  const marketId = String(market.id ?? "").trim();
-  if (!marketId) return -1;
   const eventUrl = toPolymarketEventUrl(event);
-  return legs.value.findIndex(
-    (leg) =>
-      leg.selectedMarketId === marketId && leg.marketUrl.trim() === eventUrl,
-  );
+  return legs.value.findIndex((leg) => leg.marketUrl.trim() === eventUrl);
 }
 
-function isSearchMarketSelected(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-) {
-  return findInsightsLegIndexForMarket(event, market) !== -1;
+function isSearchEventSelected(event: PolymarketGammaSearchEvent) {
+  return findInsightsLegIndexForEvent(event) !== -1;
 }
 
-function handleRemoveSearchMarket(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-) {
-  const legIndex = findInsightsLegIndexForMarket(event, market);
+function handleRemoveSearchEvent(event: PolymarketGammaSearchEvent) {
+  const legIndex = findInsightsLegIndexForEvent(event);
   if (legIndex === -1) return;
   removeLeg(legIndex);
 }
@@ -1026,61 +828,6 @@ function openCombinedCompareChartPreview() {
   );
 }
 
-async function handleAssignSearchMarket(
-  event: PolymarketGammaSearchEvent,
-  market: PolymarketGammaSearchMarket,
-) {
-  const outcomeSelection = getSearchOutcomeSelection(event, market);
-  await assignSearchMarketToLeg(event, market, outcomeSelection);
-}
-
-function setSearchOutcomeSelection(
-  event: PolymarketGammaSearchEvent | null,
-  market: PolymarketGammaSearchMarket,
-  value: string,
-) {
-  const selection = normalizeSearchOutcomeSelection(value);
-  const key = searchMarketKey(event, market);
-  searchOutcomeSelectionByMarketKey.value = {
-    ...searchOutcomeSelectionByMarketKey.value,
-    [key]: selection,
-  };
-
-  const legIndex = findInsightsLegIndexForMarket(event, market);
-  if (legIndex === -1) return;
-  const leg = legs.value[legIndex];
-  if (!leg) return;
-
-  leg.insightsOutcomeSelection = selection;
-
-  if (!leg.selectedMarketId || leg.marketOptions.length === 0) return;
-  const selectedMarket = leg.marketOptions.find(
-    (item) => item.id === leg.selectedMarketId,
-  );
-  if (!selectedMarket) return;
-
-  const yesOutcome = selectedMarket.outcomes.find(
-    (item) => normalizeOutcomeNameForMatch(item.name) === "yes",
-  );
-  const noOutcome = selectedMarket.outcomes.find(
-    (item) => normalizeOutcomeNameForMatch(item.name) === "no",
-  );
-
-  const preferred =
-    selection === "no"
-      ? (noOutcome ?? yesOutcome ?? selectedMarket.outcomes[0])
-      : (yesOutcome ?? noOutcome ?? selectedMarket.outcomes[0]);
-
-  if (preferred) {
-    leg.selectedOutcomeId = preferred.id;
-    leg.selectedOutcomeName = preferred.name;
-  }
-}
-
-function selectSearchEvent(event: PolymarketGammaSearchEvent) {
-  selectedSearchEvent.value = event;
-}
-
 function mergeSearchEvents(
   existing: PolymarketGammaSearchEvent[],
   incoming: PolymarketGammaSearchEvent[],
@@ -1101,7 +848,6 @@ async function fetchMarketSearchPage(opts: { page: number; append: boolean }) {
     marketSearchEvents.value = [];
     marketSearchPagination.value = null;
     marketSearchCurrentPage.value = 1;
-    selectedSearchEvent.value = null;
     marketSearchError.value = null;
     return;
   }
@@ -1126,17 +872,6 @@ async function fetchMarketSearchPage(opts: { page: number; append: boolean }) {
       : nextEvents;
     marketSearchPagination.value = response.pagination ?? null;
     marketSearchCurrentPage.value = opts.page;
-
-    if (marketSearchEvents.value.length === 0) {
-      selectedSearchEvent.value = null;
-    } else if (
-      !selectedSearchEvent.value ||
-      !marketSearchEvents.value.some(
-        (event) => event.id === selectedSearchEvent.value?.id,
-      )
-    ) {
-      selectedSearchEvent.value = marketSearchEvents.value[0] ?? null;
-    }
   } catch (err) {
     console.error("Failed to search Polymarket markets:", err);
     marketSearchError.value = "Could not load results. Try again.";
@@ -1144,7 +879,6 @@ async function fetchMarketSearchPage(opts: { page: number; append: boolean }) {
       marketSearchEvents.value = [];
       marketSearchPagination.value = null;
       marketSearchCurrentPage.value = 1;
-      selectedSearchEvent.value = null;
     }
   } finally {
     marketSearchLoading.value = false;
@@ -1289,16 +1023,84 @@ watch(
   { immediate: true },
 );
 
-function buildCompareSeriesName(leg: LegState): string {
-  const explicit = (leg.compareLabel ?? "").trim();
-  if (explicit) return explicit;
+type MarketColumnInput = {
+  eventName: string;
+  marketId: string;
+  marketName: string;
+  outcomeId: string;
+  outcomeName: string;
+};
 
-  const market = leg.marketOptions.find((m) => m.id === leg.selectedMarketId);
-  const marketTitle = (market?.title ?? "").trim();
-  const eventTitle = (leg.title ?? "").trim();
+function assignMarketColumnTitles<T extends MarketColumnInput>(
+  items: T[],
+): Array<T & { columnTitle: string }> {
+  const baseTitles = items.map(
+    (item) => `${item.eventName} - ${item.marketName}`,
+  );
+  const baseTitleCounts = new Map<string, number>();
+  for (const title of baseTitles) {
+    baseTitleCounts.set(title, (baseTitleCounts.get(title) ?? 0) + 1);
+  }
 
-  if (marketTitle && eventTitle) return `${marketTitle} — ${eventTitle}`;
-  return marketTitle || eventTitle || "Market";
+  const candidates = items.map((item, index) => {
+    const baseTitle =
+      baseTitles[index] ?? `${item.eventName} - ${item.marketName}`;
+    return baseTitleCounts.get(baseTitle) === 1
+      ? baseTitle
+      : `${baseTitle} (${item.outcomeName})`;
+  });
+  const candidateCounts = new Map<string, number>();
+  for (const candidate of candidates) {
+    candidateCounts.set(candidate, (candidateCounts.get(candidate) ?? 0) + 1);
+  }
+
+  const preliminaryTitles = items.map((item, index) => {
+    const candidate =
+      candidates[index] ?? `${item.eventName} - ${item.marketName}`;
+    return {
+      item,
+      title:
+        candidateCounts.get(candidate) === 1
+          ? candidate
+          : `${candidate} [${item.marketId}]`,
+    };
+  });
+  const preliminaryCounts = new Map<string, number>();
+  for (const entry of preliminaryTitles) {
+    preliminaryCounts.set(
+      entry.title,
+      (preliminaryCounts.get(entry.title) ?? 0) + 1,
+    );
+  }
+
+  const seenTitles = new Map<string, number>();
+  return preliminaryTitles.map(({ item, title }) => {
+    const occurrence = (seenTitles.get(title) ?? 0) + 1;
+    seenTitles.set(title, occurrence);
+    const columnTitle =
+      preliminaryCounts.get(title) === 1 ? title : `${title} #${occurrence}`;
+    return { ...item, columnTitle };
+  });
+}
+
+function eventNameForLeg(leg: LegState): string {
+  return (
+    (leg.compareLabel ?? "").trim() || leg.title.trim() || "Polymarket Event"
+  );
+}
+
+function createMarketColumnInput(
+  leg: LegState,
+  market: MarketOption,
+  outcome: OutcomeOption,
+): MarketColumnInput {
+  return {
+    eventName: eventNameForLeg(leg),
+    marketId: market.id,
+    marketName: market.title.trim() || market.id,
+    outcomeId: outcome.id,
+    outcomeName: outcome.name,
+  };
 }
 
 function findOutcomeByName(
@@ -1362,15 +1164,13 @@ function selectOutcomesForSelection(
   return [outcomes[0]];
 }
 
-async function handleViewCombinedCompareChart() {
-  if (compareChartLoading.value) return;
-
+async function generateCombinedCompareData(): Promise<boolean> {
   compareChartError.value = null;
   compareChartData.value = [];
   compareSaveError.value = null;
   compareSaveSuccessPath.value = "";
 
-  if (!hasInsightsChartActions.value) return;
+  if (!hasInsightsChartActions.value) return false;
 
   const fromTs = compareFromDate.value
     ? unixSecondsFromDateInput(compareFromDate.value, false)
@@ -1381,12 +1181,12 @@ async function handleViewCombinedCompareChart() {
 
   if (toTs !== null && fromTs && toTs < fromTs) {
     compareChartError.value = "To date must be after From date.";
-    return;
+    return false;
   }
 
   const frequency = normalizeExportFrequency(compareFrequency.value);
 
-  const prepared = legs.value
+  const preparedInputs = legs.value
     .flatMap((leg) => {
       const market = leg.marketOptions.find(
         (m) => m.id === leg.selectedMarketId,
@@ -1401,19 +1201,16 @@ async function handleViewCombinedCompareChart() {
         true,
       );
 
-      return selectedOutcomes.map((outcome) => ({
-        seriesName: `${buildCompareSeriesName(leg)} (${outcome.name})`,
-        outcomeId: outcome.id,
-      }));
+      return selectedOutcomes.map((outcome) =>
+        createMarketColumnInput(leg, market, outcome),
+      );
     })
-    .filter((item) => Boolean(item.outcomeId)) as Array<{
-    seriesName: string;
-    outcomeId: string;
-  }>;
+    .filter((item) => Boolean(item.outcomeId));
+  const prepared = assignMarketColumnTitles(preparedInputs);
 
   if (prepared.length === 0) {
     compareChartError.value = "Load markets first (or check selections).";
-    return;
+    return false;
   }
 
   compareChartLoading.value = true;
@@ -1438,6 +1235,7 @@ async function handleViewCombinedCompareChart() {
 
       if (r.status === "rejected") {
         failedCount += 1;
+        series.push({ name: meta.columnTitle, data: [] });
         continue;
       }
 
@@ -1452,7 +1250,7 @@ async function handleViewCombinedCompareChart() {
       }));
 
       series.push({
-        name: meta.seriesName,
+        name: meta.columnTitle,
         data,
       });
     }
@@ -1462,109 +1260,50 @@ async function handleViewCombinedCompareChart() {
         failedCount > 0
           ? "No data returned (some requests failed)."
           : "No data returned for the selected range.";
-      return;
+      return false;
     }
 
     compareChartData.value = series;
     if (failedCount > 0) {
       compareChartError.value = `Chart displayed, but ${failedCount} request(s) failed.`;
     }
+    return true;
   } catch (err) {
     console.error("Failed to load combined compare chart:", err);
     compareChartError.value =
       err instanceof Error ? err.message : "Failed to load chart data.";
+    return false;
   } finally {
     compareChartLoading.value = false;
   }
 }
 
-function buildCombinedCompareExportJson(): string {
-  const payload = {
-    type: isCompareInsightsMode.value
-      ? "polymarket_combined_compare"
-      : "polymarket_market_chart",
-    generated_at: new Date().toISOString(),
-    range: {
-      from_date: compareFromDate.value || null,
-      to_date: compareToDate.value || null,
-      frequency: compareFrequency.value || "daily",
-    },
-    // Store in a notebook-friendly shape.
-    // Each series becomes `{ name, points: [{t,p}] }`.
-    series: compareChartData.value.map((s) => ({
-      name: s.name,
-      points: (s.data ?? []).map((pt) => ({
-        t: pt.timestamp,
-        p: pt.price,
-      })),
-    })),
-  };
+let combinedDataGenerationPromise: Promise<boolean> | null = null;
 
-  return JSON.stringify(payload, null, 2);
-}
+function ensureCombinedCompareData(): Promise<boolean> {
+  if (combinedDataGenerationPromise) return combinedDataGenerationPromise;
 
-function buildCombinedCompareCsv(series: ScatterSeries[]): string {
-  const timestamps = new Set<number>();
-  const valuesBySeries = new Map<string, Map<number, number>>();
-
-  for (const s of series) {
-    const name = (s.name ?? "").trim() || "Series";
-    const map = new Map<number, number>();
-    for (const point of s.data ?? []) {
-      const ts = Number(point.timestamp);
-      const price = Number(point.price);
-      if (!Number.isFinite(ts) || !Number.isFinite(price)) continue;
-      timestamps.add(ts);
-      map.set(ts, price);
+  const generation = generateCombinedCompareData();
+  combinedDataGenerationPromise = generation;
+  void generation.finally(() => {
+    if (combinedDataGenerationPromise === generation) {
+      combinedDataGenerationPromise = null;
     }
-    valuesBySeries.set(name, map);
-  }
-
-  const sortedTimestamps = Array.from(timestamps).sort((a, b) => a - b);
-  const seriesNames = Array.from(valuesBySeries.keys());
-
-  const header = [
-    csvQuote("Date (UTC)"),
-    csvQuote("Timestamp (UTC)"),
-    ...seriesNames.map((name) => csvQuote(name)),
-  ].join(",");
-
-  const rows: string[] = [];
-  for (const ts of sortedTimestamps) {
-    const dateStr = new Date(ts * 1000)
-      .toISOString()
-      .replace("T", " ")
-      .slice(0, 16);
-    const mmddyyyy = `${dateStr.slice(5, 7)}-${dateStr.slice(
-      8,
-      10,
-    )}-${dateStr.slice(0, 4)} ${dateStr.slice(11, 16)}`;
-
-    const values = seriesNames.map((name) => {
-      const v = valuesBySeries.get(name)?.get(ts);
-      return v === undefined ? "" : String(v);
-    });
-
-    rows.push(
-      [csvQuote(mmddyyyy), csvQuote(String(ts)), ...values.map(csvQuote)].join(
-        ",",
-      ),
-    );
-  }
-
-  return [header, ...rows].join("\n");
+  });
+  return generation;
 }
 
-function handleDownloadCombinedCompareCsv() {
+async function handlePreviewCombinedData() {
+  if (!(await ensureCombinedCompareData())) return;
+  openCombinedCompareChartPreview();
+}
+
+async function handleDownloadCombinedCompareCsv() {
   compareSaveError.value = null;
 
-  if (compareChartLoading.value) return;
-  if (compareChartData.value.length === 0) {
-    compareSaveError.value = `Generate the ${isCompareInsightsMode.value ? "combined " : ""}chart first.`;
-    return;
-  }
+  if (!(await ensureCombinedCompareData())) return;
 
-  const csvText = buildCombinedCompareCsv(compareChartData.value);
+  const csvText = buildAlignedPolymarketCsv(compareChartData.value);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const prefix = isCompareInsightsMode.value
     ? "polymarket-combined-compare"
@@ -1572,37 +1311,15 @@ function handleDownloadCombinedCompareCsv() {
   downloadCsv(`${prefix}_${stamp}.csv`, csvText);
 }
 
-function handleSendToBetaRegression() {
-  compareSaveError.value = null;
-
-  if (compareChartLoading.value) return;
-  if (compareChartData.value.length < 2) {
-    compareSaveError.value =
-      "Generate a chart with at least 2 markets to use Beta Regression.";
-    return;
-  }
-
-  const csvText = buildCombinedCompareCsv(compareChartData.value);
-  const seriesNames = compareChartData.value.map((s) => s.name);
-  void router.push({
-    path: "/beta-regression",
-    state: {
-      csvText,
-      xColumn: seriesNames[0],
-      yColumn: seriesNames[1],
-    },
-  });
-}
-
 function defaultCombinedCompareNotebookFilename(): string {
   const prefix = isCompareInsightsMode.value
     ? "polymarket-compare"
     : "polymarket-chart";
   const base = `${prefix}-${new Date().toISOString().slice(0, 10)}`;
-  return buildSafeJsonFilename(base);
+  return buildSafeCsvFilename(base);
 }
 
-function normalizeJsonFilename(
+function normalizeCsvFilename(
   input: string,
   fallbackFilename: string,
 ): string {
@@ -1611,9 +1328,9 @@ function normalizeJsonFilename(
 
   // Disallow directories; keep only the last path segment.
   const justName = candidate.split(/[/\\]/).pop() ?? "";
-  const noExt = justName.replace(/\.json$/i, "").trim();
+  const noExt = justName.replace(/\.csv$/i, "").trim();
   if (!noExt) throw new Error("Filename cannot be empty.");
-  return buildSafeJsonFilename(noExt);
+  return buildSafeCsvFilename(noExt);
 }
 
 async function performSendCombinedCompareChartToNotebooks(
@@ -1625,14 +1342,14 @@ async function performSendCombinedCompareChartToNotebooks(
   compareSaveSuccessPath.value = "";
 
   if (compareChartData.value.length === 0) {
-    compareSaveError.value = `Generate the ${isCompareInsightsMode.value ? "combined " : ""}chart first.`;
+    compareSaveError.value = "Combined data is unavailable. Try again.";
     return;
   }
 
   const fallback = defaultCombinedCompareNotebookFilename();
   let filename: string;
   try {
-    filename = normalizeJsonFilename(filenameInput, fallback);
+    filename = normalizeCsvFilename(filenameInput, fallback);
   } catch (err) {
     compareFilenameError.value =
       err instanceof Error ? err.message : "Invalid filename.";
@@ -1645,8 +1362,8 @@ async function performSendCombinedCompareChartToNotebooks(
 
     await queueTextFileForNotebooks({
       path,
-      content: buildCombinedCompareExportJson(),
-      mimetype: "application/json",
+      content: buildAlignedPolymarketCsv(compareChartData.value),
+      mimetype: "text/csv",
     });
 
     // Best-effort: if JupyterLite already initialized, sync immediately.
@@ -1671,7 +1388,7 @@ function handleSendCombinedCompareChartToNotebooks() {
   compareSaveSuccessPath.value = "";
 
   if (compareChartData.value.length === 0) {
-    compareSaveError.value = `Generate the ${isCompareInsightsMode.value ? "combined " : ""}chart first.`;
+    compareSaveError.value = "Combined data is unavailable. Try again.";
     return;
   }
 
@@ -1681,14 +1398,13 @@ function handleSendCombinedCompareChartToNotebooks() {
 }
 
 function goToNotebooks() {
-  void router.push("/notebooks");
+  void router.push("/profile/jupyterlite").catch((err) => {
+    console.error("Failed to navigate to JupyterLite:", err);
+  });
 }
 
-function handleCombinedCompareNotebookAction() {
-  if (compareCanGoToNotebooks.value) {
-    goToNotebooks();
-    return;
-  }
+async function handleCombinedCompareNotebookAction() {
+  if (!(await ensureCombinedCompareData())) return;
   handleSendCombinedCompareChartToNotebooks();
 }
 
@@ -1768,8 +1484,6 @@ watch(
     chartPreviewDialogOpen.value = false;
     chartPreviewTitle.value = "Generated Chart";
     chartPreviewSeries.value = [];
-    showExportMarketList.value = false;
-
     const resetToDefaults = () => {
       step.value = 1;
       legsCount.value = 1;
@@ -1783,8 +1497,6 @@ watch(
       marketSearchPagination.value = null;
       marketSearchCurrentPage.value = 1;
       marketSearchEvents.value = [];
-      selectedSearchEvent.value = null;
-      searchOutcomeSelectionByMarketKey.value = {};
       operator.value = "lt";
       singleOperator.value = "gte";
       threshold.value = 0.95;
@@ -2230,6 +1942,9 @@ async function loadLeg(index: number) {
     // Constrain chart/export date pickers so users can't select earlier than the event start.
     const minDate = extractEventStartDateMin(data);
     leg.minDate = minDate;
+    if (!leg.exportToDate) {
+      leg.exportToDate = formatIsoTodayUtc();
+    }
     if (minDate) {
       if (!leg.exportFromDate || isBeforeIsoDate(leg.exportFromDate, minDate)) {
         leg.exportFromDate = minDate;
@@ -2557,10 +2272,6 @@ function unixSecondsFromDateInput(dateStr: string, endOfDay: boolean): number {
   return Math.floor(ms / 1000);
 }
 
-function csvQuote(value: unknown): string {
-  return `"${String(value ?? "").replace(/"/g, '""')}"`;
-}
-
 function downloadCsv(filename: string, csvText: string) {
   const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
@@ -2705,16 +2416,9 @@ async function handleDownloadExport(leg: LegState) {
     const desiredOutcomeName = leg.selectedOutcomeName;
     const desiredOutcomeIdForActiveMarket = leg.selectedOutcomeId;
 
-    const requests: Array<{
-      marketId: string;
-      marketTitle: string;
-      outcomeId: string;
-      outcomeName: string;
-      columnTitle: string;
-    }> = [];
+    const requestInputs: MarketColumnInput[] = [];
 
     let skippedCount = 0;
-    const titleCount = new Map<string, number>();
 
     for (const marketId of marketIds) {
       const market = leg.marketOptions.find((m) => m.id === marketId);
@@ -2738,18 +2442,11 @@ async function handleDownloadExport(leg: LegState) {
       }
 
       for (const outcome of outcomes) {
-        const baseTitle = `${market.title ?? marketId} (${outcome.name})`;
-        const count = (titleCount.get(baseTitle) ?? 0) + 1;
-        titleCount.set(baseTitle, count);
-        requests.push({
-          marketId,
-          marketTitle: market.title ?? marketId,
-          outcomeId: outcome.id,
-          outcomeName: outcome.name,
-          columnTitle: count === 1 ? baseTitle : `${baseTitle} [${marketId}]`,
-        });
+        requestInputs.push(createMarketColumnInput(leg, market, outcome));
       }
     }
+
+    const requests = assignMarketColumnTitles(requestInputs);
 
     const results = await Promise.allSettled(
       requests.map(async (req) => {
@@ -2765,23 +2462,23 @@ async function handleDownloadExport(leg: LegState) {
       }),
     );
 
-    // Build Polymarket-style pivot export:
-    // Date (UTC), Timestamp (UTC), <Market Title 1>, <Market Title 2>, ...
-    const desiredTitles = requests.map((req) => req.columnTitle);
-
-    const seriesByTitle = new Map<string, Map<number, number>>();
-    const timestamps = new Set<number>();
+    const alignedSeries: ScatterSeries[] = requests.map((request) => ({
+      name: request.columnTitle,
+      data: [],
+    }));
 
     let failedCount = 0;
     // `skippedCount` = markets where no suitable outcomes were found.
 
-    for (const r of results) {
+    for (let index = 0; index < results.length; index++) {
+      const r = results[index];
+      const targetSeries = alignedSeries[index];
+      if (!r || !targetSeries) continue;
+
       if (r.status === "rejected") {
         failedCount += 1;
         continue;
       }
-
-      const { columnTitle } = r.value;
 
       let history = Array.isArray(r.value.history) ? r.value.history : [];
       if (fromTs) {
@@ -2793,20 +2490,13 @@ async function handleDownloadExport(leg: LegState) {
 
       history = downsampleHistory(history, frequency);
 
-      let series = seriesByTitle.get(columnTitle);
-      if (!series) {
-        series = new Map<number, number>();
-        seriesByTitle.set(columnTitle, series);
-      }
-
-      for (const pt of history) {
-        // pt.t is the labeled bucket timestamp in seconds (UTC).
-        timestamps.add(pt.t);
-        series.set(pt.t, pt.p);
-      }
+      targetSeries.data = history.map((point) => ({
+        timestamp: point.t,
+        price: point.p,
+      }));
     }
 
-    if (timestamps.size === 0) {
+    if (alignedSeries.every((series) => series.data.length === 0)) {
       leg.exportError =
         failedCount > 0
           ? "No data returned (some requests failed)."
@@ -2814,41 +2504,7 @@ async function handleDownloadExport(leg: LegState) {
       return;
     }
 
-    const sortedTimestamps = Array.from(timestamps).sort((a, b) => a - b);
-
-    const header = [
-      csvQuote("Date (UTC)"),
-      csvQuote("Timestamp (UTC)"),
-      ...desiredTitles.map((t) => csvQuote(t)),
-    ].join(",");
-
-    const rows: string[] = [];
-    for (const ts of sortedTimestamps) {
-      const dateStr = new Date(ts * 1000)
-        .toISOString()
-        .replace("T", " ")
-        .slice(0, 16);
-      // Convert YYYY-MM-DD HH:mm -> MM-DD-YYYY HH:mm
-      const mmddyyyy = `${dateStr.slice(5, 7)}-${dateStr.slice(
-        8,
-        10,
-      )}-${dateStr.slice(0, 4)} ${dateStr.slice(11, 16)}`;
-
-      const values = desiredTitles.map((title) => {
-        const v = seriesByTitle.get(title)?.get(ts);
-        return v === undefined ? "" : String(v);
-      });
-
-      rows.push(
-        [
-          csvQuote(mmddyyyy),
-          csvQuote(String(ts)),
-          ...values.map(csvQuote),
-        ].join(","),
-      );
-    }
-
-    const csvText = [header, ...rows].join("\n");
+    const csvText = buildAlignedPolymarketCsv(alignedSeries);
 
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     downloadCsv(`polymarket-price-history_${stamp}.csv`, csvText);
@@ -2873,15 +2529,17 @@ async function handleDownloadExport(leg: LegState) {
   }
 }
 
-async function handleViewChart(leg: LegState) {
-  if (leg.chartLoading) return;
-
+async function generateSingleMarketChartData(
+  leg: LegState,
+): Promise<boolean> {
   leg.chartError = null;
   leg.chartData = [];
+  singleMarketSaveError.value = null;
+  singleMarketSaveSuccessPath.value = "";
 
   if (leg.marketOptions.length === 0) {
     leg.chartError = "Load a Polymarket URL first to get markets.";
-    return;
+    return false;
   }
 
   const marketIds =
@@ -2891,7 +2549,7 @@ async function handleViewChart(leg: LegState) {
 
   if (marketIds.length === 0) {
     leg.chartError = "Select at least one market (or Select All).";
-    return;
+    return false;
   }
 
   const fromTs = leg.exportFromDate
@@ -2903,7 +2561,7 @@ async function handleViewChart(leg: LegState) {
 
   if (toTs !== null && fromTs && toTs < fromTs) {
     leg.chartError = "To date must be after From date.";
-    return;
+    return false;
   }
 
   const frequency = normalizeExportFrequency(leg.exportFrequency);
@@ -2913,16 +2571,9 @@ async function handleViewChart(leg: LegState) {
     const desiredOutcomeName = leg.selectedOutcomeName;
     const desiredOutcomeIdForActiveMarket = leg.selectedOutcomeId;
 
-    const requests: Array<{
-      marketId: string;
-      marketTitle: string;
-      outcomeId: string;
-      outcomeName: string;
-      seriesName: string;
-    }> = [];
+    const requestInputs: MarketColumnInput[] = [];
 
     let skippedCount = 0;
-    const titleCount = new Map<string, number>();
 
     for (const marketId of marketIds) {
       const market = leg.marketOptions.find((m) => m.id === marketId);
@@ -2945,18 +2596,11 @@ async function handleViewChart(leg: LegState) {
       }
 
       for (const outcome of outcomes) {
-        const baseTitle = `${market.title ?? marketId} (${outcome.name})`;
-        const count = (titleCount.get(baseTitle) ?? 0) + 1;
-        titleCount.set(baseTitle, count);
-        requests.push({
-          marketId,
-          marketTitle: market.title ?? marketId,
-          outcomeId: outcome.id,
-          outcomeName: outcome.name,
-          seriesName: count === 1 ? baseTitle : `${baseTitle} [${marketId}]`,
-        });
+        requestInputs.push(createMarketColumnInput(leg, market, outcome));
       }
     }
+
+    const requests = assignMarketColumnTitles(requestInputs);
 
     const results = await Promise.allSettled(
       requests.map(async (req) => {
@@ -2971,16 +2615,21 @@ async function handleViewChart(leg: LegState) {
       }),
     );
 
-    const chartSeries: ScatterSeries[] = [];
+    const chartSeries: ScatterSeries[] = requests.map((request) => ({
+      name: request.columnTitle,
+      data: [],
+    }));
     let failedCount = 0;
 
-    for (const r of results) {
+    for (let index = 0; index < results.length; index++) {
+      const r = results[index];
+      const targetSeries = chartSeries[index];
+      if (!r || !targetSeries) continue;
+
       if (r.status === "rejected") {
         failedCount += 1;
         continue;
       }
-
-      const { seriesName } = r.value;
 
       let history = Array.isArray(r.value.history) ? r.value.history : [];
       if (fromTs) {
@@ -2992,15 +2641,10 @@ async function handleViewChart(leg: LegState) {
 
       history = downsampleHistory(history, frequency);
 
-      const data: PriceDataPoint[] = history.map((pt) => ({
+      targetSeries.data = history.map((pt) => ({
         timestamp: pt.t,
         price: pt.p,
       }));
-
-      chartSeries.push({
-        name: seriesName,
-        data,
-      });
     }
 
     if (
@@ -3011,7 +2655,7 @@ async function handleViewChart(leg: LegState) {
         failedCount > 0
           ? "No data returned (some requests failed)."
           : "No data returned for the selected range.";
-      return;
+      return false;
     }
 
     leg.chartData = chartSeries;
@@ -3027,12 +2671,83 @@ async function handleViewChart(leg: LegState) {
         );
       leg.chartError = `Chart displayed, but ${parts.join("; ")}.`;
     }
+    return true;
   } catch (err) {
     console.error("Failed to load chart data:", err);
     leg.chartError =
       err instanceof Error ? err.message : "Failed to load chart data.";
+    return false;
   } finally {
     leg.chartLoading = false;
+  }
+}
+
+const singleMarketGenerationPromises = new WeakMap<
+  LegState,
+  Promise<boolean>
+>();
+
+function ensureSingleMarketChartData(leg: LegState): Promise<boolean> {
+  const existing = singleMarketGenerationPromises.get(leg);
+  if (existing) return existing;
+
+  const generation = generateSingleMarketChartData(leg);
+  singleMarketGenerationPromises.set(leg, generation);
+  void generation.finally(() => {
+    if (singleMarketGenerationPromises.get(leg) === generation) {
+      singleMarketGenerationPromises.delete(leg);
+    }
+  });
+  return generation;
+}
+
+async function handlePreviewChart(leg: LegState) {
+  if (!(await ensureSingleMarketChartData(leg))) return;
+  openLegChartPreview(leg);
+}
+
+function defaultSingleMarketNotebookFilename(leg: LegState): string {
+  const selectedMarketTitle = leg.marketOptions.find(
+    (market) => market.id === leg.selectedMarketId,
+  )?.title;
+  const label = selectedMarketTitle || leg.title || "polymarket-market";
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+  return buildSafeCsvFilename(`${label}-${stamp}`);
+}
+
+async function handleSendSingleMarketToJupyterLite(leg: LegState) {
+  if (singleMarketSaveLoading.value) return;
+
+  singleMarketSaveError.value = null;
+  singleMarketSaveSuccessPath.value = "";
+
+  if (!(await ensureSingleMarketChartData(leg))) {
+    singleMarketSaveError.value =
+      leg.chartError || "Single-market data is unavailable. Try again.";
+    return;
+  }
+
+  singleMarketSaveLoading.value = true;
+  try {
+    const filename = defaultSingleMarketNotebookFilename(leg);
+    const path = `data/${filename}`;
+
+    await queueTextFileForNotebooks({
+      path,
+      content: buildAlignedPolymarketCsv(leg.chartData),
+      mimetype: "text/csv",
+    });
+
+    const sync = await syncQueuedNotebookFilesToJupyterLite();
+    singleMarketSaveSuccessPath.value = sync.skippedBecauseNotInitialized
+      ? `${path} (queued)`
+      : path;
+  } catch (err) {
+    console.error("Failed to save single-market data to JupyterLite:", err);
+    singleMarketSaveError.value =
+      err instanceof Error ? err.message : "Failed to save to JupyterLite.";
+  } finally {
+    singleMarketSaveLoading.value = false;
   }
 }
 
