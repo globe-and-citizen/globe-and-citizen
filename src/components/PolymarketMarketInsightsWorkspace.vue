@@ -1,6 +1,5 @@
 <template>
   <div class="grid gap-5">
-    <div v-if="isInsightsMode" class="grid gap-5">
       <div
         v-if="hasInsightsChartActions"
         class="border rounded-xl p-4 bg-muted/10 grid gap-3"
@@ -435,131 +434,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <div v-else class="grid gap-5">
-      <div
-        v-for="(leg, idx) in legs"
-        :key="idx"
-        class="border rounded-md p-4 grid gap-3"
-      >
-        <div class="font-medium">Leg {{ idx + 1 }}</div>
-
-        <div class="grid gap-2">
-          <Label>Market/Event URL</Label>
-          <div class="flex gap-2">
-            <Input
-              :model-value="leg.marketUrl"
-              type="text"
-              placeholder="https://polymarket.com/event/... or /market/..."
-              @update:model-value="
-                (value) => updateLegField(idx, 'marketUrl', String(value ?? ''))
-              "
-            />
-            <Button
-              :disabled="leg.loading || !leg.marketUrl.trim()"
-              @click="loadLeg(idx)"
-            >
-              <span v-if="leg.loading">Loading...</span>
-              <span v-else>Load</span>
-            </Button>
-          </div>
-          <p v-if="leg.error" class="text-sm text-red-600">
-            {{ leg.error }}
-          </p>
-          <p v-if="leg.title" class="text-sm text-muted-foreground">
-            {{ leg.title }}
-          </p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="grid gap-2">
-            <Label>Market</Label>
-            <Select
-              :model-value="leg.selectedMarketId"
-              :disabled="getMarketSelectOptions(leg).length === 0"
-              @update:model-value="
-                (value) => {
-                  updateLegField(idx, 'selectedMarketId', String(value ?? ''));
-                  onMarketChange(idx);
-                }
-              "
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select market" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem
-                    v-for="m in getMarketSelectOptions(leg)"
-                    :key="m.id"
-                    :value="m.id"
-                  >
-                    {{ m.title }}
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="grid gap-2">
-            <Label>Outcome</Label>
-            <Select
-              :model-value="leg.selectedOutcomeId"
-              :disabled="getOutcomeSelectOptions(leg).length === 0"
-              @update:model-value="
-                (value) => {
-                  updateLegField(idx, 'selectedOutcomeId', String(value ?? ''));
-                  onOutcomeChange(idx);
-                }
-              "
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select outcome" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem
-                    v-for="o in getOutcomeSelectOptions(leg)"
-                    :key="o.id"
-                    :value="o.id"
-                  >
-                    {{ o.name }}
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div v-if="showAlertOutcomeMode" class="grid gap-2">
-            <Label>Outcome Mode</Label>
-            <Select
-              :model-value="leg.insightsOutcomeSelection"
-              @update:model-value="
-                (value) => {
-                  updateLegField(
-                    idx,
-                    'insightsOutcomeSelection',
-                    String(value ?? ''),
-                  );
-                  onInsightsOutcomeSelectionChange(idx);
-                }
-              "
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="yes">Yes</SelectItem>
-                <SelectItem value="no">No</SelectItem>
-                <SelectItem value="both">Yes and No</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <Dialog
       :open="marketSearchDialogOpen"
       @update:open="onMarketSearchDialogOpenUpdate"
@@ -695,9 +569,7 @@
                   <Button
                     v-else
                     class="shrink-0"
-                    :disabled="
-                      !canAddMoreInsightsMarkets || !isInsightsMode
-                    "
+                    :disabled="!canAddMoreInsightsMarkets"
                     @click="handleAssignSearchEvent(event.event)"
                   >
                     Add Event
@@ -761,7 +633,6 @@ import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -825,9 +696,6 @@ type MutableLegField =
   | "exportFrequency";
 
 const props = defineProps<{
-  isInsightsMode: boolean;
-  isCompareInsightsMode: boolean;
-  showAlertOutcomeMode: boolean;
   hasInsightsChartActions: boolean;
   insightsChartPanelTitle: string;
   compareFromDate: string;
@@ -872,11 +740,6 @@ const props = defineProps<{
   canRemoveLeg: (index: number) => boolean;
   removeLeg: (index: number) => void;
   setLegField: (index: number, field: MutableLegField, value: string) => void;
-  loadLeg: (index: number) => void;
-  getMarketSelectOptions: (leg: LegState) => MarketOption[];
-  getOutcomeSelectOptions: (leg: LegState) => OutcomeOption[];
-  onMarketChange: (index: number) => void;
-  onOutcomeChange: (index: number) => void;
   onInsightsOutcomeSelectionChange: (index: number) => void;
   exportSelectAllState: (leg: LegState) => CheckboxModelValue;
   toggleAllExportMarkets: (leg: LegState, value: CheckboxModelValue) => void;
@@ -960,10 +823,6 @@ function onMarketSearchDialogOpenUpdate(open: boolean) {
     return;
   }
   emit("update:marketSearchDialogOpen", true);
-}
-
-function updateLegField(index: number, field: MutableLegField, value: string) {
-  props.setLegField(index, field, value);
 }
 
 function updateActiveLegField(field: MutableLegField, value: string) {

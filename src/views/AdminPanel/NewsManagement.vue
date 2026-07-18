@@ -1,5 +1,4 @@
 <template>
-  <!--  <NewsApi />-->
   <NewsStepper />
 </template>
 <script setup lang="ts">

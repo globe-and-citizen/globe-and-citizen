@@ -115,21 +115,6 @@
       :history-window-seconds="selectedHistorySeconds"
     />
 
-    <!-- <div class="grid gap-4 lg:grid-cols-2">
-      <OrderbookSnapshot
-        title="Market One Snapshot"
-        :subtitle="`Outcome: ${selectedOutcomeNameA}`"
-        :token-id="tokenIdA"
-        :book="selectedBookA"
-      />
-      <OrderbookSnapshot
-        title="Market Two Snapshot"
-        :subtitle="`Outcome: ${selectedOutcomeNameB}`"
-        :token-id="tokenIdB"
-        :book="selectedBookB"
-      />
-    </div> -->
-
     <div
       class="w-full rounded-xl border border-base-300 bg-base-100 p-5 shadow-sm lg:p-6"
     >

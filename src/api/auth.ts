@@ -14,11 +14,11 @@ import { traceUser } from "./user";
 // const layer8Enabled = import.meta.env.VITE_API_BASE_URL.includes(
 //   "globeandcitizenreverseproxy"
 // );
-const layer8Enabled = import.meta.env.VITE_LAYER8_ENABLED === 'true';
+const layer8Enabled = import.meta.env.VITE_LAYER8_ENABLED === "true";
 
 export async function interceptorFetch(
   url: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<Response> {
   if (layer8Enabled) {
     return (await interceptorWasm.fetch(url, options)) as Response;
@@ -29,7 +29,7 @@ export async function interceptorFetch(
 
 export async function fetchWithAuth(
   url: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<Response> {
   const authStore = useAuthStore();
   const token = authStore.token;
@@ -59,7 +59,7 @@ export async function fetchWithAuth(
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ refresh_token: refreshToken }),
-        }
+        },
       );
 
       if (refreshResponse.ok) {
@@ -89,7 +89,7 @@ export async function fetchWithAuth(
 }
 
 export async function signIn(
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Promise<SignInResponse> {
   try {
     const response = await interceptorFetch(`${API_BASE_URL}${SIGN_IN_URL}`, {
@@ -114,7 +114,7 @@ export async function signIn(
       throw new Error(
         typeof responseData.data === "string"
           ? responseData.data
-          : "Sign-in failed"
+          : "Sign-in failed",
       );
     }
 
@@ -125,14 +125,16 @@ export async function signIn(
   }
 }
 
-export async function setSignedInUser(responseData: SignInResponse | { data: string }) {
+export async function setSignedInUser(
+  responseData: SignInResponse | { data: string },
+) {
   const authStore = useAuthStore();
 
   if (
-      typeof responseData.data === "object" &&
-      responseData.data !== null &&
-      "token" in responseData.data &&
-      "user" in responseData.data
+    typeof responseData.data === "object" &&
+    responseData.data !== null &&
+    "token" in responseData.data &&
+    "user" in responseData.data
   ) {
     authStore.setToken(responseData.data.token);
     authStore.setUser(responseData.data.user);
@@ -158,9 +160,9 @@ export async function setSignedInUser(responseData: SignInResponse | { data: str
     return responseData as SignInResponse;
   } else {
     throw new Error(
-        typeof responseData.data === "string"
-            ? responseData.data
-            : "Sign-in failed"
+      typeof responseData.data === "string"
+        ? responseData.data
+        : "Sign-in failed",
     );
   }
 }
@@ -189,7 +191,7 @@ export const signUpApi = async (data: SignUpData) => {
 
 export const changePassword = async (
   old_password: string,
-  new_password: string
+  new_password: string,
 ): Promise<void> => {
   const response = await fetchWithAuth(
     `${API_BASE_URL}/users/change-password`,
@@ -199,13 +201,13 @@ export const changePassword = async (
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ old_password, new_password }),
-    }
+    },
   );
 
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(
-      errorData.data || errorData.error || "Change password failed"
+      errorData.data || errorData.error || "Change password failed",
     );
   }
 };
