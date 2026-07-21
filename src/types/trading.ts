@@ -20,6 +20,8 @@ export interface PolymarketMarket {
   conditionId?: string;
   endDate?: string;
   endDateIso?: string;
+  startDate?: string;
+  startDateIso?: string;
   gameStartTime?: string;
   events?: object[];
   realtimePrices?: Record<

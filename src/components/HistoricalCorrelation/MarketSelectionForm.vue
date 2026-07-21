@@ -20,7 +20,7 @@
         </p>
       </div>
 
-      <Button variant="outline" @click="openMarketSearchDialog">
+      <Button type="button" variant="outline" @click="openMarketSearchDialog">
         Open Search
       </Button>
     </div>
@@ -278,9 +278,9 @@ const tokenIdA = defineModel<string>("tokenIdA", {default: ""});
 const tokenIdB = defineModel<string>("tokenIdB", {default: ""});
 const startDate = defineModel<string>("startDate", {default: ""});
 const endDate = defineModel<string>("endDate", {default: ""});
-const interval = defineModel<string>("interval", {default: "1h"});
+const interval = defineModel<string>("interval", {default: "1m"});
 const allowedIntervals = ["1h", "6h", "1d", "1w", "1m", "all", "max"];
-const fidelity = ref<number>(1);
+const fidelity = ref<number>(10);
 
 defineProps<{
   isLoading: boolean;
@@ -410,28 +410,70 @@ const toOutcomes = (market: PolymarketMarket | null): MarketOutcome[] => {
   }));
 };
 
-const outcomesA = computed(() => toOutcomes(marketA.value));
-const outcomesB = computed(() => toOutcomes(marketB.value));
+const outcomesA = ref<MarketOutcome[]>([]);
+const outcomesB = ref<MarketOutcome[]>([]);
 
-watch([marketA, outcomesA], () => {
-  if (!marketA.value || outcomesA.value.length === 0) {
+watch(marketA, (value) => {
+  if (value) {
+    const newOutcomes = toOutcomes(value);
+    const matchingTokenId = findMatchingTokenId(outcomesA.value, newOutcomes, tokenIdA.value);
+
+    outcomesA.value = newOutcomes;
+    if (matchingTokenId) {
+      tokenIdA.value = matchingTokenId;
+    } else {
+      tokenIdA.value = newOutcomes[0]?.tokenId || "";
+    }
+  } else {
+    outcomesA.value = [];
     tokenIdA.value = "";
-    return;
   }
-  if (!outcomesA.value.some((o) => o.tokenId === tokenIdA.value)) {
-    tokenIdA.value = outcomesA.value[0]?.tokenId || "";
-  }
-}, {immediate: true});
+}, {immediate: true})
 
-watch([marketB, outcomesB], () => {
-  if (!marketB.value || outcomesB.value.length === 0) {
+watch(marketB, (value) => {
+  if (value) {
+    const newOutcomes = toOutcomes(value);
+    const matchingTokenId = findMatchingTokenId(outcomesB.value, newOutcomes, tokenIdB.value);
+
+    outcomesB.value = newOutcomes;
+    if (matchingTokenId) {
+      tokenIdB.value = matchingTokenId;
+    } else {
+      tokenIdB.value = newOutcomes[0]?.tokenId || "";
+    }
+  } else {
+    outcomesB.value = [];
     tokenIdB.value = "";
-    return;
   }
-  if (!outcomesB.value.some((o) => o.tokenId === tokenIdB.value)) {
-    tokenIdB.value = outcomesB.value[0]?.tokenId || "";
+}, {immediate: true})
+
+function findMatchingTokenId(
+  oldOutcomes: MarketOutcome[],
+  newOutcomes: MarketOutcome[],
+  oldTokenId: string,
+): string | undefined {
+  // Check that both arrays contain the same names
+  const oldName = new Set(oldOutcomes.map(o => o.name))
+  const newName = new Set(newOutcomes.map(o => o.name))
+
+  if (
+    oldName.size !== newName.size ||
+    [...oldName].some(name => !newName.has(name))
+  ) {
+    return
   }
-}, {immediate: true});
+
+  // Find outcome in the old list by tokenId
+  const oldOutcome = oldOutcomes.find(o => o.tokenId === oldTokenId);
+  if (!oldOutcome) {
+    return undefined
+  }
+
+  // Find matching outcome in new list by name
+  const newOutcome = newOutcomes.find(o => o.name === oldOutcome.name)
+
+  return newOutcome?.tokenId
+}
 
 const selectedOutcomeNameA = computed(() => {
   const selected = outcomesA.value.find((o) => o.tokenId === tokenIdA.value);
@@ -511,4 +553,15 @@ watch(searchOptionB, (b) => {
     marketsB.value = [];
   }
 }, {immediate: true, deep: true})
+
+watch([marketA, marketB], ([a, b]) => {
+  if (a && b) {
+    const aIso = a.startDateIso ?? "";
+    const bIso = b.startDateIso ?? "";
+    if (!aIso && !bIso) return;
+    startDate.value = aIso > bIso ? aIso : bIso;
+    endDate.value = new Date().toISOString().slice(0, 10);
+  }
+}, {immediate: true})
+
 </script>
