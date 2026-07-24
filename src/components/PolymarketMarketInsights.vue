@@ -188,7 +188,10 @@ const {
 });
 
 const hasMultipleMarkets = computed(
-  () => legs.value.length > 1 || hasInitialCompareSelection.value,
+  () =>
+    legs.value.length > 1 ||
+    legs.value.some((leg) => leg.exportSelectedMarkets.length > 1) ||
+    hasInitialCompareSelection.value,
 );
 const insightsChartPanelTitle = computed(() =>
   hasMultipleMarkets.value
