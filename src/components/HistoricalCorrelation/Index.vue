@@ -30,8 +30,8 @@
         v-model:interval="historyInterval"
         :is-loading="isLoading"
         @generate="onGenerate"
-        @update:chart-title="t => chartTitle = t"
-        @update:fidelity="t => historyFidelity = t"
+        @update:chart-title="(t: string) => chartTitle = t"
+        @update:fidelity="(t: number) => historyFidelity = t"
       />
     </section>
 

@@ -1,6 +1,5 @@
-import {fetchWithAuth, interceptorFetch} from "./auth";
-import {API_BASE_URL} from "./constants";
-import {toast} from "vue3-toastify";
+import { fetchWithAuth, interceptorFetch } from "./auth";
+import { API_BASE_URL } from "./constants";
 
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, "");
 
@@ -81,55 +80,6 @@ export const getPolymarketDataBySlug = async (
   return res.data[0];
 };
 
-export const createAlert = async (payload: CreateAlertPayload) => {
-  const response = await fetchWithAuth(`${API_V1_BASE_URL}/alerts`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  if (!response.ok) {
-    throw new Error("Failed to create alert");
-  }
-  const res = await response.json();
-  toast("Alert created successfully!", {
-    autoClose: 3000,
-    type: "success",
-    position: "top-right",
-  });
-  return res;
-};
-
-export const updateAlert = async (
-  alertId: string | number,
-  payload: UpdateAlertPayload,
-) => {
-  if (alertId === undefined || alertId === null || alertId === "") {
-    throw new Error("Invalid alert id");
-  }
-
-  const response = await fetchWithAuth(`${API_V1_BASE_URL}/alerts/${alertId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to update alert");
-  }
-
-  toast("Alert updated successfully!", {
-    autoClose: 3000,
-    type: "success",
-    position: "top-right",
-  });
-  const res = await response.json();
-  return res;
-};
-
 const CLOB_BASE_URL = "https://clob.polymarket.com";
 
 export type PolymarketPriceHistoryPoint = {
@@ -184,7 +134,7 @@ export const getPolymarketPricesHistories = async (params: {
   interval: string;
   fidelity: number;
 }): Promise<PolymarketPricesHistoriesResponse> => {
-  const {market_a, market_b, startTs, endTs, interval, fidelity} = params;
+  const { market_a, market_b, startTs, endTs, interval, fidelity } = params;
   if (!market_a?.trim() || !market_b?.trim()) {
     throw new Error("Missing CLOB token id");
   }
@@ -202,23 +152,20 @@ export const getPolymarketPricesHistories = async (params: {
   }
   // url.searchParams.set("endTs", String(Math.floor(endTs)));
 
-  const response = await interceptorFetch(
-    url.toString(),
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        market_a: market_a,
-        market_b: market_b,
-        start_ts: startTs,
-        end_ts: endTs,
-        interval: interval,
-        fidelity: fidelity,
-      }),
+  const response = await interceptorFetch(url.toString(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({
+      market_a: market_a,
+      market_b: market_b,
+      start_ts: startTs,
+      end_ts: endTs,
+      interval: interval,
+      fidelity: fidelity,
+    }),
+  });
   if (!response.ok) {
     const errBody = await response.json().catch(() => null);
     const errMsg =
@@ -309,11 +256,11 @@ export const searchPolymarketPublic = async (params: {
   limitPerType?: number;
   page?: number;
 }): Promise<PolymarketGammaPublicSearchResponse> => {
-  const {q, keepClosedMarkets, limitPerType, page} = params;
+  const { q, keepClosedMarkets, limitPerType, page } = params;
 
   const query = (q ?? "").trim();
   if (!query) {
-    return {events: [], markets: []};
+    return { events: [], markets: [] };
   }
 
   const base = normalizeBaseUrl(API_BASE_URL);
@@ -359,4 +306,4 @@ export type SelectMarketOption = {
   event: PolymarketGammaSearchEvent | null;
   market: PolymarketGammaSearchMarket | null;
   isSelected: boolean;
-}
+};

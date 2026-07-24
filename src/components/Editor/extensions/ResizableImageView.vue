@@ -35,7 +35,6 @@ import { computed, onBeforeUnmount, ref } from "vue";
 const props = defineProps(nodeViewProps);
 
 const containerRef = ref<HTMLDivElement | null>(null);
-const imageRef = ref<HTMLImageElement | null>(null);
 const isResizing = ref(false);
 
 const minWidth = 80;
