@@ -16,7 +16,6 @@ import {
 import { usePolymarketSeriesFetch } from "@/composables/usePolymarketSeriesFetch";
 import {
   assignPolymarketColumnTitles,
-  createPolymarketColumnInput,
 } from "@/lib/polymarketColumnTitles";
 import { buildAlignedPolymarketCsv } from "@/lib/polymarketCsv";
 import {
@@ -24,7 +23,7 @@ import {
   isBeforeIsoDate,
   unixSecondsFromDateInput,
 } from "@/lib/polymarketDates";
-import { selectPolymarketOutcomes } from "@/lib/polymarketOutcomeSelection";
+import { buildPolymarketLegRequests } from "@/lib/polymarketLegRequests";
 import { buildSafeCsvFilename } from "@/composables/jupyterLiteStorage";
 
 export function usePolymarketCompareChart(options: {
@@ -96,16 +95,11 @@ export function usePolymarketCompareChart(options: {
     }
 
     const inputs = options.legs.value.flatMap((leg) => {
-      const market = leg.marketOptions.find(
-        (item) => item.id === leg.selectedMarketId,
+      const { requests } = buildPolymarketLegRequests(
+        leg,
+        leg.exportSelectedMarkets,
       );
-      if (!market) return [];
-      return selectPolymarketOutcomes(
-        market,
-        leg.insightsOutcomeSelection,
-        leg.selectedOutcomeId.trim(),
-        leg.selectedOutcomeName.trim(),
-      ).map((outcome) => createPolymarketColumnInput(leg, market, outcome));
+      return requests;
     });
     const requests = assignPolymarketColumnTitles(inputs);
     if (requests.length === 0) {
