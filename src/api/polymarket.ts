@@ -80,8 +80,6 @@ export const getPolymarketDataBySlug = async (
   return res.data[0];
 };
 
-const CLOB_BASE_URL = "https://clob.polymarket.com";
-
 export type PolymarketPriceHistoryPoint = {
   t: number;
   p: number;
@@ -104,7 +102,7 @@ export const getPolymarketPricesHistory = async (params: {
     throw new Error("Invalid start timestamp");
   }
 
-  const url = new URL("/prices-history", CLOB_BASE_URL);
+  const url = new URL(`${API_V1_BASE_URL}/polymarket/prices-history`);
   url.searchParams.set("market", market);
   url.searchParams.set("startTs", String(Math.floor(startTs)));
 
@@ -114,11 +112,16 @@ export const getPolymarketPricesHistory = async (params: {
   }
 
   const res = (await response.json()) as unknown;
-  if (!res || typeof res !== "object" || !("history" in res)) {
+  const payload =
+    res && typeof res === "object" && "data" in res
+      ? (res as { data: unknown }).data
+      : res;
+
+  if (!payload || typeof payload !== "object" || !("history" in payload)) {
     throw new Error("Unexpected price history response");
   }
 
-  return res as PolymarketPriceHistoryResponse;
+  return payload as PolymarketPriceHistoryResponse;
 };
 
 export type PolymarketPricesHistoriesResponse = {
