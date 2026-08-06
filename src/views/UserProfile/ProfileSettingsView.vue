@@ -95,24 +95,6 @@
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
             <div class="grid gap-2">
-              <Label for="location">Location</Label>
-              <select
-                id="location"
-                v-model="editForm.location"
-                class="border border-[rgba(229,229,229, 0.92)] rounded-md px-3 py-2 text-sm text-black bg-[rgb(243,243,243)] min-w-[0px]"
-              >
-                <option disabled value="">Select your country</option>
-                <option
-                  v-for="country in countries"
-                  :key="country.code"
-                  :value="country.code"
-                >
-                  {{ country.country }}
-                </option>
-              </select>
-            </div>
-
-            <div class="grid gap-2">
               <Label for="dateOfBirth"
                 >Date of Birth <i>(coming soon)</i></Label
               >
@@ -145,6 +127,11 @@
                 <Label for="color">Color</Label>
                 <Input id="color" v-model="editForm.color" disabled />
               </div>
+
+              <div class="grid gap-2">
+                <Label for="location">Location</Label>
+                <Input id="color" v-model="country" disabled/>
+              </div>
             </div>
 
             <div class="grid gap-2">
@@ -176,7 +163,7 @@ import { Label } from "@/components/ui/label";
 import type { UserType } from "@/models/Auth";
 import { useAuthStore } from "@/store/authStore.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import Button from "../../components/Button.vue";
 import { generateUserIcon } from "@/composables/utils.ts";
 import Textarea from "../../components/ui/textarea/Textarea.vue";
@@ -301,6 +288,10 @@ watch(userData, (newData) => {
       location: newData.location || "",
     };
   }
+});
+
+const country = computed(() => {
+  return countries.find(c => c.code === editForm.value.location)?.country || 'The Moon'
 });
 
 function handleSaveEdit() {

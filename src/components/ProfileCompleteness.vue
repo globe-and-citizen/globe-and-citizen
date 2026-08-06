@@ -149,7 +149,8 @@ const metadataUpdated = computed(() => {
     userData.value?.bio ||
     userData.value?.color ||
     userData.value?.display_name ||
-    userData.value?.email_verified
+    userData.value?.email_verified ||
+    userData.value?.location
   );
 });
 
@@ -169,6 +170,10 @@ const profileDetails = computed(() => [
   {
     label: "Favorite Color Selected",
     completed: !!userData.value?.color,
+  },
+  {
+    label: "Location Verified",
+    completed: !!userData.value?.location && !userData.value?.location.includes("moon"),
   },
 ]);
 

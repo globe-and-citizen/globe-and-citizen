@@ -234,7 +234,7 @@
           class="input input-bordered h-10 w-full rounded-lg border-base-300 bg-base-100 text-sm border px-2"
         />
         <p class="text-xs text-muted-foreground mt-1">
-          Accuracy of the data expressed in minutes. Default is 1 minute.
+          Accuracy of the data expressed in minutes.
         </p>
       </div>
     </div>
