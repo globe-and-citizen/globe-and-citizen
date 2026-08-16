@@ -10,21 +10,25 @@ export type UserType = {
   id: number;
   username: string;
   email: string;
-  created_at: string;
-  updated_at: string;
-  bio: string;
-  location: string;
   website: string;
   profile_picture_url: string;
   date_of_birth: string;
   role_id: number;
   role: Role;
   description: string;
-  email_verified: boolean;
-  display_name: string;
-  color: string;
-  metadata_updated_at: string;
+  created_at: string;
+  updated_at: string;
+  layer8_metadata: Layer8Metadata;
 };
+
+export type Layer8Metadata = {
+  display_name: string;
+  bio: string;
+  favorite_color: string;
+  is_email_verified: boolean;
+  location: string;
+  updated_at: string;
+}
 
 export type Role = {
   id: number;
