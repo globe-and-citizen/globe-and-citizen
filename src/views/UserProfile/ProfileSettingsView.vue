@@ -114,7 +114,7 @@
             Layer8 Provided Metadata
           </h5>
           <div class="grid gap-4 py-4">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div class="grid gap-2">
                 <Label for="username">Display name</Label>
                 <Input
@@ -122,15 +122,40 @@
                   v-model="layer8_metadata.display_name"
                   disabled
                 />
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on Layer8:
+                  {{ formatVerifiedAt(layer8_metadata.display_name_l8_updated_at) || "never" }}
+                </div>
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on G&C:
+                  {{ formatVerifiedAt(layer8_metadata.display_name_updated_at) || "never" }}
+                </div>
               </div>
+
               <div class="grid gap-2">
                 <Label for="color">Color</Label>
                 <Input id="color" v-model="layer8_metadata.favorite_color" disabled/>
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on Layer8:
+                  {{ formatVerifiedAt(layer8_metadata.favorite_color_l8_updated_at) || "never" }}
+                </div>
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on G&C:
+                  {{ formatVerifiedAt(layer8_metadata.favorite_color_updated_at) || "never" }}
+                </div>
               </div>
 
               <div class="grid gap-2">
                 <Label for="location">Location</Label>
                 <Input id="country" v-model="country" disabled/>
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on Layer8:
+                  {{ formatVerifiedAt(layer8_metadata.location_l8_updated_at) || "never" }}
+                </div>
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on G&C:
+                  {{ formatVerifiedAt(layer8_metadata.location_updated_at) || "never" }}
+                </div>
               </div>
             </div>
 
@@ -143,10 +168,14 @@
                 disabled
                 placeholder="Enter your bio (optional)"
               />
-<!--              <div class="text-xs text-[#8F8F8F] text-start mt-1">-->
-<!--                Last updated:-->
-<!--                {{ formatVerifiedAt(layer8_metadata.bio_layer8_updated_at) || "never" }}-->
-<!--              </div>-->
+              <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                Last Updated on Layer8:
+                {{ formatVerifiedAt(layer8_metadata.bio_l8_updated_at) || "never" }}
+              </div>
+              <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                Last Updated on G&C:
+                {{ formatVerifiedAt(layer8_metadata.bio_updated_at) || "never" }}
+              </div>
             </div>
           </div>
         </div>
@@ -164,7 +193,7 @@
 import {getUser, updateUser} from "@/api/user.ts";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
-import type {Layer8Metadata, UserType} from "@/models/Auth";
+import type {Layer8Metadata, UserType, UserUpdateType} from "@/models/Auth";
 import {useAuthStore} from "@/store/authStore.ts";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/vue-query";
 import {computed, ref, watch} from "vue";
@@ -213,16 +242,23 @@ const user = ref(
       description: "",
       layer8_metadata: {
         display_name: "",
-        // display_name_updated_at: null,
         bio: "",
-        // bio_layer8_updated_at: null,
         favorite_color: "",
-        // favorite_color_updated_at: null,
         is_email_verified: false,
-        // is_email_verified_updated_at: null,
         location: "",
-        // location_updated_at: null,
         updated_at: "",
+
+        display_name_l8_updated_at: null,
+        bio_l8_updated_at: null,
+        favorite_color_l8_updated_at: null,
+        is_email_verified_l8_updated_at: null,
+        location_l8_updated_at: null,
+
+        display_name_updated_at: null,
+        bio_updated_at: null,
+        favorite_color_updated_at: null,
+        is_email_verified_updated_at: null,
+        location_updated_at: null,
       }
     }
 );
@@ -233,7 +269,19 @@ const layer8_metadata = ref<Layer8Metadata>({
   favorite_color: user.value.layer8_metadata?.favorite_color || "",
   is_email_verified: user.value.layer8_metadata?.is_email_verified || false,
   location: user.value.layer8_metadata?.location || "",
-  updated_at: user.value.updated_at || "",
+  updated_at: user.value.layer8_metadata?.updated_at || "",
+
+  display_name_l8_updated_at: user.value.layer8_metadata?.display_name_l8_updated_at || "",
+  bio_l8_updated_at: user.value.layer8_metadata?.bio_l8_updated_at || "",
+  favorite_color_l8_updated_at: user.value.layer8_metadata?.favorite_color_l8_updated_at || "",
+  is_email_verified_l8_updated_at: user.value.layer8_metadata?.is_email_verified_l8_updated_at || "",
+  location_l8_updated_at: user.value.layer8_metadata?.location_l8_updated_at || "",
+
+  display_name_updated_at: user.value.layer8_metadata?.display_name_updated_at || "",
+  bio_updated_at: user.value.layer8_metadata?.bio_updated_at || "",
+  favorite_color_updated_at: user.value.layer8_metadata?.favorite_color_updated_at || "",
+  is_email_verified_updated_at: user.value.layer8_metadata?.is_email_verified_updated_at || "",
+  location_updated_at: user.value.layer8_metadata?.location_updated_at || "",
 })
 
 const editForm = ref({
@@ -259,7 +307,7 @@ const {mutate: updateUserMutation} = useMutation({
   },
   onSuccess: (res: unknown) => {
     // Attempt to update auth store user instantly if API returns user
-    let updatedUser: Partial<UserType> | undefined;
+    let updatedUser: Partial<UserUpdateType> | undefined;
     if (
       typeof res === "object" &&
       res !== null &&
@@ -268,7 +316,7 @@ const {mutate: updateUserMutation} = useMutation({
       (res as { data?: { user?: unknown } }).data?.user &&
       typeof (res as { data: { user: unknown } }).data.user === "object"
     ) {
-      updatedUser = (res as { data: { user: Partial<UserType> } }).data.user;
+      updatedUser = (res as { data: { user: Partial<UserUpdateType> } }).data.user;
     }
     if (
       updatedUser &&
@@ -310,6 +358,18 @@ watch(userData, (newData) => {
       is_email_verified: newData.layer8_metadata?.is_email_verified || false,
       location: newData.layer8_metadata?.location || "",
       updated_at: newData.layer8_metadata?.updated_at || "",
+
+      display_name_l8_updated_at: newData.layer8_metadata?.display_name_l8_updated_at || "",
+      bio_l8_updated_at: newData.layer8_metadata?.bio_l8_updated_at || "",
+      favorite_color_l8_updated_at: newData.layer8_metadata?.favorite_color_l8_updated_at || "",
+      is_email_verified_l8_updated_at: newData.layer8_metadata?.is_email_verified_l8_updated_at || "",
+      location_l8_updated_at: newData.layer8_metadata?.location_l8_updated_at || "",
+
+      display_name_updated_at: newData.layer8_metadata?.display_name_updated_at || "",
+      bio_updated_at: newData.layer8_metadata?.bio_updated_at || "",
+      favorite_color_updated_at: newData.layer8_metadata?.favorite_color_updated_at || "",
+      is_email_verified_updated_at: newData.layer8_metadata?.is_email_verified_updated_at || "",
+      location_updated_at: newData.layer8_metadata?.location_updated_at || "",
     }
   }
   console.log("newData", newData);

@@ -133,7 +133,7 @@
             <Label for="bio">Bio</Label>
             <Input
               id="bio"
-              v-model="editForm.bio"
+              v-model="metadata.bio"
               placeholder="Enter user bio (optional)"
             />
           </div>
@@ -150,7 +150,7 @@
             <Label for="location">Location</Label>
             <Input
               id="location"
-              v-model="editForm.location"
+              v-model="metadata.location"
               placeholder="Enter user location (optional)"
             />
           </div>
@@ -278,7 +278,7 @@ import { createUserTableColumns } from "./utils/tableColumns.ts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
 import { fetchAllUsers, updateUser } from "@/api/user.ts";
 import { useSearchStore } from "@/store/searchStore.ts";
-import type { Role, UserType } from "@/models/Auth";
+import type {Layer8Metadata, Role, UserType} from "@/models/Auth";
 
 const searchStore = useSearchStore();
 const currentPage = ref(1);
@@ -310,6 +310,7 @@ const editDialogOpen = ref(false);
 const deactivateDialogOpen = ref(false);
 const selectedUser = ref<UserType | null>(null);
 const editForm = ref<Partial<UserType>>({});
+const metadata = ref<Partial<Layer8Metadata>>({});
 const selectedRole = ref<number | null>(null);
 
 // Available roles for dropdown
@@ -323,6 +324,7 @@ const availableRoles = ref<Role[]>([
 function handleEdit(user: UserType) {
   selectedUser.value = user;
   editForm.value = { ...user };
+  metadata.value = { ...user.layer8_metadata}
   selectedRole.value = user.role?.id || null;
   editDialogOpen.value = true;
 }
@@ -342,9 +344,9 @@ function handleSaveEdit() {
     id: editForm.value.id,
     email: editForm.value.email ?? "",
     role_id: editForm.value.role_id ?? editForm.value.role?.id ?? 0,
-    bio: editForm.value.bio ?? "",
+    // bio: editForm.value.bio ?? "",
     profile_picture_url: editForm.value.profile_picture_url ?? "",
-    location: editForm.value.location ?? "",
+    // location: editForm.value.location ?? "",
     website: editForm.value.website ?? "",
     date_of_birth: editForm.value.date_of_birth ?? "",
   };

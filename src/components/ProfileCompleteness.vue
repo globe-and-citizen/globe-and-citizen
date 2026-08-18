@@ -63,7 +63,7 @@
         Last updated on:
         <span>{{
           metadataUpdated
-            ? dayjs(userData?.metadata_updated_at).format(
+            ? dayjs(userData?.layer8_metadata?.updated_at).format(
                 "MMMM D, YYYY, h:mm A"
               )
             : "Not updated yet"
