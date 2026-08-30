@@ -1,6 +1,6 @@
 <template>
   <div>
-    <NewsStepper hide-summarize />
+    <NewsStepper />
   </div>
 </template>
 <script setup lang="ts">

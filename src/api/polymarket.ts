@@ -208,6 +208,10 @@ export const getPolymarketPricesHistories = async (params: {
   return result;
 };
 
+export type PolymarketGammaTag = {
+  label?: string;
+};
+
 export type PolymarketGammaSearchMarket = {
   id: string;
   question?: string;
@@ -224,6 +228,11 @@ export type PolymarketGammaSearchMarket = {
   active?: boolean;
   closed?: boolean;
   volumeNum?: number;
+  tags?: PolymarketGammaTag[];
+  events?: Array<{
+    title?: string;
+    tags?: PolymarketGammaTag[];
+  }>;
 };
 
 export type PolymarketGammaSearchEvent = {
@@ -235,6 +244,7 @@ export type PolymarketGammaSearchEvent = {
   icon?: string;
   active?: boolean;
   closed?: boolean;
+  tags?: PolymarketGammaTag[];
   markets?: PolymarketGammaSearchMarket[];
 };
 
