@@ -378,7 +378,7 @@ const { data: post, isLoading } = useQuery<
   Post | null,
   string[]
 >({
-  queryKey: ["post", postId],
+  queryKey: ["post", postId.value],
   queryFn: async () => {
     const response = await fetchPostById(postId.value);
     return response as Post | null;
