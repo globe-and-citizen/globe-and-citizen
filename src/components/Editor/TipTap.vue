@@ -110,7 +110,7 @@ const editor = useEditor({
   editorProps: {
     attributes: {
       class:
-        "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none min-h-[300px] p-4",
+        "prose prose-sm max-w-none min-h-[300px] p-4 focus:outline-none",
       style: `min-height: ${props.minHeight}`,
     },
     handleDrop: (
@@ -305,11 +305,13 @@ const deleteRow = () => {
 </script>
 
 <template>
-  <div class="border border-gray-300 rounded-md overflow-hidden">
+  <div
+    class="min-w-0 overflow-hidden rounded-md border border-input bg-background shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20"
+  >
     <!-- Toolbar -->
     <div
       v-if="editor"
-      class="border-b border-gray-300 bg-gray-50 p-2 flex flex-wrap gap-1"
+      class="flex flex-wrap gap-1 border-b border-border bg-muted/40 p-2"
     >
       <!-- Text Style Buttons -->
       <div class="flex gap-1 border-r border-gray-300 pr-2 mr-2 h-fit">
@@ -398,7 +400,7 @@ const deleteRow = () => {
       <!-- Headings -->
       <div class="flex gap-1 border-r border-gray-300 pr-2 mr-2 h-fit">
         <select
-          class="px-2 py-1 text-sm border border-gray-300 rounded bg-white text-gray-900"
+          class="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
           @change="(e: Event) => {
             const level = (e.target as HTMLSelectElement).value;
             if (level === 'p') {
@@ -699,7 +701,7 @@ const deleteRow = () => {
     </div>
 
     <!-- Editor Content -->
-    <div class="bg-white dark:bg-gray-900">
+    <div class="bg-background">
       <editor-content class="ql-editor" :editor="editor" />
     </div>
   </div>
@@ -715,7 +717,8 @@ svg {
   outline: none;
   min-height: v-bind(minHeight);
   padding: 1rem;
-  background: white;
+  background: transparent;
+  color: inherit;
   font-family: Lato, sans-serif !important;
 }
 

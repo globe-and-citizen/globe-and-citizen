@@ -36,7 +36,7 @@ export const profileMenuItems = [
   {
     section: "Studio",
     icon: articles,
-    title: "My Articles",
+    title: "My Predictions",
     url: "/articles",
   },
   {

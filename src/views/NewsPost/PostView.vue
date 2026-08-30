@@ -41,6 +41,11 @@
                 <div v-if="post" class="lg:pb-10 flex flex-col lg:flex-row font-lato">
                     <div class="w-full lg:w-7/12">
                         <div class="gc-container">
+                            <PostPredictionSection
+                                v-if="post.prediction"
+                                :prediction="post.prediction"
+                                class="mb-6"
+                            />
                             <div class="prose prose-sm md:prose-lg max-w-none">
                                 <div class="ql-editor !pl-0">
                                     <Segmented
@@ -227,6 +232,8 @@ import {useAuthStore} from "@/store/authStore";
 import DeleteDialog from "@/components/AdminPanel/NewsTable/DeleteDialog.vue";
 import EditDialog from "@/components/AdminPanel/NewsTable/EditDialog.vue";
 import ExploreMore from "@/views/Home/sections/ExploreMore.vue";
+import PostPredictionSection from "@/components/PostPredictionSection.vue";
+import {withoutEmbeddedPrediction} from "@/utils/postPrediction";
 
 import {toast} from "vue3-toastify";
 
@@ -358,7 +365,9 @@ onMounted(() => {
 
 const sanitizedContent = computed(() => {
     if (!post.value || !post.value.content) return "";
-    return DOMPurify.sanitize(post.value.content);
+    return DOMPurify.sanitize(
+        withoutEmbeddedPrediction(post.value.content, post.value.prediction)
+    );
 });
 
 const entriesLimit = 3;
