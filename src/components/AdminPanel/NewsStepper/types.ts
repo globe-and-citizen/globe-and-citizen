@@ -26,33 +26,33 @@ const titleSchema = z
   .max(100, "Title must be at most 100 characters")
   .refine((v) => getWordCount(v) <= 20, "Title must be at most 20 words");
 
-// TLGP: max 100 words, 500 characters
+// TLGP: max 100 words, 650 characters
 const tlgpSchema = z
   .string()
   .min(1, "TLGP is required")
-  .max(500, "TLGP must be at most 500 characters")
+  .max(650, "TLGP must be at most 650 characters")
   .refine((v) => getWordCount(v) <= 100, "TLGP must be at most 100 words");
 
-// Rules Analysis: max 400 words, 2000 characters
+// Rules Analysis: max 400 words, 2600 characters
 const rulesAnalysisSchema = z
   .string()
   .refine((v) => getTextLength(v) > 0, "Rules Analysis is required")
   .refine(
-    (v) => getTextLength(v) <= 2000,
-    "Rules Analysis must be at most 2000 characters",
+    (v) => getTextLength(v) <= 2600,
+    "Rules Analysis must be at most 2600 characters",
   )
   .refine(
     (v) => getWordCount(v) <= 400,
     "Rules Analysis must be at most 400 words",
   );
 
-// Full Analysis: max 1000 words, 5000 characters
+// Full Analysis: max 1000 words, 6500 characters
 const fullAnalysisSchema = z
   .string()
   .refine((v) => getTextLength(v) > 0, "Full Analysis is required")
   .refine(
-    (v) => getTextLength(v) <= 5000,
-    "Full Analysis must be at most 5000 characters",
+    (v) => getTextLength(v) <= 6500,
+    "Full Analysis must be at most 6500 characters",
   )
   .refine(
     (v) => getWordCount(v) <= 1000,
@@ -76,6 +76,13 @@ export const formSchema = [
     predictionMarketQuestion: z.string(),
     predictionOutcome: z.enum(["Yes", "No"]),
     predictionTokenId: z.string(),
+    hedgeUrl: z.string().min(1, "Hedge is required"),
+    hedgeEventTitle: z.string(),
+    hedgeMarketId: z.string(),
+    hedgeMarketSlug: z.string(),
+    hedgeMarketQuestion: z.string(),
+    hedgeOutcome: z.enum(["Yes", "No"]),
+    hedgeTokenId: z.string(),
     tlgp: tlgpSchema,
     rulesAnalysis: rulesAnalysisSchema,
     fullAnalysis: fullAnalysisSchema,

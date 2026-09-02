@@ -49,6 +49,7 @@ export type Post = {
   source_url: string;
   source_name: string;
   prediction?: PostPrediction;
+  hedge?: PostPrediction;
   url_to_image: string;
   version: number;
   type?: "entry" | "post";

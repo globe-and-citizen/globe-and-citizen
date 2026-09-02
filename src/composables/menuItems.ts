@@ -30,7 +30,7 @@ export const profileMenuItems = [
   {
     section: "Studio",
     icon: articles,
-    title: "Create Article",
+    title: "Write Prediction",
     url: "/create",
   },
   {

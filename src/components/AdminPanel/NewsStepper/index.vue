@@ -2,7 +2,7 @@
   <div class="mx-auto w-full max-w-full px-0 py-0 sm:px-6 sm:py-6">
     <header class="mb-5 border-b pb-3">
       <h1 class="text-xl font-semibold tracking-tight sm:text-2xl">
-        News Processing Workflow
+        Write Prediction
       </h1>
     </header>
     <form @submit.prevent="onSubmit">
@@ -118,6 +118,74 @@
               </a>
             </div>
           </div>
+          <p v-if="errors.predictionUrl" class="text-sm text-destructive">
+            {{ errors.predictionUrl }}
+          </p>
+        </section>
+
+        <!-- Hedge -->
+        <section class="space-y-3">
+          <h2 class="text-lg font-semibold">Hedge</h2>
+          <p class="text-sm text-muted-foreground">
+            Choose the Polymarket market and Yes or No position that hedges the
+            prediction.
+          </p>
+
+          <div class="space-y-3 rounded-lg border bg-muted/20 p-4">
+            <div class="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                @click="openHedgeModal"
+              >
+                {{ hedgeSelection ? "Change Hedge" : "Select Hedge" }}
+              </Button>
+              <Button
+                v-if="hedgeSelection"
+                type="button"
+                variant="ghost"
+                size="sm"
+                @click="clearHedge"
+              >
+                Clear
+              </Button>
+            </div>
+
+            <div v-if="hedgeSelection" class="min-w-0 space-y-1">
+              <div class="break-words text-sm">
+                <span class="font-medium">Event:</span>
+                {{ hedgeSelection.eventTitle }}
+              </div>
+              <div class="break-words text-sm">
+                <span class="font-medium">Market:</span>
+                {{ hedgeSelection.marketQuestion }}
+              </div>
+              <div class="text-sm">
+                <span class="font-medium">Position:</span>
+                <span
+                  :class="
+                    hedgeSelection.outcome === 'Yes'
+                      ? 'text-green-600 font-semibold'
+                      : 'text-red-600 font-semibold'
+                  "
+                >
+                  {{ hedgeSelection.outcome }}
+                </span>
+              </div>
+              <a
+                :href="hedgeSelection.url"
+                target="_blank"
+                rel="noreferrer"
+                class="text-xs text-primary underline-offset-4 hover:underline"
+              >
+                Open on Polymarket
+              </a>
+            </div>
+          </div>
+          <p v-if="errors.hedgeUrl" class="text-sm text-destructive">
+            {{ errors.hedgeUrl }}
+          </p>
         </section>
 
         <!-- TLGP -->
@@ -129,7 +197,7 @@
             </span>
           </h2>
           <p class="text-sm text-muted-foreground">
-            A summary of your prediction. Maximum 100 words, 500 characters.
+            A summary of your prediction. Maximum 100 words, 650 characters.
           </p>
 
           <FormField v-slot="{ componentField }" name="tlgp">
@@ -139,7 +207,7 @@
                 <Textarea
                   v-bind="componentField"
                   rows="5"
-                  :maxlength="500"
+                  :maxlength="650"
                   placeholder="Summarize your prediction here..."
                 />
               </FormControl>
@@ -148,7 +216,7 @@
               >
                 <p class="text-xs text-muted-foreground">
                   {{ tlgpWordCount }} / 100 words ·
-                  {{ (componentField.modelValue as string)?.length ?? 0 }} / 500
+                  {{ (componentField.modelValue as string)?.length ?? 0 }} / 650
                   characters
                 </p>
                 <FormMessage />
@@ -162,7 +230,7 @@
           <h2 class="text-lg font-semibold">Rules Analysis</h2>
           <p class="text-sm text-muted-foreground">
             Analyze the rules of the selected market to avoid gotchas. Maximum
-            400 words, 2000 characters.
+            400 words, 2600 characters.
           </p>
 
           <FormField v-slot="{ componentField }" name="rulesAnalysis">
@@ -181,7 +249,7 @@
               >
                 <p class="text-xs text-muted-foreground">
                   {{ rulesAnalysisWordCount }} / 400 words ·
-                  {{ rulesAnalysisCharacterCount }} / 2000 characters
+                  {{ rulesAnalysisCharacterCount }} / 2600 characters
                 </p>
                 <FormMessage />
               </div>
@@ -194,7 +262,7 @@
           <h2 class="text-lg font-semibold">Full Analysis</h2>
           <p class="text-sm text-muted-foreground">
             Write the full details of your prediction and explain the logic of
-            your bet. Maximum 1000 words, 5000 characters.
+            your bet. Maximum 1000 words, 6500 characters.
           </p>
 
           <FormField v-slot="{ componentField }" name="fullAnalysis">
@@ -213,7 +281,7 @@
               >
                 <p class="text-xs text-muted-foreground">
                   {{ fullAnalysisWordCount }} / 1000 words ·
-                  {{ fullAnalysisCharacterCount }} / 5000 characters
+                  {{ fullAnalysisCharacterCount }} / 6500 characters
                 </p>
                 <FormMessage />
               </div>
@@ -382,6 +450,12 @@
     @confirm="onPredictionConfirm"
     @cancel="predictionModalOpen = false"
   />
+  <MarketSelectionModal
+    v-model:open="hedgeModalOpen"
+    title="Select Hedge Market"
+    @confirm="onHedgeConfirm"
+    @cancel="hedgeModalOpen = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -425,6 +499,13 @@ const initialValues = {
   predictionMarketQuestion: "",
   predictionOutcome: "Yes" as "Yes" | "No",
   predictionTokenId: "",
+  hedgeUrl: "",
+  hedgeEventTitle: "",
+  hedgeMarketId: "",
+  hedgeMarketSlug: "",
+  hedgeMarketQuestion: "",
+  hedgeOutcome: "Yes" as "Yes" | "No",
+  hedgeTokenId: "",
   tlgp: "",
   rulesAnalysis: "",
   fullAnalysis: "",
@@ -437,7 +518,7 @@ const form = useForm({
   initialValues,
 });
 
-const { setFieldValue, setFieldTouched, validate, values } = form;
+const { errors, setFieldValue, setFieldTouched, validate, values } = form;
 
 const titleWordCount = computed(() => getWordCount(values.title || ""));
 const tlgpWordCount = computed(() => getWordCount(values.tlgp || ""));
@@ -501,6 +582,37 @@ function clearPrediction() {
   setFieldValue("predictionTokenId", "");
   setFieldValue("polymarketImage", "");
   usePolymarketImage.value = false;
+}
+
+// --- Hedge selection ---
+const hedgeSelection = ref<MarketSelection | null>(null);
+const hedgeModalOpen = ref(false);
+
+function openHedgeModal() {
+  hedgeModalOpen.value = true;
+}
+
+function onHedgeConfirm(selection: MarketSelection) {
+  hedgeSelection.value = selection;
+  setFieldValue("hedgeUrl", selection.url);
+  setFieldValue("hedgeEventTitle", selection.eventTitle);
+  setFieldValue("hedgeMarketId", selection.marketId);
+  setFieldValue("hedgeMarketSlug", selection.marketSlug);
+  setFieldValue("hedgeMarketQuestion", selection.marketQuestion);
+  setFieldValue("hedgeOutcome", selection.outcome);
+  setFieldValue("hedgeTokenId", selection.tokenId);
+  setFieldTouched("hedgeUrl", true);
+}
+
+function clearHedge() {
+  hedgeSelection.value = null;
+  setFieldValue("hedgeUrl", "");
+  setFieldValue("hedgeEventTitle", "");
+  setFieldValue("hedgeMarketId", "");
+  setFieldValue("hedgeMarketSlug", "");
+  setFieldValue("hedgeMarketQuestion", "");
+  setFieldValue("hedgeOutcome", "Yes");
+  setFieldValue("hedgeTokenId", "");
 }
 
 // --- Cover image ---
@@ -575,6 +687,7 @@ const publishMutation = useMutation({
 
     // Reset form
     predictionSelection.value = null;
+    hedgeSelection.value = null;
     usePolymarketImage.value = false;
     form.resetForm();
     form.setValues(initialValues);
@@ -587,7 +700,8 @@ async function onSubmit() {
 
   const v = result.values ?? {};
   const prediction = predictionSelection.value;
-  if (!prediction) return;
+  const hedge = hedgeSelection.value;
+  if (!prediction || !hedge) return;
 
   const title = (v.title as string)?.trim() || "Untitled Article";
   const slug = (v.slug as string)?.trim() || generateSlug(title);
@@ -633,6 +747,17 @@ async function onSubmit() {
       token_id: prediction.tokenId,
       image: prediction.image,
       tags: prediction.tags,
+    },
+    hedge: {
+      url: hedge.url,
+      event_title: hedge.eventTitle,
+      market_id: hedge.marketId,
+      market_slug: hedge.marketSlug,
+      market_question: hedge.marketQuestion,
+      outcome: hedge.outcome,
+      token_id: hedge.tokenId,
+      image: hedge.image,
+      tags: hedge.tags,
     },
   };
   publishMutation.mutate(finalData as NewPostType);

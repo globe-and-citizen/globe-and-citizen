@@ -29,6 +29,12 @@
             :prediction="post.prediction"
             class="my-4"
           />
+          <PostPredictionSection
+            v-if="post?.hedge"
+            :prediction="post.hedge"
+            title="Hedge"
+            class="my-4"
+          />
           <p class="text-sm">{{ post?.description }}</p>
           <div class="ql-editor mt-4 !h-fit" v-html="sanitizedContent"></div>
         </div>
@@ -90,7 +96,11 @@ function formatDate(dateString: string): string {
 const sanitizedContent = computed(() => {
   if (!props.post || !props.post.content) return "";
   return DOMPurify.sanitize(
-    withoutEmbeddedPrediction(props.post.content, props.post.prediction),
+    withoutEmbeddedPrediction(
+      props.post.content,
+      props.post.prediction,
+      props.post.hedge,
+    ),
   );
 });
 </script>

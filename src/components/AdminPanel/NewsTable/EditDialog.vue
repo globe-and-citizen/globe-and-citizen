@@ -9,8 +9,7 @@
       <DialogHeader class="border-b pb-3">
         <DialogTitle>Edit Post</DialogTitle>
         <DialogDescription>
-          Update the article using the same sections as the News Processing
-          Workflow.
+          Update the article using the same sections as Write Prediction.
         </DialogDescription>
       </DialogHeader>
 
@@ -72,6 +71,12 @@
             :prediction="post.prediction"
             show-immutable-notice
           />
+          <PostPredictionSection
+            v-if="post?.hedge"
+            :prediction="post.hedge"
+            title="Hedge"
+            show-immutable-notice
+          />
 
           <section class="space-y-3">
             <h2 class="text-lg font-semibold">
@@ -81,7 +86,7 @@
               </span>
             </h2>
             <p class="text-sm text-muted-foreground">
-              A summary of your prediction. Maximum 100 words, 500 characters.
+              A summary of your prediction. Maximum 100 words, 650 characters.
             </p>
             <div class="grid gap-2">
               <Label for="edit-tlgp">Prediction summary</Label>
@@ -89,7 +94,7 @@
                 id="edit-tlgp"
                 v-model="formData.tlgp"
                 rows="5"
-                :maxlength="500"
+                :maxlength="650"
                 placeholder="Summarize your prediction here..."
                 :aria-invalid="Boolean(errors.tlgp)"
               />
@@ -98,7 +103,7 @@
               >
                 <p class="text-xs text-muted-foreground">
                   {{ tlgpWordCount }} / 100 words · {{ formData.tlgp.length }} /
-                  500 characters
+                  650 characters
                 </p>
                 <p v-if="errors.tlgp" class="text-sm text-destructive">
                   {{ errors.tlgp }}
@@ -111,7 +116,7 @@
             <h2 class="text-lg font-semibold">Rules Analysis</h2>
             <p class="text-sm text-muted-foreground">
               Analyze the rules of the selected market to avoid gotchas. Maximum
-              400 words, 2000 characters.
+              400 words, 2600 characters.
             </p>
             <div class="grid gap-2">
               <Label>Market rules analysis</Label>
@@ -125,7 +130,7 @@
               >
                 <p class="text-xs text-muted-foreground">
                   {{ rulesAnalysisWordCount }} / 400 words ·
-                  {{ rulesAnalysisCharacterCount }} / 2000 characters
+                  {{ rulesAnalysisCharacterCount }} / 2600 characters
                 </p>
                 <p v-if="errors.rulesAnalysis" class="text-sm text-destructive">
                   {{ errors.rulesAnalysis }}
@@ -138,7 +143,7 @@
             <h2 class="text-lg font-semibold">Full Analysis</h2>
             <p class="text-sm text-muted-foreground">
               Write the full details of your prediction and explain the logic of
-              your bet. Maximum 1000 words, 5000 characters.
+              your bet. Maximum 1000 words, 6500 characters.
             </p>
             <div class="grid gap-2">
               <Label>Prediction analysis</Label>
@@ -152,7 +157,7 @@
               >
                 <p class="text-xs text-muted-foreground">
                   {{ fullAnalysisWordCount }} / 1000 words ·
-                  {{ fullAnalysisCharacterCount }} / 5000 characters
+                  {{ fullAnalysisCharacterCount }} / 6500 characters
                 </p>
                 <p v-if="errors.fullAnalysis" class="text-sm text-destructive">
                   {{ errors.fullAnalysis }}
@@ -443,6 +448,7 @@ watch(
     const editableContent = withoutEmbeddedPrediction(
       post.content,
       post.prediction,
+      post.hedge,
     );
     const sections = parseNewsWorkflowContent(
       editableContent,

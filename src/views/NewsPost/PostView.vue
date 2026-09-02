@@ -46,6 +46,12 @@
                                 :prediction="post.prediction"
                                 class="mb-6"
                             />
+                            <PostPredictionSection
+                                v-if="post.hedge"
+                                :prediction="post.hedge"
+                                title="Hedge"
+                                class="mb-6"
+                            />
                             <div class="prose prose-sm md:prose-lg max-w-none">
                                 <div class="ql-editor !pl-0">
                                     <Segmented
@@ -366,7 +372,11 @@ onMounted(() => {
 const sanitizedContent = computed(() => {
     if (!post.value || !post.value.content) return "";
     return DOMPurify.sanitize(
-        withoutEmbeddedPrediction(post.value.content, post.value.prediction)
+        withoutEmbeddedPrediction(
+            post.value.content,
+            post.value.prediction,
+            post.value.hedge
+        )
     );
 });
 
