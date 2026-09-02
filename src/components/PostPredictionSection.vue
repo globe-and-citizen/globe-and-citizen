@@ -1,6 +1,6 @@
 <template>
   <section class="space-y-2">
-    <h2 class="text-lg font-semibold">Prediction</h2>
+    <h2 class="text-lg font-semibold">{{ title }}</h2>
     <div class="space-y-2 rounded-md border bg-muted/30 p-4">
       <p class="text-sm font-medium">
         {{ prediction.market_question }}
@@ -26,7 +26,8 @@
         Open on Polymarket
       </a>
       <p v-if="showImmutableNotice" class="text-xs text-muted-foreground">
-        The selected prediction is locked after the article is published.
+        The selected {{ title.toLowerCase() }} is locked after the article is
+        published.
       </p>
     </div>
   </section>
@@ -38,9 +39,11 @@ import type { PostPrediction } from "@/models/Posts";
 withDefaults(
   defineProps<{
     prediction: PostPrediction;
+    title?: string;
     showImmutableNotice?: boolean;
   }>(),
   {
+    title: "Prediction",
     showImmutableNotice: false,
   },
 );
