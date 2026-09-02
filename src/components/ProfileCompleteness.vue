@@ -63,7 +63,7 @@
         Last updated on:
         <span>{{
           metadataUpdated
-            ? dayjs(userData?.metadata_updated_at).format(
+            ? dayjs(userData?.layer8_metadata?.updated_at).format(
                 "MMMM D, YYYY, h:mm A"
               )
             : "Not updated yet"
@@ -146,29 +146,34 @@ const { mutate } = useMutation({
 
 const metadataUpdated = computed(() => {
   return (
-    userData.value?.bio ||
-    userData.value?.color ||
-    userData.value?.display_name ||
-    userData.value?.email_verified
+    userData.value?.layer8_metadata?.bio ||
+    userData.value?.layer8_metadata?.favorite_color ||
+    userData.value?.layer8_metadata?.display_name ||
+    userData.value?.layer8_metadata?.is_email_verified ||
+    userData.value?.layer8_metadata?.location
   );
 });
 
 const profileDetails = computed(() => [
   {
     label: "Email Verified",
-    completed: userData.value?.email_verified || false,
+    completed: userData.value?.layer8_metadata?.is_email_verified || false,
   },
   {
     label: "Display Name Set",
-    completed: !!userData.value?.display_name,
+    completed: !!userData.value?.layer8_metadata?.display_name || '',
   },
   {
     label: "Bio Completed",
-    completed: !!userData.value?.bio,
+    completed: !!userData.value?.layer8_metadata?.bio || '',
   },
   {
     label: "Favorite Color Selected",
-    completed: !!userData.value?.color,
+    completed: !!userData.value?.layer8_metadata?.favorite_color || '',
+  },
+  {
+    label: "Location Verified",
+    completed: !!userData.value?.layer8_metadata?.location && !userData.value?.layer8_metadata.location.includes("moon"),
   },
 ]);
 

@@ -21,16 +21,16 @@
           class="hidden lg:flex items-center gap-6 font-semibold text-base font-lato"
         >
           <RouterLink
-            to="/markets"
-            active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
-            class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
-            >Markets</RouterLink
-          >
-          <RouterLink
             to="/predictions"
             active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
             class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
             >Predictions</RouterLink
+          >
+          <RouterLink
+            to="/viewpoints"
+            active-class="text-red-500 border-b-1 !border-b-red-500 pb-1.5 hover:border-b-red-500"
+            class="text-black-100 py-2 px-[8.5px] pb-1.5 border-b-1 border-b-transparent hover:border-b-1 hover:border-b-black-100"
+            >Viewpoints</RouterLink
           >
         </nav>
       </div>
@@ -42,9 +42,6 @@
           v-if="headerState === 'no-user' || headerState === 'no-user-search'"
         >
           <div class="hidden md:flex items-center gap-4">
-<!--            <RouterLink to="/sign-up" class="w-fit">-->
-<!--              <Button variant="secondary" title="Sign up" size="medium" />-->
-<!--            </RouterLink>-->
             <RouterLink to="/sign-in" class="w-fit">
               <Button variant="primary" title="Sign in" size="medium" />
             </RouterLink>
@@ -205,38 +202,19 @@
             class="flex flex-col gap-4 font-semibold text-base font-lato mb-6"
           >
             <RouterLink
-              to="/markets"
-              active-class="text-red-500"
-              class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
-              @click="closeMobileMenu"
-              >Markets</RouterLink
-            >
-            <RouterLink
               to="/predictions"
               active-class="text-red-500"
               class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
               @click="closeMobileMenu"
               >Predictions</RouterLink
             >
-<!--            <div class="rounded-md border border-gray-200 overflow-hidden">-->
-<!--              <div-->
-<!--                class="px-4 py-3 text-xs font-semibold uppercase tracking-[0.24em] text-gray-500 bg-gray-50"-->
-<!--              >-->
-<!--                Services-->
-<!--              </div>-->
-<!--              <div class="flex flex-col">-->
-<!--                <RouterLink-->
-<!--                  v-for="item in serviceMenuItems"-->
-<!--                  :key="item.url"-->
-<!--                  :to="item.url"-->
-<!--                  class="text-black-100 py-3 px-4 rounded-none hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300"-->
-<!--                  active-class="text-red-500 border-l-red-500 bg-red-50/50"-->
-<!--                  @click="closeMobileMenu"-->
-<!--                >-->
-<!--                  {{ item.title }}-->
-<!--                </RouterLink>-->
-<!--              </div>-->
-<!--            </div>-->
+            <RouterLink
+              to="/viewpoints"
+              active-class="text-red-500"
+              class="text-black-100 py-3 px-4 rounded-md hover:bg-gray-50 border-l-4 border-transparent hover:border-l-gray-300 active:border-l-red-500"
+              @click="closeMobileMenu"
+              >Viewpoints</RouterLink
+            >
           </nav>
 
           <!-- Mobile Auth Buttons -->
@@ -244,12 +222,6 @@
             v-if="headerState === 'no-user' || headerState === 'no-user-search'"
           >
             <div class="flex flex-col gap-3 border-t pt-4">
-<!--              <RouterLink-->
-<!--                to="/sign-up"-->
-<!--                class="text-center py-3 px-4 border border-black rounded-md text-base font-lato text-black-100 font-semibold hover:bg-gray-50"-->
-<!--                @click="closeMobileMenu"-->
-<!--                >Sign up</RouterLink-->
-<!--              >-->
               <RouterLink
                 to="/sign-in"
                 class="text-center bg-black font-lato font-semibold text-white px-4 py-3 rounded-md text-base hover:opacity-90"
@@ -334,28 +306,6 @@
         </div>
       </div>
     </Transition>
-
-<!--    &lt;!&ndash; Filters Bar &ndash;&gt;-->
-<!--    <div v-if="showFilterBar" class="w-full">-->
-<!--      <nav-->
-<!--        class="gc-container flex items-center gap-6 overflow-x-auto text-base font-lato font-semibold px-4 md:px-0"-->
-<!--      >-->
-<!--        <RouterLink-->
-<!--          :to="{ path: '/predictions', query: { category: 'all-news' } }"-->
-<!--          :class="{ 'text-red-500': currentCategory === 'all-news' }"-->
-<!--          class="py-3 text-gray-800 whitespace-nowrap hover:text-red-500 border-b-2 border-transparent"-->
-<!--        >-->
-<!--          News-->
-<!--        </RouterLink>-->
-<!--        <RouterLink-->
-<!--          :to="{ path: '/predictions', query: { category: 'opinions' } }"-->
-<!--          :class="{ 'text-red-500': currentCategory === 'opinions' }"-->
-<!--          class="py-3 text-gray-800 whitespace-nowrap hover:text-red-500 border-b-2 border-transparent"-->
-<!--        >-->
-<!--          Opinions-->
-<!--        </RouterLink>-->
-<!--      </nav>-->
-<!--    </div>-->
   </header>
 </template>
 
@@ -378,9 +328,6 @@ const authStore = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
-// const showFilterBar = computed(() => {
-//   return route.path === "/predictions";
-// });
 const storeUsername = computed(() =>
   authStore.user?.username ? authStore.user.username : "",
 );
@@ -400,10 +347,6 @@ const { data: userData } = useQuery({
 const profilePictureUrl = computed(() => {
   return userData.value?.profile_picture_url;
 });
-
-// const currentCategory = computed(
-//   () => route.query.category as string | undefined,
-// );
 
 const isMobileMenuOpen = ref(false);
 
@@ -435,7 +378,7 @@ const { data: post, isLoading } = useQuery<
   Post | null,
   string[]
 >({
-  queryKey: ["post", postId],
+  queryKey: ["post", postId.value],
   queryFn: async () => {
     const response = await fetchPostById(postId.value);
     return response as Post | null;
@@ -462,9 +405,9 @@ const navigateToCreateOpinion = () => {
 
   router.push({
     name: "WriteOpinionView",
-      params: {
-          id: postId.value,
-      },
+    params: {
+      id: postId.value,
+    },
   });
 };
 

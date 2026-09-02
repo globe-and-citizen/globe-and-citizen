@@ -6,11 +6,6 @@
         alt="Opinion hero image"
         class="h-[200px] sm:h-[250px] md:h-[300px] lg:h-[557px] xl:h-[557px] w-full object-cover"
     />
-    <!-- <div
-      v-if="opinion"
-      ref="insightsWrapper"
-      class="reader-insights-sticky shadow-card-soft mb-4 md:mb-6 lg:mb-8 sticky top-0 z-10 bg-white-100"
-    ></div> -->
     <div class="mt-6 lg:mt-0 px-4 md:px-8 lg:px-[120px] lg:pb-10">
         <div class="gc-container">
             <div v-if="!opinion" class="flex justify-center items-center h-64">
@@ -23,7 +18,6 @@
                 class="lg:pb-10 font-lato"
                 @touchstart="handleTouchStart"
                 @touchmove="handleTouchMove"
-                @touchend="handleTouchEnd"
             >
                 <!-- Mobile and Tablet Layout (< lg) -->
                 <div class="lg:hidden">
@@ -223,8 +217,7 @@ const touchStartX = ref(0);
 const touchStartY = ref(0);
 const touchEndX = ref(0);
 const touchEndY = ref(0);
-// const minSwipeDistance = 50;
-// const maxVerticalDistance = 100;
+
 const handleTouchStart = (event: TouchEvent) => {
     if (window.innerWidth >= 1024) return;
     const touch = event.touches[0];
@@ -239,36 +232,6 @@ const handleTouchMove = (event: TouchEvent) => {
     touchEndY.value = touch.clientY;
 };
 
-const handleTouchEnd = () => {
-    // if (window.innerWidth >= 1024) return;
-    // const deltaX = touchEndX.value - touchStartX.value;
-    // const deltaY = Math.abs(touchEndY.value - touchStartY.value);
-    // const screenWidth = window.innerWidth;
-    // const edgeThreshold = screenWidth;
-    // const isFromLeftEdge = touchStartX.value <= edgeThreshold;
-    // const isFromRightEdge = touchStartX.value >= screenWidth - edgeThreshold;
-    // const isHorizontalSwipe = Math.abs(deltaX) >= minSwipeDistance;
-    // const isNotTooVertical = deltaY <= maxVerticalDistance;
-    // if (
-    //   (isFromLeftEdge || isFromRightEdge) &&
-    //   isHorizontalSwipe &&
-    //   isNotTooVertical
-    // ) {
-    //   if (
-    //     (isFromRightEdge && deltaX < -minSwipeDistance) ||
-    //     (isFromLeftEdge && deltaX > minSwipeDistance)
-    //   ) {
-    //     showAnnotations.value = !showAnnotations.value;
-    //     if ("vibrate" in navigator) {
-    //       navigator.vibrate(50);
-    //     }
-    //   }
-    // }
-    // touchStartX.value = 0;
-    // touchStartY.value = 0;
-    // touchEndX.value = 0;
-    // touchEndY.value = 0;
-};
 
 const {
     value: {data: opinion},

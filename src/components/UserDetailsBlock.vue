@@ -22,7 +22,7 @@
           {{ !!user?.description.length ? user?.description : "" }}
         </p>
         <p class="text-xs text-white-60 font-lato font-medium">
-          {{ user?.location || "Unknown location" }}
+          {{ user?.layer8_metadata?.location || "Unknown location" }}
         </p>
       </div>
     </div>

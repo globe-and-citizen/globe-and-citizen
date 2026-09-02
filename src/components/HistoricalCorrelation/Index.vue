@@ -30,8 +30,8 @@
         v-model:interval="historyInterval"
         :is-loading="isLoading"
         @generate="onGenerate"
-        @update:chart-title="t => chartTitle = t"
-        @update:fidelity="t => historyFidelity = t"
+        @update:chart-title="(t: string) => chartTitle = t"
+        @update:fidelity="(t: number) => historyFidelity = t"
       />
     </section>
 
@@ -83,8 +83,8 @@ const tokenIdA = ref("");
 const tokenIdB = ref("");
 const startDate = ref("");
 const endDate = ref("");
-const historyInterval = ref("all");
-const historyFidelity = ref(1);
+const historyInterval = ref("1m");
+const historyFidelity = ref(10);
 const pairedSamplesCount = ref(0);
 const chartTitle = ref("");
 const errorMsg = ref("");

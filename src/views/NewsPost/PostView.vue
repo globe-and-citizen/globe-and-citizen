@@ -4,7 +4,6 @@
         class="animate-pulse space-y-4 py-10"
         @touchstart="handleTouchStart"
         @touchmove="handleTouchMove"
-        @touchend="handleTouchEnd"
     >
         <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
         <div class="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
@@ -21,7 +20,6 @@
             class="mt-6 lg:mt-0 px-4 md:px-8 lg:px-[120px] lg:pb-10"
             @touchstart="handleTouchStart"
             @touchmove="handleTouchMove"
-            @touchend="handleTouchEnd"
         >
             <div class="gc-container">
                 <NewsPostHeadingSection :post="post"/>
@@ -43,6 +41,17 @@
                 <div v-if="post" class="lg:pb-10 flex flex-col lg:flex-row font-lato">
                     <div class="w-full lg:w-7/12">
                         <div class="gc-container">
+                            <PostPredictionSection
+                                v-if="post.prediction"
+                                :prediction="post.prediction"
+                                class="mb-6"
+                            />
+                            <PostPredictionSection
+                                v-if="post.hedge"
+                                :prediction="post.hedge"
+                                title="Hedge"
+                                class="mb-6"
+                            />
                             <div class="prose prose-sm md:prose-lg max-w-none">
                                 <div class="ql-editor !pl-0">
                                     <Segmented
@@ -92,31 +101,6 @@
                             <h3 class="text-lg md:text-xl font-bold mb-4">
                                 Related Opinions
                             </h3>
-                            <!-- <div class="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4">
-                              <router-link
-                                v-for="opinion in displayedEntries"
-                                :key="opinion.id"
-                                :to="`/post/${postId}/${opinion.slug}`"
-                                class="block hover:opacity-90 flex-shrink-0 w-64"
-                              >
-                                <div class="bg-white rounded-lg shadow-sm border p-2">
-                                  <div>
-                                    <h4 class="text-lg font-bold line-clamp-2">
-                                      {{ opinion.title }}
-                                    </h4>
-                                    <div class="max-w-none">
-                                      <div
-                                        class="ql-editor !p-0"
-                                        v-html="sanitizedContent.substring(0, 70) + '...'"
-                                      ></div>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-2">
-                                      Opinion by {{ opinion.user.username }}
-                                    </p>
-                                  </div>
-                                </div>
-                              </router-link>
-                            </div> -->
                             <ExploreMore :posts="displayedEntries ? displayedEntries : []"/>
                         </div>
 
@@ -254,6 +238,8 @@ import {useAuthStore} from "@/store/authStore";
 import DeleteDialog from "@/components/AdminPanel/NewsTable/DeleteDialog.vue";
 import EditDialog from "@/components/AdminPanel/NewsTable/EditDialog.vue";
 import ExploreMore from "@/views/Home/sections/ExploreMore.vue";
+import PostPredictionSection from "@/components/PostPredictionSection.vue";
+import {withoutEmbeddedPrediction} from "@/utils/postPrediction";
 
 import {toast} from "vue3-toastify";
 
@@ -278,8 +264,7 @@ const touchStartX = ref(0);
 const touchStartY = ref(0);
 const touchEndX = ref(0);
 const touchEndY = ref(0);
-// const minSwipeDistance = 50;
-// const maxVerticalDistance = 100;
+
 const handleTouchStart = (event: TouchEvent) => {
     if (window.innerWidth >= 1024) return;
     const touch = event.touches[0];
@@ -294,36 +279,6 @@ const handleTouchMove = (event: TouchEvent) => {
     touchEndY.value = touch.clientY;
 };
 
-const handleTouchEnd = () => {
-    // if (window.innerWidth >= 1024) return;
-    // const deltaX = touchEndX.value - touchStartX.value;
-    // const deltaY = Math.abs(touchEndY.value - touchStartY.value);
-    // const screenWidth = window.innerWidth;
-    // const edgeThreshold = screenWidth;
-    // const isFromLeftEdge = touchStartX.value <= edgeThreshold;
-    // const isFromRightEdge = touchStartX.value >= screenWidth - edgeThreshold;
-    // const isHorizontalSwipe = Math.abs(deltaX) >= minSwipeDistance;
-    // const isNotTooVertical = deltaY <= maxVerticalDistance;
-    // if (
-    //   (isFromLeftEdge || isFromRightEdge) &&
-    //   isHorizontalSwipe &&
-    //   isNotTooVertical
-    // ) {
-    //   if (
-    //     (isFromRightEdge && deltaX < -minSwipeDistance) ||
-    //     (isFromLeftEdge && deltaX > minSwipeDistance)
-    //   ) {
-    //     showAnnotations.value = !showAnnotations.value;
-    //     if ("vibrate" in navigator) {
-    //       navigator.vibrate(50);
-    //     }
-    //   }
-    // }
-    // touchStartX.value = 0;
-    // touchStartY.value = 0;
-    // touchEndX.value = 0;
-    // touchEndY.value = 0;
-};
 
 const {
     value: {data: post, isLoading},
@@ -416,7 +371,13 @@ onMounted(() => {
 
 const sanitizedContent = computed(() => {
     if (!post.value || !post.value.content) return "";
-    return DOMPurify.sanitize(post.value.content);
+    return DOMPurify.sanitize(
+        withoutEmbeddedPrediction(
+            post.value.content,
+            post.value.prediction,
+            post.value.hedge
+        )
+    );
 });
 
 const entriesLimit = 3;

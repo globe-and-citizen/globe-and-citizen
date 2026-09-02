@@ -191,6 +191,15 @@ export async function patchNewsArticle(
       throw new Error(`Error updating news article: ${response}`);
     }
 
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error ||
+          errorData.message ||
+          `Error updating news article: ${response.statusText}`
+      );
+    }
+
     const data = await response.json();
     return { success: true, message: data.message };
   } catch (error) {

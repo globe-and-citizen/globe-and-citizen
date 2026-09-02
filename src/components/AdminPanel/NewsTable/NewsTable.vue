@@ -166,6 +166,7 @@
   <EditDialog
     :is-open="editDialogOpen"
     :post="selectedPost"
+    :is-saving="updatePostPending"
     @close="editDialogOpen = false"
     @save="handleSaveEdit"
   />
@@ -288,7 +289,7 @@ const { mutate: deletePost } = useMutation({
   },
 });
 
-const { mutate: updatePost } = useMutation({
+const { mutate: updatePost, isPending: updatePostPending } = useMutation({
   mutationFn: async ({
     postId,
     article,
@@ -300,6 +301,8 @@ const { mutate: updatePost } = useMutation({
   },
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ["allPosts"] });
+    queryClient.invalidateQueries({ queryKey: ["users-news-articles"] });
+    editDialogOpen.value = false;
   },
   onError: (error) => {
     console.error("Failed to update post:", error);
@@ -425,20 +428,23 @@ function handleEdit(post: Post) {
 }
 
 function handleSaveEdit(formData: Partial<Post>) {
+  const article: Partial<NewPostType> = {
+    title: formData.title || "",
+    slug: formData.slug || "",
+    description: formData.description || "",
+    url_to_image: formData.url_to_image || "",
+    content: formData.content || "",
+  };
+
+  if (!selectedPost.value?.prediction) {
+    article.source_name = formData.source_name || "";
+    article.source_url = formData.source_url || "";
+  }
+
   updatePost({
     postId: selectedPost.value?.slug || "",
-    article: {
-      title: formData.title || "",
-      slug: formData.slug || "",
-      author: formData.author || "",
-      description: formData.description || "",
-      url_to_image: formData.url_to_image || "",
-      source_name: formData.source_name || "",
-      source_url: formData.source_url || "",
-      content: formData.content || "",
-    },
+    article,
   });
-  editDialogOpen.value = false;
 }
 
 function handleDelete(post: Post) {

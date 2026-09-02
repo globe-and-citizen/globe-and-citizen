@@ -21,6 +21,18 @@ type CountryVote = {
   comments: number;
 };
 
+export type PostPrediction = {
+  url: string;
+  event_title: string;
+  market_id: string;
+  market_slug: string;
+  market_question: string;
+  outcome: "Yes" | "No";
+  token_id: string;
+  image?: string;
+  tags?: string[];
+};
+
 export type Post = {
   id: number;
   created_at: string;
@@ -36,6 +48,8 @@ export type Post = {
   description: string;
   source_url: string;
   source_name: string;
+  prediction?: PostPrediction;
+  hedge?: PostPrediction;
   url_to_image: string;
   version: number;
   type?: "entry" | "post";

@@ -20,7 +20,7 @@
         </p>
       </div>
 
-      <Button variant="outline" @click="openMarketSearchDialog">
+      <Button type="button" variant="outline" @click="openMarketSearchDialog">
         Open Search
       </Button>
     </div>
@@ -234,7 +234,7 @@
           class="input input-bordered h-10 w-full rounded-lg border-base-300 bg-base-100 text-sm border px-2"
         />
         <p class="text-xs text-muted-foreground mt-1">
-          Accuracy of the data expressed in minutes. Default is 1 minute.
+          Accuracy of the data expressed in minutes.
         </p>
       </div>
     </div>
@@ -266,21 +266,24 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from "vue";
+import {computed, ref, watch, onMounted} from "vue";
 import type {PolymarketEvent, PolymarketMarket} from "@/types";
 import {parseIfString, parsePolymarketUrl} from "@/utils/trading/useTradingUtils.ts";
 import {useMarketData} from "@/queries";
 import {Button} from "@/components/ui/button";
 import type {PolymarketGammaSearchEvent, SelectMarketOption} from "@/api/polymarket.ts";
 import SearchDialog from "@/components/HistoricalCorrelation/SearchDialog.vue";
+import {useRoute} from "vue-router";
+
+const route = useRoute();
 
 const tokenIdA = defineModel<string>("tokenIdA", {default: ""});
 const tokenIdB = defineModel<string>("tokenIdB", {default: ""});
 const startDate = defineModel<string>("startDate", {default: ""});
 const endDate = defineModel<string>("endDate", {default: ""});
-const interval = defineModel<string>("interval", {default: "1h"});
+const interval = defineModel<string>("interval", {default: "1m"});
 const allowedIntervals = ["1h", "6h", "1d", "1w", "1m", "all", "max"];
-const fidelity = ref<number>(1);
+const fidelity = ref<number>(10);
 
 defineProps<{
   isLoading: boolean;
@@ -306,6 +309,21 @@ const canGenerate = computed(() => {
 });
 
 function handleGenerate() {
+  const url = new URL(window.location.href);
+
+  url.searchParams.set("marketA", marketA.value?.slug ?? "");
+  url.searchParams.set("tokenIdA", tokenIdA.value);
+
+  url.searchParams.set("marketB", marketB.value?.slug ?? "");
+  url.searchParams.set("tokenIdB", tokenIdB.value);
+
+  url.searchParams.set("startDate", startDate.value);
+  url.searchParams.set("endDate", endDate.value);
+  url.searchParams.set("interval", interval.value);
+  url.searchParams.set("fidelity", String(fidelity.value));
+
+  window.history.replaceState({}, "", url.toString());
+
   emit('generate')
   emit("update:fidelity", fidelity.value);
 }
@@ -363,10 +381,26 @@ watch(marketErrorB, (err) => {
 
 watch(marketDataA, (value) => {
   marketsA.value = toMarketList(value);
+
+  // if restoring from url queries
+  const savedMarketSlugA = route.query.marketA;
+
+  if (typeof savedMarketSlugA === "string") {
+    marketA.value =
+      marketsA.value.find(m => m.slug === savedMarketSlugA) ?? null;
+  }
 }, {immediate: true});
 
 watch(marketDataB, (value) => {
   marketsB.value = toMarketList(value);
+
+  // if restoring from url queries
+  const savedMarketSlugB = route.query.marketB;
+
+  if (typeof savedMarketSlugB === "string") {
+    marketB.value =
+      marketsB.value.find(m => m.slug === savedMarketSlugB) ?? null;
+  }
 }, {immediate: true});
 
 function handleInputMarketUrlA(event: Event) {
@@ -410,28 +444,106 @@ const toOutcomes = (market: PolymarketMarket | null): MarketOutcome[] => {
   }));
 };
 
-const outcomesA = computed(() => toOutcomes(marketA.value));
-const outcomesB = computed(() => toOutcomes(marketB.value));
+const outcomesA = ref<MarketOutcome[]>([]);
+const outcomesB = ref<MarketOutcome[]>([]);
 
-watch([marketA, outcomesA], () => {
-  if (!marketA.value || outcomesA.value.length === 0) {
+watch(marketA, (value) => {
+  if (value) {
+    const newOutcomes = toOutcomes(value);
+    outcomesA.value = newOutcomes;
+
+    // if restoring from url query
+    if (pendingTokenIdA.value) {
+      const savedOutcome = newOutcomes.find(
+        o => o.tokenId === pendingTokenIdA.value
+      );
+
+      if (savedOutcome) {
+        tokenIdA.value = savedOutcome.tokenId;
+        pendingTokenIdA.value = null;
+        return;
+      }
+    }
+
+    const matchingTokenId = findMatchingTokenId(
+      outcomesA.value,
+      newOutcomes,
+      tokenIdA.value
+    );
+
+    if (matchingTokenId) {
+      tokenIdA.value = matchingTokenId;
+    } else {
+      tokenIdA.value = newOutcomes[0]?.tokenId || "";
+    }
+  } else {
+    outcomesA.value = [];
     tokenIdA.value = "";
-    return;
-  }
-  if (!outcomesA.value.some((o) => o.tokenId === tokenIdA.value)) {
-    tokenIdA.value = outcomesA.value[0]?.tokenId || "";
   }
 }, {immediate: true});
 
-watch([marketB, outcomesB], () => {
-  if (!marketB.value || outcomesB.value.length === 0) {
+watch(marketB, (value) => {
+  if (value) {
+    const newOutcomes = toOutcomes(value);
+    outcomesB.value = newOutcomes;
+
+    // if restoring from url queries
+    if (pendingTokenIdB.value) {
+      const savedOutcome = newOutcomes.find(
+        o => o.tokenId === pendingTokenIdB.value
+      );
+
+      if (savedOutcome) {
+        tokenIdB.value = savedOutcome.tokenId;
+        pendingTokenIdB.value = null;
+        return;
+      }
+    }
+
+    const matchingTokenId = findMatchingTokenId(
+      outcomesB.value,
+      newOutcomes,
+      tokenIdB.value
+    );
+
+    if (matchingTokenId) {
+      tokenIdB.value = matchingTokenId;
+    } else {
+      tokenIdB.value = newOutcomes[0]?.tokenId || "";
+    }
+  } else {
+    outcomesB.value = [];
     tokenIdB.value = "";
-    return;
-  }
-  if (!outcomesB.value.some((o) => o.tokenId === tokenIdB.value)) {
-    tokenIdB.value = outcomesB.value[0]?.tokenId || "";
   }
 }, {immediate: true});
+
+function findMatchingTokenId(
+  oldOutcomes: MarketOutcome[],
+  newOutcomes: MarketOutcome[],
+  oldTokenId: string,
+): string | undefined {
+  // Check that both arrays contain the same names
+  const oldName = new Set(oldOutcomes.map(o => o.name))
+  const newName = new Set(newOutcomes.map(o => o.name))
+
+  if (
+    oldName.size !== newName.size ||
+    [...oldName].some(name => !newName.has(name))
+  ) {
+    return
+  }
+
+  // Find outcome in the old list by tokenId
+  const oldOutcome = oldOutcomes.find(o => o.tokenId === oldTokenId);
+  if (!oldOutcome) {
+    return undefined
+  }
+
+  // Find matching outcome in new list by name
+  const newOutcome = newOutcomes.find(o => o.name === oldOutcome.name)
+
+  return newOutcome?.tokenId
+}
 
 const selectedOutcomeNameA = computed(() => {
   const selected = outcomesA.value.find((o) => o.tokenId === tokenIdA.value);
@@ -511,4 +623,107 @@ watch(searchOptionB, (b) => {
     marketsB.value = [];
   }
 }, {immediate: true, deep: true})
+
+watch([marketA, marketB], ([a, b]) => {
+  if (a && b) {
+    // Don't overwrite dates when loading a saved configuration.
+    if (typeof route.query.startDate === "string" && typeof route.query.endDate === "string") {
+      return;
+    }
+
+    const aIso = a.startDateIso ?? "";
+    const bIso = b.startDateIso ?? "";
+
+    if (!aIso && !bIso) return;
+
+    startDate.value = aIso > bIso ? aIso : bIso;
+    endDate.value = new Date().toISOString().slice(0, 10);
+  }
+}, {immediate: true});
+
+// restore from queries
+const isRestoringFromUrl = ref(false);
+const pendingTokenIdA = ref<string | null>(null);
+const pendingTokenIdB = ref<string | null>(null);
+
+function restoreFromSavedUrl() {
+  const savedMarketSlugA = route.query.marketA;
+  const savedTokenIdA = route.query.tokenIdA;
+
+  const savedMarketSlugB = route.query.marketB;
+  const savedTokenIdB = route.query.tokenIdB;
+
+  const savedStartDate = route.query.startDate;
+  const savedEndDate = route.query.endDate;
+  const savedInterval = route.query.interval;
+  const savedFidelity = route.query.fidelity;
+
+  // Not a saved correlation URL
+  if (
+    typeof savedMarketSlugA !== "string" ||
+    typeof savedTokenIdA !== "string" ||
+    typeof savedMarketSlugB !== "string" ||
+    typeof savedTokenIdB !== "string"
+  ) {
+    return;
+  }
+
+  // Restore basic configuration
+  if (typeof savedStartDate === "string") {
+    startDate.value = savedStartDate;
+  }
+
+  if (typeof savedEndDate === "string") {
+    endDate.value = savedEndDate;
+  }
+
+  if (
+    typeof savedInterval === "string" &&
+    allowedIntervals.includes(savedInterval)
+  ) {
+    interval.value = savedInterval;
+  }
+
+  if (typeof savedFidelity === "string") {
+    const parsedFidelity = Number(savedFidelity);
+
+    if (Number.isFinite(parsedFidelity)) {
+      fidelity.value = parsedFidelity;
+    }
+  }
+
+  isRestoringFromUrl.value = true;
+
+  // Keep token IDs until the corresponding market/outcomes are loaded.
+  pendingTokenIdA.value = savedTokenIdA;
+  pendingTokenIdB.value = savedTokenIdB;
+
+  // Trigger your existing market fetching
+  endpointsA.value = `/markets/slug/${savedMarketSlugA}`;
+  endpointsB.value = `/markets/slug/${savedMarketSlugB}`;
+
+  marketUrlA.value =
+    `https://polymarket.com/market/${savedMarketSlugA}`;
+
+  marketUrlB.value =
+    `https://polymarket.com/market/${savedMarketSlugB}`;
+}
+
+watch([marketA, marketB, tokenIdA, tokenIdB], ([a, b, tokenA, tokenB]) => {
+    if (!isRestoringFromUrl.value || !a || !b || !tokenA || !tokenB) {
+      return;
+    }
+
+    isRestoringFromUrl.value = false;
+
+    emit("update:fidelity", fidelity.value);
+    emit("generate");
+  },
+  {flush: "post"}
+);
+
+onMounted(() => {
+  restoreFromSavedUrl();
+});
+
 </script>

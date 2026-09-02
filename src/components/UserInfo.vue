@@ -31,7 +31,7 @@
       <p class="text-base font-normal">{{ user?.description }}</p>
       <div class="mt-2">
         <p class="font-normal text-black-40">Bio</p>
-        <p class="italic text-black-100">"{{ user?.bio }}"</p>
+        <p class="italic text-black-100">"{{ user?.layer8_metadata?.bio }}"</p>
       </div>
     </div>
   </div>

@@ -1,6 +1,15 @@
 export type TradeStatus = "open" | "resolved";
 export type FilterType = "all" | "open" | "resolved";
 
+export interface PolymarketTag {
+  label?: string;
+}
+
+export interface PolymarketMarketEvent {
+  title?: string;
+  tags?: PolymarketTag[];
+}
+
 export interface PolymarketMarket {
   id: string;
   question: string;
@@ -20,8 +29,11 @@ export interface PolymarketMarket {
   conditionId?: string;
   endDate?: string;
   endDateIso?: string;
+  startDate?: string;
+  startDateIso?: string;
   gameStartTime?: string;
-  events?: object[];
+  tags?: PolymarketTag[];
+  events?: PolymarketMarketEvent[];
   realtimePrices?: Record<
     string,
     {
@@ -35,5 +47,7 @@ export interface PolymarketMarket {
 }
 
 export interface PolymarketEvent {
+  title?: string;
+  tags?: PolymarketTag[];
   markets: PolymarketMarket[];
 }

@@ -32,7 +32,7 @@
             @click="zoomOut"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-4 h-4">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
             </svg>
           </button>
 
@@ -41,7 +41,7 @@
             @click="zoomIn"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-4 h-4">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14"/>
             </svg>
           </button>
         </div>
@@ -340,12 +340,41 @@ watch(samples, (v) => {
   pairedSamplesCount.value = v.length;
 }, {immediate: true});
 
-
 const scatterData = computed(() =>
-  samples.value.map((sample) => ({
-    value: [sample.x, sample.y],
-    timestamp: sample.timestamp,
-  }))
+  samples.value.map((sample) => {
+    const color = (() => {
+      const hoursDiff = (Date.now() / 1000 - sample.timestamp) / 3600;
+
+      // ≤ 48h: Ultra Vivid Pure Green (00c853)
+      if (hoursDiff <= 48) {
+        const alpha = 0.5 + (1 - hoursDiff / 48) * 0.5;
+        return `rgba(0, 200, 83, ${alpha})`;
+      }
+      // ≤ 7d: Electric Pure Blue (0052ff)
+      if (hoursDiff <= 168) {
+        const alpha = 0.5 + (1 - (hoursDiff - 48) / 120) * 0.5;
+        return `rgba(0, 82, 255, ${alpha})`;
+      }
+      // ≤ 30d: Intense Sharp Amber/Orange (ff8f00)
+      if (hoursDiff <= 720) {
+        const alpha = 0.5 + (1 - (hoursDiff - 168) / 552) * 0.5;
+        return `rgba(255, 143, 0, ${alpha})`;
+      }
+      // > 30d: Deep Solid Charcoal (1e293b)
+      const alpha = 0.5 + (1 - Math.min(hoursDiff - 720, 1440) / 1440) * 0.5;
+      return `rgba(30, 41, 59, ${alpha})`;
+    })();
+
+    return {
+      value: [sample.x, sample.y],
+      timestamp: sample.timestamp,
+      itemStyle: {
+        color,
+        borderColor: "#ffffff",
+        borderWidth: 0.8,
+      },
+    };
+  })
 );
 
 const latestSample = computed<ScatterPoint | null>(() => {
@@ -696,7 +725,8 @@ const updateChart = () => {
 
       legend: {
         top: legendTop,
-        data: ["Samples", "Regression"],
+        // Define explicit items so ECharts creates legend icons with corresponding colors
+        data: ["≤ 48h", "≤ 7d", "≤ 30d", "> 30d", "Latest", "Regression"],
       },
 
       tooltip: {
@@ -760,27 +790,57 @@ const updateChart = () => {
       ],
 
       series: [
+        // --- Dummy series to force legend generation ---
+        {
+          name: "≤ 48h",
+          type: "scatter",
+          itemStyle: { color: "#00c853" },
+          data: [],
+        },
+        {
+          name: "≤ 7d",
+          type: "scatter",
+          itemStyle: { color: "#0052ff" },
+          data: [],
+        },
+        {
+          name: "≤ 30d",
+          type: "scatter",
+          itemStyle: { color: "#ff8f00" },
+          data: [],
+        },
+        {
+          name: "> 30d",
+          type: "scatter",
+          itemStyle: { color: "#1e293b" },
+          data: [],
+        },
+
+        // --- Actual data series ---
         {
           name: "Samples",
           type: "scatter",
           symbolSize: 8,
-          itemStyle: {color: "#2563eb"},
           data: scatterData.value,
         },
         {
           name: "Latest",
           type: "scatter",
-          symbolSize: 8,
-          itemStyle: {color: "#dc2626"}, // красный
+          symbolSize: 9,
+          itemStyle: {
+            color: "#ff1744", // Punchy Pure Crimson
+            borderColor: "#ffffff",
+            borderWidth: 1.5,
+          },
           data: latestData.value,
           label: {
             show: !!latestSample.value,
             formatter: "latest",
             position: "top",
-            fontWeight: 500,
-            // color: "#dc2626",
+            fontWeight: 700,
+            color: "#ff1744",
+            fontSize: 12,
           },
-          // рисуется поверх основных точек
           z: 10,
         },
         {
@@ -789,7 +849,7 @@ const updateChart = () => {
           showSymbol: false,
           smooth: false,
           silent: true,
-          lineStyle: {color: "#dc2626", width: 2, type: "dashed"},
+          lineStyle: { color: "#ff1744", width: 2, type: "dashed" },
           data: regressionLine.value,
         },
       ],
@@ -899,10 +959,12 @@ watch(
 .icon-btn {
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
+
 .icon-btn:hover {
   transform: translateY(-3px);
   box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
+
 .btn-ghost svg, .btn-outline svg {
   stroke-width: 1.6;
 }

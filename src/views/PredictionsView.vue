@@ -68,8 +68,6 @@
                   email: '',
                   created_at: new Date().toISOString(),
                   updated_at: new Date().toISOString(),
-                  bio: '',
-                  location: '',
                   website: '',
                   profile_picture_url:
                     'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
@@ -77,10 +75,27 @@
                   role_id: 0,
                   role: { id: 0, description: '', level: 0, name: 'user' },
                   description: '',
-                  email_verified: false,
-                  display_name: article.source?.name || 'Unknown Source',
-                  color: '',
-                  metadata_updated_at: new Date().toISOString(),
+                  layer8_metadata: {
+                    bio: '',
+                    display_name: article.source?.name || 'Unknown Source',
+                    favorite_color: '',
+                    is_email_verified: false,
+                    location: '',
+
+                    display_name_l8_updated_at: '',
+                    bio_l8_updated_at: '',
+                    favorite_color_l8_updated_at: '',
+                    is_email_verified_l8_updated_at: '',
+                    location_l8_updated_at: '',
+
+                    display_name_updated_at: '',
+                    bio_updated_at: '',
+                    favorite_color_updated_at: '',
+                    is_email_verified_updated_at: '',
+                    location_updated_at: '',
+
+                    updated_at: new Date().toISOString(),
+                  }
                 },
               }"
               :show-reading-time-and-comments="false"
@@ -141,7 +156,7 @@ const fetchFn = async () => {
 };
 
 const {data, isLoading, refetch} = useQuery<AllNewsResponseType>({
-    queryKey: ["predictions", currentPage.value, pageSize.value],
+    queryKey: ["viewpoints", currentPage.value, pageSize.value],
     queryFn: fetchFn,
     refetchOnWindowFocus: true,
 });
