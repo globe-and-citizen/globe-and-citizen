@@ -24,11 +24,19 @@
               class="w-full max-h-64 object-cover rounded-md"
             />
           </div>
+          <PostPredictionSection
+            v-if="post?.prediction"
+            :prediction="post.prediction"
+            class="my-4"
+          />
+          <PostPredictionSection
+            v-if="post?.hedge"
+            :prediction="post.hedge"
+            title="Hedge"
+            class="my-4"
+          />
           <p class="text-sm">{{ post?.description }}</p>
-          <div
-            className="ql-editor mt-4 !h-fit"
-            v-html="sanitizedContent"
-          ></div>
+          <div class="ql-editor mt-4 !h-fit" v-html="sanitizedContent"></div>
         </div>
       </div>
       <DialogFooter class="flex-col-reverse sm:flex-row sm:gap-1 md:gap-2">
@@ -58,6 +66,8 @@ import {
 } from "@/components/ui/dialog";
 import type { Post } from "@/models/Posts";
 import DOMPurify from "dompurify";
+import PostPredictionSection from "@/components/PostPredictionSection.vue";
+import { withoutEmbeddedPrediction } from "@/utils/postPrediction";
 
 interface Props {
   isOpen: boolean;
@@ -85,6 +95,12 @@ function formatDate(dateString: string): string {
 
 const sanitizedContent = computed(() => {
   if (!props.post || !props.post.content) return "";
-  return DOMPurify.sanitize(props.post.content);
+  return DOMPurify.sanitize(
+    withoutEmbeddedPrediction(
+      props.post.content,
+      props.post.prediction,
+      props.post.hedge,
+    ),
+  );
 });
 </script>
