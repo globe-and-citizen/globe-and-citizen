@@ -7,29 +7,6 @@
         showFullInsights,
     }"
   >
-    <!-- SEE READERS INSIGHT TOGGLE -->
-
-    <!-- <div
-      class="min-w-[260px] flex justify-between items-center"
-      :class="{ hidden: showFullInsights }"
-    >
-      <span class="text-xl text-black-100 font-semibold">
-        {{ modelValue ? "Hide Readers Insight" : "See Readers Insight" }}
-      </span>
-      <label class="toggle-switch">
-        <input
-          type="checkbox"
-          :checked="modelValue"
-          @change="
-            $emit(
-              'update:modelValue',
-              ($event.target as HTMLInputElement).checked
-            )
-          "
-        />
-        <span class="toggle-slider"></span>
-      </label>
-    </div> -->
 
     <!-- STATS SECTION -->
     <div
@@ -128,7 +105,6 @@
         <div class="charts-placeholder">
           <div class="mt-2 space-y-6">
             <div class="bg-white rounded-lg shadow-sm">
-              <!-- <h4 class="font-medium text-black-80 mb-4">Interactive map</h4> -->
               <div class="h-[400px]">
                 <LeafletMap :country-votes="countryVotes" />
               </div>

@@ -1,7 +1,7 @@
 <template>
   <div>
     <RouterLink to="profile-menu" class="block md:hidden cursor-pointer">
-      <component :is="arrowBackIcon" class="rotate-180" />
+      <component :is="arrowBackIcon" class="rotate-180"/>
     </RouterLink>
     <div class="grid grid-cols-1 md:grid-cols-[134px_1fr] gap-4 font-lato">
       <div class="justify-items-center">
@@ -95,26 +95,8 @@
           </div>
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
             <div class="grid gap-2">
-              <Label for="location">Location</Label>
-              <select
-                id="location"
-                v-model="editForm.location"
-                class="border border-[rgba(229,229,229, 0.92)] rounded-md px-3 py-2 text-sm text-black bg-[rgb(243,243,243)] min-w-[0px]"
-              >
-                <option disabled value="">Select your country</option>
-                <option
-                  v-for="country in countries"
-                  :key="country.code"
-                  :value="country.code"
-                >
-                  {{ country.country }}
-                </option>
-              </select>
-            </div>
-
-            <div class="grid gap-2">
               <Label for="dateOfBirth"
-                >Date of Birth <i>(coming soon)</i></Label
+              >Date of Birth <i>(coming soon)</i></Label
               >
               <Input
                 id="dateOfBirth"
@@ -132,18 +114,48 @@
             Layer8 Provided Metadata
           </h5>
           <div class="grid gap-4 py-4">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-2">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div class="grid gap-2">
                 <Label for="username">Display name</Label>
                 <Input
                   id="displayName"
-                  v-model="editForm.display_name"
+                  v-model="layer8_metadata.display_name"
                   disabled
                 />
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on Layer8:
+                  {{ formatVerifiedAt(layer8_metadata.display_name_l8_updated_at) || "never" }}
+                </div>
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on G&C:
+                  {{ formatVerifiedAt(layer8_metadata.display_name_updated_at) || "never" }}
+                </div>
               </div>
+
               <div class="grid gap-2">
                 <Label for="color">Color</Label>
-                <Input id="color" v-model="editForm.color" disabled />
+                <Input id="color" v-model="layer8_metadata.favorite_color" disabled/>
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on Layer8:
+                  {{ formatVerifiedAt(layer8_metadata.favorite_color_l8_updated_at) || "never" }}
+                </div>
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on G&C:
+                  {{ formatVerifiedAt(layer8_metadata.favorite_color_updated_at) || "never" }}
+                </div>
+              </div>
+
+              <div class="grid gap-2">
+                <Label for="location">Location</Label>
+                <Input id="country" v-model="country" disabled/>
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on Layer8:
+                  {{ formatVerifiedAt(layer8_metadata.location_l8_updated_at) || "never" }}
+                </div>
+                <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                  Last Updated on G&C:
+                  {{ formatVerifiedAt(layer8_metadata.location_updated_at) || "never" }}
+                </div>
               </div>
             </div>
 
@@ -151,11 +163,19 @@
               <Label for="bio">Bio (provided from Layer8)</Label>
               <Textarea
                 id="bio"
-                v-model="editForm.bio"
+                v-model="layer8_metadata.bio"
                 class="min-h-[84px]"
                 disabled
                 placeholder="Enter your bio (optional)"
               />
+              <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                Last Updated on Layer8:
+                {{ formatVerifiedAt(layer8_metadata.bio_l8_updated_at) || "never" }}
+              </div>
+              <div class="text-xs text-[#8F8F8F] text-start mt-1">
+                Last Updated on G&C:
+                {{ formatVerifiedAt(layer8_metadata.bio_updated_at) || "never" }}
+              </div>
             </div>
           </div>
         </div>
@@ -170,31 +190,32 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { getUser, updateUser } from "@/api/user.ts";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import type { UserType } from "@/models/Auth";
-import { useAuthStore } from "@/store/authStore.ts";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/vue-query";
-import { ref, watch } from "vue";
+import {getUser, updateUser} from "@/api/user.ts";
+import {Input} from "@/components/ui/input";
+import {Label} from "@/components/ui/label";
+import type {Layer8Metadata, UserType, UserUpdateType} from "@/models/Auth";
+import {useAuthStore} from "@/store/authStore.ts";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/vue-query";
+import {computed, ref, watch} from "vue";
 import Button from "../../components/Button.vue";
-import { generateUserIcon } from "@/composables/utils.ts";
+import {generateUserIcon} from "@/composables/utils.ts";
 import Textarea from "../../components/ui/textarea/Textarea.vue";
-import { toast } from "vue3-toastify";
+import {toast} from "vue3-toastify";
 import arrowBackIcon from "../../assets/arrow-back.svg";
-import { RouterLink } from "vue-router";
-import { uploadToCloudinary } from "@/api/images.ts";
-import { countries } from "@/composables/countries.ts";
+import {RouterLink} from "vue-router";
+import {uploadToCloudinary} from "@/api/images.ts";
+import {countries} from "@/composables/countries.ts";
 
 const queryClient = useQueryClient();
 const authStore = useAuthStore();
-const { data: userData } = useQuery({
+const {data: userData} = useQuery({
   queryKey: ["user", authStore.user?.username],
   queryFn: async () => {
     if (!authStore.user?.username) {
       throw new Error("User username is not available.");
     }
     const response = await getUser(authStore.user.username);
+    console.log(response);
     return response as Partial<UserType>;
   },
   enabled: !!authStore.user?.username,
@@ -207,45 +228,76 @@ const user = ref(
   userData?.value
     ? userData.value
     : {
-        username: "Guest User",
-        email: "guest@example.com",
-        profile_picture_url: "",
+      username: "Guest User",
+      email: "guest@example.com",
+      profile_picture_url: "",
+      role: {
+        id: 0,
+        name: "user",
+        description: "",
+        level: 0,
+      },
+      website: "",
+      date_of_birth: "",
+      description: "",
+      layer8_metadata: {
+        display_name: "",
         bio: "",
-        role: {
-          id: 0,
-          name: "user",
-          description: "",
-          level: 0,
-        },
+        favorite_color: "",
+        is_email_verified: false,
         location: "",
-        website: "",
-        date_of_birth: "",
+        updated_at: "",
+
+        display_name_l8_updated_at: null,
+        bio_l8_updated_at: null,
+        favorite_color_l8_updated_at: null,
+        is_email_verified_l8_updated_at: null,
+        location_l8_updated_at: null,
+
+        display_name_updated_at: null,
+        bio_updated_at: null,
+        favorite_color_updated_at: null,
+        is_email_verified_updated_at: null,
+        location_updated_at: null,
       }
+    }
 );
 
-watch(userData, (newData) => {
-  if (newData) {
-    user.value = newData;
-  }
-});
+const layer8_metadata = ref<Layer8Metadata>({
+  display_name: user.value.layer8_metadata?.display_name || "",
+  bio: user.value.layer8_metadata?.bio || "",
+  favorite_color: user.value.layer8_metadata?.favorite_color || "",
+  is_email_verified: user.value.layer8_metadata?.is_email_verified || false,
+  location: user.value.layer8_metadata?.location || "",
+  updated_at: user.value.layer8_metadata?.updated_at || "",
+
+  display_name_l8_updated_at: user.value.layer8_metadata?.display_name_l8_updated_at || "",
+  bio_l8_updated_at: user.value.layer8_metadata?.bio_l8_updated_at || "",
+  favorite_color_l8_updated_at: user.value.layer8_metadata?.favorite_color_l8_updated_at || "",
+  is_email_verified_l8_updated_at: user.value.layer8_metadata?.is_email_verified_l8_updated_at || "",
+  location_l8_updated_at: user.value.layer8_metadata?.location_l8_updated_at || "",
+
+  display_name_updated_at: user.value.layer8_metadata?.display_name_updated_at || "",
+  bio_updated_at: user.value.layer8_metadata?.bio_updated_at || "",
+  favorite_color_updated_at: user.value.layer8_metadata?.favorite_color_updated_at || "",
+  is_email_verified_updated_at: user.value.layer8_metadata?.is_email_verified_updated_at || "",
+  location_updated_at: user.value.layer8_metadata?.location_updated_at || "",
+})
 
 const editForm = ref({
   ...user.value,
-  location: user.value.location || "",
 });
 
-const { mutate: updateUserMutation } = useMutation({
+const {mutate: updateUserMutation} = useMutation({
   mutationFn: (updatedUser: Partial<typeof user.value>) => {
     if (!authStore.user) {
       throw new Error("User is not authenticated.");
     }
     const payload = {
-      bio: updatedUser.bio,
       description: updatedUser.description,
       date_of_birth: updatedUser.date_of_birth,
       email: updatedUser.email,
       id: authStore.user.id,
-      location: updatedUser.location,
       profile_picture_url: updatedUser.profile_picture_url,
       role_id: updatedUser.role?.id || 3,
       website: updatedUser.website,
@@ -255,7 +307,7 @@ const { mutate: updateUserMutation } = useMutation({
   },
   onSuccess: (res: unknown) => {
     // Attempt to update auth store user instantly if API returns user
-    let updatedUser: Partial<UserType> | undefined;
+    let updatedUser: Partial<UserUpdateType> | undefined;
     if (
       typeof res === "object" &&
       res !== null &&
@@ -264,7 +316,7 @@ const { mutate: updateUserMutation } = useMutation({
       (res as { data?: { user?: unknown } }).data?.user &&
       typeof (res as { data: { user: unknown } }).data.user === "object"
     ) {
-      updatedUser = (res as { data: { user: Partial<UserType> } }).data.user;
+      updatedUser = (res as { data: { user: Partial<UserUpdateType> } }).data.user;
     }
     if (
       updatedUser &&
@@ -273,10 +325,10 @@ const { mutate: updateUserMutation } = useMutation({
       typeof updatedUser.email === "string"
     ) {
       authStore.setUser(updatedUser as UserType);
-      user.value = { ...user.value, ...updatedUser } as UserType;
-      editForm.value = { ...editForm.value, ...updatedUser };
+      user.value = {...user.value, ...updatedUser} as UserType;
+      editForm.value = {...editForm.value, ...updatedUser};
     }
-    queryClient.invalidateQueries({ queryKey: ["user"] });
+    queryClient.invalidateQueries({queryKey: ["user"]});
     toast("Profile updated successfully!", {
       autoClose: 3000,
       type: "success",
@@ -298,9 +350,35 @@ watch(userData, (newData) => {
     user.value = newData;
     editForm.value = {
       ...newData,
-      location: newData.location || "",
     };
+    layer8_metadata.value = {
+      display_name: newData.layer8_metadata?.display_name || "",
+      bio: newData.layer8_metadata?.bio || "",
+      favorite_color: newData.layer8_metadata?.favorite_color || "",
+      is_email_verified: newData.layer8_metadata?.is_email_verified || false,
+      location: newData.layer8_metadata?.location || "",
+      updated_at: newData.layer8_metadata?.updated_at || "",
+
+      display_name_l8_updated_at: newData.layer8_metadata?.display_name_l8_updated_at || "",
+      bio_l8_updated_at: newData.layer8_metadata?.bio_l8_updated_at || "",
+      favorite_color_l8_updated_at: newData.layer8_metadata?.favorite_color_l8_updated_at || "",
+      is_email_verified_l8_updated_at: newData.layer8_metadata?.is_email_verified_l8_updated_at || "",
+      location_l8_updated_at: newData.layer8_metadata?.location_l8_updated_at || "",
+
+      display_name_updated_at: newData.layer8_metadata?.display_name_updated_at || "",
+      bio_updated_at: newData.layer8_metadata?.bio_updated_at || "",
+      favorite_color_updated_at: newData.layer8_metadata?.favorite_color_updated_at || "",
+      is_email_verified_updated_at: newData.layer8_metadata?.is_email_verified_updated_at || "",
+      location_updated_at: newData.layer8_metadata?.location_updated_at || "",
+    }
   }
+  console.log("newData", newData);
+  console.log("user", user.value);
+  console.log("layer8_metadata", layer8_metadata.value);
+});
+
+const country = computed(() => {
+  return countries.find(c => c.code === userData.value?.layer8_metadata?.location)?.country || 'The Moon'
 });
 
 function handleSaveEdit() {
@@ -323,14 +401,30 @@ async function handleProfileImageChange(e: Event) {
       user.value.profile_picture_url = url as string;
     }
     updateUserMutation(editForm.value);
-    toast("Profile picture updated!", { autoClose: 3000, type: "success" });
+    toast("Profile picture updated!", {autoClose: 3000, type: "success"});
   } catch (error) {
     console.error("Profile picture upload failed:", error);
-    toast("Profile picture upload failed", { autoClose: 3000, type: "error" });
+    toast("Profile picture upload failed", {autoClose: 3000, type: "error"});
   } finally {
     isUploadingProfileImage.value = false;
     if (profileImageInputRef.value) profileImageInputRef.value.value = "";
   }
+}
+
+const formatVerifiedAt = (timestamp?: string | null) => {
+  if (!timestamp) return ''
+
+  const date = new Date(timestamp)
+
+  const pad = (value: number, digits = 2) =>
+    String(value).padStart(digits, '0')
+
+  const offsetMinutes = -date.getTimezoneOffset()
+  const sign = offsetMinutes >= 0 ? '+' : '-'
+  const offsetHours = Math.floor(Math.abs(offsetMinutes) / 60)
+
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} at ` +
+    `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())} GMT${sign}${offsetHours}`
 }
 </script>
 

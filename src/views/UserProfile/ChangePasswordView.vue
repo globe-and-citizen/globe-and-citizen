@@ -102,14 +102,6 @@ const validateForm = () => {
     errors.value.newPassword = "Password must be at least 8 characters.";
     valid = false;
   }
-  //   else if (
-  //     !/[A-Z]/.test(form.value.newPassword) ||
-  //     !/[0-9]/.test(form.value.newPassword)
-  //   ) {
-  //     errors.value.newPassword =
-  //       "Password must contain at least one uppercase letter and one number.";
-  //     valid = false;
-  //   }
 
   // Confirm password
   if (form.value.confirmPassword !== form.value.newPassword) {

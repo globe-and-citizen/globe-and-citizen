@@ -238,7 +238,6 @@ const sentimentChartOption = computed(() => {
   };
 });
 
-console.log(sentimentChartOption);
 watch(showFullInsights, (newVal) => {
   if (newVal) {
     const el = document.getElementById("reader-insights-sticky");

@@ -83,41 +83,43 @@
             </label>
           </div>
 
-          <label class="space-y-1">
-            <span class="field-label">Capital (Bet A + Bet B)</span>
-            <input
-              v-model.number="form.capital"
-              class="field-input"
-              type="number"
-              min="0.01"
-              step="0.01"
-              required
-            />
-          </label>
+          <div class="md:col-span-2 xl:col-span-3 grid grid-cols-3 gap-4">
+            <label class="space-y-1">
+              <span class="field-label">Capital (Bet A + Bet B)</span>
+              <input
+                v-model.number="form.capital"
+                class="field-input"
+                type="number"
+                min="0.01"
+                step="0.01"
+                required
+              />
+            </label>
 
-          <label class="space-y-1">
-            <span class="field-label">Bet A ($)</span>
-            <input
-              v-model.number="form.guard_bet"
-              class="field-input"
-              type="number"
-              step="0.01"
-              min="0"
-              required
-            />
-          </label>
+            <label class="space-y-1">
+              <span class="field-label">Bet A ($)</span>
+              <input
+                v-model.number="form.guard_bet"
+                class="field-input"
+                type="number"
+                step="0.01"
+                min="0"
+                required
+              />
+            </label>
 
-          <label class="space-y-1">
-            <span class="field-label">Bet B ($)</span>
-            <input
-              v-model.number="money_maker"
-              class="field-readonly"
-              type="number"
-              step="0.01"
-              min="0"
-              readonly
-            />
-          </label>
+            <label class="space-y-1">
+              <span class="field-label">Bet B ($)</span>
+              <input
+                v-model.number="money_maker"
+                class="field-readonly"
+                type="number"
+                step="0.01"
+                min="0"
+                readonly
+              />
+            </label>
+          </div>
 
           <div
             class="md:col-span-2 xl:col-span-3 flex flex-wrap items-center gap-3 pt-1"
