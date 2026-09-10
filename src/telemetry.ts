@@ -5,6 +5,7 @@ import { registerInstrumentations } from '@opentelemetry/instrumentation'
 import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch'
 import { XMLHttpRequestInstrumentation } from '@opentelemetry/instrumentation-xml-http-request'
 import { resourceFromAttributes } from '@opentelemetry/resources'
+import { ZoneContextManager } from '@opentelemetry/context-zone'
 
 const enabled = import.meta.env.VITE_OTEL_ENABLED === 'true'
 
@@ -26,8 +27,12 @@ if (enabled) {
     ],
   })
 
-  provider.register()
+  // Register provider with ZoneContext to ensure context propagation across async boundaries
+  provider.register({
+    contextManager: new ZoneContextManager(),
+  })
 
+  // Register instrumentations for Fetch and XMLHttpRequest to automatically create spans for network requests
   const propagateTraceHeaderCorsUrls =
     import.meta.env.VITE_OTEL_PROPAGATE_URLS
       .split(',')
@@ -38,7 +43,6 @@ if (enabled) {
       new FetchInstrumentation({
         propagateTraceHeaderCorsUrls,
       }),
-
       new XMLHttpRequestInstrumentation({
         propagateTraceHeaderCorsUrls,
       }),

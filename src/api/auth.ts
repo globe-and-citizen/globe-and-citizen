@@ -1,7 +1,6 @@
 import type { SignInResponse } from "@/models/Auth";
 import { useAuthStore } from "../store/authStore";
 import { toast, type ToastOptions } from "vue3-toastify";
-
 import {
   API_BASE_URL,
   REFRESH_TOKEN_URL,
@@ -10,10 +9,8 @@ import {
 } from "./constants";
 import * as interceptorWasm from "l8-intercept";
 import { traceUser } from "./user";
+import { trace } from '@opentelemetry/api';
 
-// const layer8Enabled = import.meta.env.VITE_API_BASE_URL.includes(
-//   "globeandcitizenreverseproxy"
-// );
 const layer8Enabled = import.meta.env.VITE_LAYER8_ENABLED === "true";
 
 export async function interceptorFetch(
@@ -21,7 +18,27 @@ export async function interceptorFetch(
   options: RequestInit = {},
 ): Promise<Response> {
   if (layer8Enabled) {
-    return (await interceptorWasm.fetch(url, options)) as Response;
+    const tracer = trace.getTracer('fe-wasm-tracer');
+
+    // Start a new span for the total execution time of the WASM function
+    return tracer.startActiveSpan('interceptor.execution', async (span) => {
+      try {
+        // OTel automatically understands this as the current context.
+        // When WASM calls `reqwest` -> `fetch()`, OTel JS will automatically recognize
+        // that network span as a child of this `wasm_total_execution` span!
+        return (await interceptorWasm.fetch(url, options)) as Response;
+      } catch (error) {
+        if (error instanceof Error) {
+          span.recordException(error);
+        } else {
+          span.recordException(new Error(String(error)));
+        }
+        throw error;
+      } finally {
+        // End the span after the WASM function completes, regardless of success or failure
+        span.end();
+      }
+    });
   } else {
     return (await fetch(url, options)) as Response;
   }
