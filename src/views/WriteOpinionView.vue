@@ -5,10 +5,10 @@
         <!-- Header -->
         <div class="pb-4 font-lato">
           <h1 class="text-2xl font-bold text-black-100 dark:text-white">
-            You are writing a prediction
+            You are writing a viewpoint
           </h1>
           <p class="text-sm text-black-60 font-medium mt-3 leading-[1]">
-            Your prediction reflects your personal opinion on the following
+            Your viewpoint reflects your personal opinion on the following
             article. Please make sure your response is original, respectful, and
             based on your own perspective. Avoid copying from other sources —
             this is your chance to express your unique thoughts and reflections.
@@ -44,7 +44,7 @@
               for="title"
               class="text-base font-semibold text-black-100 dark:text-gray-300 flex items-center gap-1"
             >
-              Prediction title <span class="text-red-500">*</span>
+              Viewpoint title <span class="text-red-500">*</span>
             </Label>
 
             <div class="relative">
@@ -76,7 +76,7 @@
               for="content"
               class="text-base font-semibold text-black-100 dark:text-gray-300 flex items-center gap-1"
             >
-              Prediction text <span class="text-red-500">*</span>
+              Viewpoint text <span class="text-red-500">*</span>
             </Label>
 
             <div
@@ -86,17 +86,19 @@
               <TipTap
                 v-model="formData.content"
                 :min-height="'300px'"
-                @update:model-value="(content: string) => {
-                  formData.content = content;
-                  validationErrors.content = false;
-                }"
+                @update:model-value="
+                  (content: string) => {
+                    formData.content = content;
+                    validationErrors.content = false;
+                  }
+                "
               />
             </div>
             <div
               v-if="validationErrors.content"
               class="absolute top-full left-0 mt-1 text-xs text-red-500"
             >
-              Prediction text is required.
+              Viewpoint text is required.
             </div>
           </div>
 
@@ -190,7 +192,7 @@
                 type: 'submit',
               }"
             >
-              Submit Prediction
+              Submit Viewpoint
             </Button>
           </div>
         </form>
@@ -233,7 +235,7 @@ const {
       return response as Post | null;
     },
     enabled: !!postId,
-  })
+  }),
 );
 
 const { mutate: postOpinion } = useMutation({
@@ -339,7 +341,7 @@ watch(
   () => formData.value.title,
   (newVal) => {
     if (newVal?.trim()) validationErrors.value.title = false;
-  }
+  },
 );
 onMounted(() => {
   window.scrollTo({ top: 0, behavior: "smooth" });

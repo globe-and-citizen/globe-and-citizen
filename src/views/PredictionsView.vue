@@ -156,7 +156,7 @@ const fetchFn = async () => {
 };
 
 const {data, isLoading, refetch} = useQuery<AllNewsResponseType>({
-    queryKey: ["predictions", currentPage.value, pageSize.value],
+    queryKey: ["viewpoints", currentPage.value, pageSize.value],
     queryFn: fetchFn,
     refetchOnWindowFocus: true,
 });
