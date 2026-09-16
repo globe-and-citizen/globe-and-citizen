@@ -477,7 +477,7 @@ import TipTap from "@/components/Editor/TipTap.vue";
 import type { NewPostType } from "@/models/Posts";
 import { useForm } from "vee-validate";
 import { formSchema, getTextLength, getWordCount } from "./types";
-import { postNewsArticle } from "@/api/posts.ts";
+import { PostArticleError, postNewsArticle } from "@/api/posts.ts";
 import { generateSlug } from "@/composables/utils.ts";
 import { uploadToCloudinary } from "@/api/images.ts";
 import { useRouter } from "vue-router";
@@ -691,6 +691,26 @@ const publishMutation = useMutation({
     usePolymarketImage.value = false;
     form.resetForm();
     form.setValues(initialValues);
+  },
+  onError: (error) => {
+    if (!(error instanceof PostArticleError)) return;
+
+    const fieldEntries = Object.entries(error.fieldErrors) as Array<
+      ["title" | "slug", string]
+    >;
+    for (const [field, message] of fieldEntries) {
+      form.setFieldError(field, message);
+      form.setFieldTouched(field, true);
+    }
+
+    const firstField = fieldEntries[0]?.[0];
+    if (firstField) {
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLInputElement>(`[name="${firstField}"]`)
+          ?.focus();
+      });
+    }
   },
 });
 
