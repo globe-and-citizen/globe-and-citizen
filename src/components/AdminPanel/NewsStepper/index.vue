@@ -726,7 +726,7 @@ async function onSubmit() {
   const title = (v.title as string)?.trim() || "Untitled Article";
   const slug = (v.slug as string)?.trim() || generateSlug(title);
 
-  // Prediction is stored separately so it stays immutable in article edits.
+  // Prediction is stored separately from the editable article analysis.
   const content = composeNewsWorkflowContent({
     tlgp: (v.tlgp as string) || "",
     rulesAnalysis: (v.rulesAnalysis as string) || "",

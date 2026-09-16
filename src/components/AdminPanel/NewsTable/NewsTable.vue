@@ -434,6 +434,8 @@ function handleSaveEdit(formData: Partial<Post>) {
     description: formData.description || "",
     url_to_image: formData.url_to_image || "",
     content: formData.content || "",
+    prediction: formData.prediction,
+    hedge: formData.hedge,
   };
 
   if (!selectedPost.value?.prediction) {

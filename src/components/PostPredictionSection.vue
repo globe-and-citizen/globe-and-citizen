@@ -1,6 +1,17 @@
 <template>
   <section class="space-y-2">
-    <h2 class="text-lg font-semibold">{{ title }}</h2>
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 class="text-lg font-semibold">{{ title }}</h2>
+      <Button
+        v-if="actionLabel"
+        type="button"
+        variant="outline"
+        size="sm"
+        @click="emit('action')"
+      >
+        {{ actionLabel }}
+      </Button>
+    </div>
     <div class="space-y-2 rounded-md border bg-muted/30 p-4">
       <p class="text-sm font-medium">
         {{ prediction.market_question }}
@@ -25,26 +36,27 @@
       >
         Open on Polymarket
       </a>
-      <p v-if="showImmutableNotice" class="text-xs text-muted-foreground">
-        The selected {{ title.toLowerCase() }} is locked after the article is
-        published.
-      </p>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import type { PostPrediction } from "@/models/Posts";
+import { Button } from "@/components/ui/button";
 
 withDefaults(
   defineProps<{
     prediction: PostPrediction;
     title?: string;
-    showImmutableNotice?: boolean;
+    actionLabel?: string;
   }>(),
   {
     title: "Prediction",
-    showImmutableNotice: false,
+    actionLabel: "",
   },
 );
+
+const emit = defineEmits<{
+  (e: "action"): void;
+}>();
 </script>

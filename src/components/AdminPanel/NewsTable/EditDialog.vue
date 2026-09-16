@@ -67,15 +67,17 @@
           </section>
 
           <PostPredictionSection
-            v-if="post?.prediction"
-            :prediction="post.prediction"
-            show-immutable-notice
+            v-if="currentPrediction"
+            :prediction="currentPrediction"
+            action-label="Change Prediction"
+            @action="predictionModalOpen = true"
           />
           <PostPredictionSection
-            v-if="post?.hedge"
-            :prediction="post.hedge"
+            v-if="currentHedge"
+            :prediction="currentHedge"
             title="Hedge"
-            show-immutable-notice
+            action-label="Change Hedge"
+            @action="hedgeModalOpen = true"
           />
 
           <section class="space-y-3">
@@ -190,7 +192,7 @@
                 <div class="min-w-0 flex-1">
                   <p class="text-sm font-medium">Polymarket Thumbnail</p>
                   <p class="text-xs text-muted-foreground">
-                    From the locked prediction market
+                    From the selected prediction market
                   </p>
                 </div>
                 <Button
@@ -343,6 +345,19 @@
       </DialogFooter>
     </DialogContent>
   </Dialog>
+
+  <MarketSelectionModal
+    v-model:open="predictionModalOpen"
+    title="Change Prediction Market"
+    @confirm="onPredictionConfirm"
+    @cancel="predictionModalOpen = false"
+  />
+  <MarketSelectionModal
+    v-model:open="hedgeModalOpen"
+    title="Change Hedge Market"
+    @confirm="onHedgeConfirm"
+    @cancel="hedgeModalOpen = false"
+  />
 </template>
 
 <script setup lang="ts">
@@ -361,9 +376,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import TipTap from "@/components/Editor/TipTap.vue";
 import PostPredictionSection from "@/components/PostPredictionSection.vue";
+import MarketSelectionModal, {
+  type MarketSelection,
+} from "@/components/AdminPanel/NewsStepper/MarketSelectionModal.vue";
 import LoaderIcon from "@/assets/icons/loader.svg";
 import { uploadToCloudinary } from "@/api/images.ts";
-import type { Post } from "@/models/Posts";
+import type { Post, PostPrediction } from "@/models/Posts";
 import { generateSlug } from "@/composables/utils.ts";
 import {
   editPostSchema,
@@ -417,8 +435,20 @@ const hiddenImageInput = ref<HTMLInputElement | null>(null);
 const imageUploading = ref(false);
 const imageUploadError = ref("");
 const usePolymarketImage = ref(false);
+const predictionSelection = ref<MarketSelection | null>(null);
+const hedgeSelection = ref<MarketSelection | null>(null);
+const predictionModalOpen = ref(false);
+const hedgeModalOpen = ref(false);
 
-const polymarketImage = computed(() => props.post?.prediction?.image || "");
+const polymarketImage = computed(() => predictionSelection.value?.image || "");
+const currentPrediction = computed(() =>
+  predictionSelection.value
+    ? toPostPrediction(predictionSelection.value)
+    : null,
+);
+const currentHedge = computed(() =>
+  hedgeSelection.value ? toPostPrediction(hedgeSelection.value) : null,
+);
 const titleWordCount = computed(() => getWordCount(formData.value.title));
 const tlgpWordCount = computed(() => getWordCount(formData.value.tlgp));
 const rulesAnalysisWordCount = computed(() =>
@@ -435,13 +465,16 @@ const fullAnalysisCharacterCount = computed(() =>
 );
 
 watch(
-  () => props.post,
-  (post) => {
+  () => [props.post, props.isOpen] as const,
+  ([post, isOpen]) => {
+    if (!isOpen) return;
     errors.value = {};
     imageUploadError.value = "";
     if (!post) {
       formData.value = createEmptyForm();
       usePolymarketImage.value = false;
+      predictionSelection.value = null;
+      hedgeSelection.value = null;
       return;
     }
 
@@ -468,6 +501,10 @@ watch(
       sourceName: post.source_name || "",
       sourceUrl: post.source_url || "",
     };
+    predictionSelection.value = toMarketSelection(post.prediction);
+    hedgeSelection.value = toMarketSelection(post.hedge);
+    predictionModalOpen.value = false;
+    hedgeModalOpen.value = false;
   },
   { immediate: true },
 );
@@ -476,6 +513,47 @@ function onTitleChange(value: string | number) {
   const title = String(value);
   formData.value.title = title;
   formData.value.slug = generateSlug(title);
+}
+
+function toMarketSelection(
+  prediction: PostPrediction | undefined,
+): MarketSelection | null {
+  if (!prediction) return null;
+  return {
+    url: prediction.url,
+    eventTitle: prediction.event_title,
+    marketId: prediction.market_id,
+    marketSlug: prediction.market_slug,
+    marketQuestion: prediction.market_question,
+    outcome: prediction.outcome,
+    tokenId: prediction.token_id,
+    image: prediction.image,
+    tags: prediction.tags ?? [],
+  };
+}
+
+function toPostPrediction(selection: MarketSelection): PostPrediction {
+  return {
+    url: selection.url,
+    event_title: selection.eventTitle,
+    market_id: selection.marketId,
+    market_slug: selection.marketSlug,
+    market_question: selection.marketQuestion,
+    outcome: selection.outcome,
+    token_id: selection.tokenId,
+    image: selection.image,
+    tags: selection.tags,
+  };
+}
+
+function onPredictionConfirm(selection: MarketSelection) {
+  predictionSelection.value = selection;
+  predictionModalOpen.value = false;
+}
+
+function onHedgeConfirm(selection: MarketSelection) {
+  hedgeSelection.value = selection;
+  hedgeModalOpen.value = false;
 }
 
 function triggerImageSelect() {
@@ -539,6 +617,11 @@ function handleSave() {
     content: composeNewsWorkflowContent(values),
     url_to_image: image,
   };
+
+  if (predictionSelection.value && hedgeSelection.value) {
+    payload.prediction = toPostPrediction(predictionSelection.value);
+    payload.hedge = toPostPrediction(hedgeSelection.value);
+  }
 
   if (!props.post?.prediction) {
     payload.source_name = formData.value.sourceName;
