@@ -230,7 +230,7 @@
           <h2 class="text-lg font-semibold">Rules Analysis</h2>
           <p class="text-sm text-muted-foreground">
             Analyze the rules of the selected market to avoid gotchas. Maximum
-            400 words, 2600 characters.
+            650 words, 3000 characters.
           </p>
 
           <FormField v-slot="{ componentField }" name="rulesAnalysis">
@@ -248,8 +248,8 @@
                 class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between"
               >
                 <p class="text-xs text-muted-foreground">
-                  {{ rulesAnalysisWordCount }} / 400 words ·
-                  {{ rulesAnalysisCharacterCount }} / 2600 characters
+                  {{ rulesAnalysisWordCount }} / 650 words ·
+                  {{ rulesAnalysisCharacterCount }} / 3000 characters
                 </p>
                 <FormMessage />
               </div>
