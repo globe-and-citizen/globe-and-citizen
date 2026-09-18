@@ -16,6 +16,7 @@ steps:
       - "VITE_OTEL_ENABLED=$_VITE_OTEL_ENABLED"
       - "VITE_OTEL_COLLECTOR_URL=$_VITE_OTEL_COLLECTOR_URL"
       - "VITE_OTEL_PROPAGATE_URLS=$_VITE_OTEL_PROPAGATE_URLS"
+      - "VITE_SERVICE_NAME=$_VITE_SERVICE_NAME"
 
   # Deploy to Cloud Storage
   - name: gcr.io/google.com/cloudsdktool/cloud-sdk
