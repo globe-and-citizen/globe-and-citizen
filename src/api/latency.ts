@@ -80,8 +80,107 @@ export interface LatencySummary {
 const WARMUP_REQUESTS = 5;
 const MEASUREMENT_REQUESTS = 100;
 
+// Retry policy: a failed request is retried up to MAX_RETRIES times
+// (so up to MAX_RETRIES + 1 attempts in total). If it still fails,
+// the whole test is aborted and no report is produced, so we never
+// publish numbers from a run that had missing samples.
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 500; // multiplied by the attempt number (linear backoff)
+
 // Use fixed sizes so results are comparable between runs.
 const PAYLOAD_SIZES_KB = [1, 10, 50, 100];
+
+// --------------------------------------------------
+// Retry helpers
+// --------------------------------------------------
+
+class LatencyTestAbortedError extends Error {
+  readonly lastError: unknown;
+
+  constructor(message: string, lastError: unknown) {
+    super(message);
+    this.name = "LatencyTestAbortedError";
+    this.lastError = lastError;
+  }
+}
+
+interface RetryCounter {
+  retries: number;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Runs `fn` and retries on failure. The latency timer lives inside `fn`,
+ * so only the successful attempt is ever measured (failed attempts and
+ * the backoff delay never leak into the statistics).
+ * Throws LatencyTestAbortedError once all retries are exhausted.
+ */
+async function withRetry<T>(
+  label: string,
+  counter: RetryCounter,
+  fn: () => Promise<T>
+): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+
+      if (attempt < MAX_RETRIES) {
+        counter.retries++;
+        console.warn(
+          `${label} failed (attempt ${attempt + 1}/${MAX_RETRIES + 1}), retrying...`,
+          error
+        );
+        await sleep(RETRY_DELAY_MS * (attempt + 1));
+      }
+    }
+  }
+
+  throw new LatencyTestAbortedError(
+    `${label} failed after ${MAX_RETRIES} retries`,
+    lastError
+  );
+}
+
+/**
+ * Wraps a test run: on abort it notifies the user, discards partial
+ * data (no report/download) and returns null so the test can be re-run.
+ */
+async function runGuarded<T>(
+  testName: string,
+  run: () => Promise<T>
+): Promise<T | null> {
+  try {
+    return await run();
+  } catch (error) {
+    if (error instanceof LatencyTestAbortedError) {
+      console.error(
+        `❌ ${testName} aborted: ${error.message}. Results are discarded, please re-run the test.`,
+        error.lastError
+      );
+
+      toast(`${testName} aborted: ${error.message}. Please re-run.`, {
+        autoClose: 5000,
+        type: "error",
+        position: toast.POSITION.BOTTOM_RIGHT,
+      } as ToastOptions);
+
+      return null;
+    }
+
+    throw error; // unexpected error, don't hide it
+  }
+}
+
+// --------------------------------------------------
+// Payload / statistics helpers
+// --------------------------------------------------
 
 function generateRandomBytes(sizeInBytes: number): Uint8Array {
   const bytes = new Uint8Array(sizeInBytes);
@@ -133,6 +232,10 @@ function summarize(latencies: number[]): LatencySummary {
   };
 }
 
+// --------------------------------------------------
+// POST test
+// --------------------------------------------------
+
 async function sendPOSTLatencyRequest(payload: string): Promise<{
   latency: number;
   status: number;
@@ -150,10 +253,15 @@ async function sendPOSTLatencyRequest(payload: string): Promise<{
     }
   );
 
-// Ensure the entire response has been received before stopping the timer.
+  // Ensure the entire response has been received before stopping the timer.
   await response.arrayBuffer();
 
   const latency = performance.now() - start;
+
+  // A non-2xx response is a failure, not a valid latency sample.
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
 
   return {
     latency,
@@ -161,8 +269,10 @@ async function sendPOSTLatencyRequest(payload: string): Promise<{
   };
 }
 
-export async function runPOSTLatencyTest() {
+async function executePOSTLatencyTest() {
   console.log("🔍 Starting POST latency test...");
+  const startPostTest = performance.now();
+  const totalRetries: RetryCounter = {retries: 0};
 
   toast("Latency test started", {
     autoClose: 2000,
@@ -179,86 +289,53 @@ export async function runPOSTLatencyTest() {
     p99: number;
     max: number;
     successful: number;
-    failed: number;
+    retries: number;
   }> = [];
 
   for (const sizeInKB of PAYLOAD_SIZES_KB) {
     console.log(`📦 Payload size: ${sizeInKB} KB`);
 
+    const sizeRetries: RetryCounter = {retries: 0};
+    const payload = generateRandomPayload(sizeInKB);
+
     // --------------------------------------------------
     // Warm-up
     // --------------------------------------------------
 
-    console.log(
-      `🔥 Warming up with ${WARMUP_REQUESTS} requests...`
-    );
-
-    const payload = generateRandomPayload(sizeInKB);
+    console.log(`🔥 Warming up with ${WARMUP_REQUESTS} requests...`);
 
     for (let i = 0; i < WARMUP_REQUESTS; i++) {
-      try {
-        await sendPOSTLatencyRequest(payload);
-      } catch (error) {
-        console.warn(
-          `Warm-up request ${i + 1} failed`,
-          error
-        );
-      }
+      await withRetry(
+        `Warm-up request ${i + 1}/${WARMUP_REQUESTS} (${sizeInKB} KB)`,
+        sizeRetries,
+        () => sendPOSTLatencyRequest(payload)
+      );
     }
 
     // --------------------------------------------------
     // Measurement
     // --------------------------------------------------
 
-    console.log(
-      `📊 Measuring ${MEASUREMENT_REQUESTS} requests...`
-    );
+    console.log(`📊 Measuring ${MEASUREMENT_REQUESTS} requests...`);
 
-    const results: LatencyResult[] = [];
+    const latencies: number[] = [];
 
     for (let i = 0; i < MEASUREMENT_REQUESTS; i++) {
-      try {
-        const { latency, status } =
-          await sendPOSTLatencyRequest(payload);
+      const {latency} = await withRetry(
+        `Request ${i + 1}/${MEASUREMENT_REQUESTS} (${sizeInKB} KB)`,
+        sizeRetries,
+        () => sendPOSTLatencyRequest(payload)
+      );
 
-        results.push({
-          request: i + 1,
-          sizeInKB,
-          latency: Number(latency.toFixed(2)),
-          status,
-        });
-      } catch (error) {
-        console.error(
-          `Request ${i + 1}/${MEASUREMENT_REQUESTS} failed:`,
-          error
-        );
-
-        results.push({
-          request: i + 1,
-          sizeInKB,
-          latency: null,
-        });
-      }
+      latencies.push(Number(latency.toFixed(2)));
     }
 
     // --------------------------------------------------
     // Statistics
     // --------------------------------------------------
 
-    const validLatencies = results
-      .map((result) => result.latency)
-      .filter((latency): latency is number => latency !== null);
-
-    const failed = results.length - validLatencies.length;
-
-    if (validLatencies.length === 0) {
-      console.error(
-        `❌ All requests failed for ${sizeInKB} KB`
-      );
-      continue;
-    }
-
-    const summary = summarize(validLatencies);
+    const summary = summarize(latencies);
+    totalRetries.retries += sizeRetries.retries;
 
     tableResults.push({
       payload: `${sizeInKB} KB`,
@@ -268,8 +345,8 @@ export async function runPOSTLatencyTest() {
       min: summary.min,
       p99: summary.p99,
       max: summary.max,
-      successful: validLatencies.length,
-      failed,
+      successful: latencies.length,
+      retries: sizeRetries.retries,
     });
   }
 
@@ -292,7 +369,7 @@ export async function runPOSTLatencyTest() {
       "P99 (ms)": result.p99.toFixed(2),
       "Max (ms)": result.max.toFixed(2),
       "Success": result.successful,
-      "Failed": result.failed,
+      "Retries": result.retries,
     }))
   );
 
@@ -304,8 +381,6 @@ export async function runPOSTLatencyTest() {
     position: toast.POSITION.BOTTOM_RIGHT,
   } as ToastOptions);
 
-  // return tableResults;
-
   // Export for offline old-vs-new diffing
   const report = {
     version: import.meta.env.VITE_APP_VERSION,
@@ -313,11 +388,14 @@ export async function runPOSTLatencyTest() {
     endpoint: "/latency-test",
     payloadSizes: PAYLOAD_SIZES_KB,
     timestamp: new Date().toISOString(),
+    duration: `${(performance.now() - startPostTest) / 60000} min`,
+    maxRetriesPerRequest: MAX_RETRIES,
+    totalRetries: totalRetries.retries,
     results: tableResults,
     timeUnit: "ms",
   };
 
-  const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(report, null, 2)], {type: "application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -327,17 +405,17 @@ export async function runPOSTLatencyTest() {
   return report;
 }
 
+/** Returns the report, or null if the test was aborted (re-run it). */
+export function runPOSTLatencyTest() {
+  return runGuarded("POST latency test", executePOSTLatencyTest);
+}
+
+// --------------------------------------------------
+// GET test
+// --------------------------------------------------
 
 const GET_PAGE_SIZES = [10, 20]; // items per page, analog of PAYLOAD_SIZES_KB
 const FIXED_PAGE = 1; // keep page constant so dataset offset doesn't vary latency independent of your fix
-
-interface GETLatencyResult {
-  request: number;
-  pageSize: number;
-  latency: number | null;
-  responseBytes: number | null;
-  status: number | null;
-}
 
 async function sendGETLatencyRequest(size: number): Promise<{
   latency: number;
@@ -350,15 +428,18 @@ async function sendGETLatencyRequest(size: number): Promise<{
     `${API_BASE_URL}${POSTS_URL}?size=${size}&page=${FIXED_PAGE}`,
     {
       method: "GET",
-      headers: {
-        "Content-Type": "Application/Json",
-      },
       cache: "no-store", // bypass browser cache so we measure real backend latency, not a cache hit
     }
   );
 
   const text = await response.text(); // read full body before stopping the timer, same principle as POST test
   const latency = performance.now() - start;
+
+  // A non-2xx response is a failure, not a valid latency sample.
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
   const responseBytes = new Blob([text]).size;
 
   return {
@@ -368,8 +449,10 @@ async function sendGETLatencyRequest(size: number): Promise<{
   };
 }
 
-export async function runGETLatencyTest() {
+async function executeGETLatencyTest() {
   console.log("🔍 Starting GET latency test (fetchAllPosts)...");
+  const startGetTest = performance.now();
+  const totalRetries: RetryCounter = {retries: 0};
 
   toast("GET latency test started", {
     autoClose: 2000,
@@ -387,11 +470,13 @@ export async function runGETLatencyTest() {
     max: number;
     avgResponseKB: number;
     successful: number;
-    failed: number;
+    retries: number;
   }> = [];
 
   for (const size of GET_PAGE_SIZES) {
     console.log(`📄 Page size: ${size} items`);
+
+    const sizeRetries: RetryCounter = {retries: 0};
 
     // --------------------------------------------------
     // Warm-up
@@ -400,11 +485,11 @@ export async function runGETLatencyTest() {
     console.log(`🔥 Warming up with ${WARMUP_REQUESTS} requests...`);
 
     for (let i = 0; i < WARMUP_REQUESTS; i++) {
-      try {
-        await sendGETLatencyRequest(size);
-      } catch (error) {
-        console.warn(`Warm-up request ${i + 1} failed`, error);
-      }
+      await withRetry(
+        `Warm-up request ${i + 1}/${WARMUP_REQUESTS} (size=${size})`,
+        sizeRetries,
+        () => sendGETLatencyRequest(size)
+      );
     }
 
     // --------------------------------------------------
@@ -413,54 +498,29 @@ export async function runGETLatencyTest() {
 
     console.log(`📊 Measuring ${MEASUREMENT_REQUESTS} requests...`);
 
-    const results: GETLatencyResult[] = [];
+    const latencies: number[] = [];
+    const responseSizes: number[] = [];
 
     for (let i = 0; i < MEASUREMENT_REQUESTS; i++) {
-      try {
-        const { latency, status, responseBytes } = await sendGETLatencyRequest(size);
+      const {latency, responseBytes} = await withRetry(
+        `Request ${i + 1}/${MEASUREMENT_REQUESTS} (size=${size})`,
+        sizeRetries,
+        () => sendGETLatencyRequest(size)
+      );
 
-        results.push({
-          request: i + 1,
-          pageSize: size,
-          latency: Number(latency.toFixed(2)),
-          responseBytes,
-          status,
-        });
-      } catch (error) {
-        console.error(`Request ${i + 1}/${MEASUREMENT_REQUESTS} failed:`, error);
-
-        results.push({
-          request: i + 1,
-          pageSize: size,
-          latency: null,
-          responseBytes: null,
-          status: null,
-        });
-      }
+      latencies.push(Number(latency.toFixed(2)));
+      responseSizes.push(responseBytes);
     }
 
     // --------------------------------------------------
     // Statistics
     // --------------------------------------------------
 
-    const validLatencies = results
-      .map((r) => r.latency)
-      .filter((l): l is number => l !== null);
-
-    const validBytes = results
-      .map((r) => r.responseBytes)
-      .filter((b): b is number => b !== null);
-
-    const failed = results.length - validLatencies.length;
-
-    if (validLatencies.length === 0) {
-      console.error(`❌ All requests failed for size=${size}`);
-      continue;
-    }
-
-    const summary = summarize(validLatencies);
+    const summary = summarize(latencies);
     const avgResponseKB =
-      validBytes.reduce((sum, b) => sum + b, 0) / validBytes.length / 1024;
+      responseSizes.reduce((sum, b) => sum + b, 0) / responseSizes.length / 1024;
+
+    totalRetries.retries += sizeRetries.retries;
 
     tableResults.push({
       pageSize: size,
@@ -471,8 +531,8 @@ export async function runGETLatencyTest() {
       p99: summary.p99,
       max: summary.max,
       avgResponseKB,
-      successful: validLatencies.length,
-      failed,
+      successful: latencies.length,
+      retries: sizeRetries.retries,
     });
   }
 
@@ -494,7 +554,7 @@ export async function runGETLatencyTest() {
       "P99 (ms)": result.p99.toFixed(2),
       "Max (ms)": result.max.toFixed(2),
       "Success": result.successful,
-      "Failed": result.failed,
+      "Retries": result.retries,
     }))
   );
 
@@ -513,11 +573,14 @@ export async function runGETLatencyTest() {
     endpoint: POSTS_URL,
     fixedPage: FIXED_PAGE,
     timestamp: new Date().toISOString(),
+    duration: `${(performance.now() - startGetTest) / 60000} min`,
+    maxRetriesPerRequest: MAX_RETRIES,
+    totalRetries: totalRetries.retries,
     results: tableResults,
     timeUnit: "ms",
   };
 
-  const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(report, null, 2)], {type: "application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
@@ -525,4 +588,9 @@ export async function runGETLatencyTest() {
   a.click();
 
   return report;
+}
+
+/** Returns the report, or null if the test was aborted (re-run it). */
+export function runGETLatencyTest() {
+  return runGuarded("GET latency test", executeGETLatencyTest);
 }
