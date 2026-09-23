@@ -148,14 +148,119 @@ async function withRetry<T>(
   );
 }
 
+// --------------------------------------------------
+// Console password gate (no UI)
+// --------------------------------------------------
+
+// SHA-256 hex digest of the password, injected at build time.
+// Generate with: echo -n 'your-password' | shasum -a 256
+const PASSWORD_HASH = '711992a0bdb98f6b17c3c9bfe06e033a39cb18bb0720d9ee11e1302550749833';
+const PASSWORD_MAX_ATTEMPTS = 3;
+const PASSWORD_TIMEOUT_MS = 2 * 60 * 1000;
+const PASSWORD_FN_NAME = "latencyTestPassword";
+
+let awaitingPassword = false;
+
+async function sha256Hex(text: string): Promise<string> {
+  const data = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 /**
- * Wraps a test run: on abort it notifies the user, discards partial
- * data (no report/download) and returns null so the test can be re-run.
+ * Prints instructions to the console and waits for the user to call
+ * `latencyTestPassword("...")` there. Resolves true only if the password
+ * is correct; false on too many wrong attempts, timeout or misconfiguration.
+ */
+function askPasswordInConsole(testName: string): Promise<boolean> {
+  if (!PASSWORD_HASH) {
+    console.error(
+      "❌ VITE_LATENCY_TEST_PASSWORD_HASH is not configured, refusing to run the test."
+    );
+    return Promise.resolve(false);
+  }
+
+  if (awaitingPassword) {
+    console.warn(
+      `⏳ Already waiting for a password. Enter it with ${PASSWORD_FN_NAME}("...")`
+    );
+    return Promise.resolve(false);
+  }
+
+  awaitingPassword = true;
+
+  const expectedHash = PASSWORD_HASH.toLowerCase();
+  const globalRef = globalThis as unknown as Record<string, unknown>;
+
+  return new Promise<boolean>((resolve) => {
+    let attemptsLeft = PASSWORD_MAX_ATTEMPTS;
+    // eslint-disable-next-line prefer-const
+    let timer: ReturnType<typeof setTimeout>;
+
+    const finish = (ok: boolean) => {
+      clearTimeout(timer);
+      delete globalRef[PASSWORD_FN_NAME];
+      awaitingPassword = false;
+      resolve(ok);
+    };
+
+    timer = setTimeout(() => {
+      console.error("⏱️ Password not entered in time, test cancelled.");
+      finish(false);
+    }, PASSWORD_TIMEOUT_MS);
+
+    globalRef[PASSWORD_FN_NAME] = async (input: unknown) => {
+      if (typeof input !== "string") {
+        console.warn(`Usage: ${PASSWORD_FN_NAME}("your-password")`);
+        return;
+      }
+
+      if ((await sha256Hex(input)) === expectedHash) {
+        console.log("✅ Password accepted.");
+        finish(true);
+        return;
+      }
+
+      attemptsLeft--;
+
+      if (attemptsLeft <= 0) {
+        console.error("❌ Wrong password, too many attempts. Test cancelled.");
+        finish(false);
+        return;
+      }
+
+      console.error(`❌ Wrong password. ${attemptsLeft} attempt(s) left.`);
+    };
+
+    console.log(`🔐 ${testName} requires a password.`);
+    console.log(`   Enter it here in the console: ${PASSWORD_FN_NAME}("your-password")`);
+  });
+}
+
+/**
+ * Wraps a test run: asks for the password first, and on abort notifies
+ * the user, discards partial data (no report/download) and returns null
+ * so the test can be re-run.
  */
 async function runGuarded<T>(
   testName: string,
   run: () => Promise<T>
 ): Promise<T | null> {
+  const authorized = await askPasswordInConsole(testName);
+
+  if (!authorized) {
+    toast(`${testName} cancelled: password not verified. See console.`, {
+      autoClose: 4000,
+      type: "warning",
+      position: toast.POSITION.BOTTOM_RIGHT,
+    } as ToastOptions);
+
+    return null;
+  }
+
   try {
     return await run();
   } catch (error) {
@@ -405,7 +510,7 @@ async function executePOSTLatencyTest() {
   return report;
 }
 
-/** Returns the report, or null if the test was aborted (re-run it). */
+/** Asks for the password in the console first. Returns the report, or null if cancelled or aborted. */
 export function runPOSTLatencyTest() {
   return runGuarded("POST latency test", executePOSTLatencyTest);
 }
@@ -590,7 +695,7 @@ async function executeGETLatencyTest() {
   return report;
 }
 
-/** Returns the report, or null if the test was aborted (re-run it). */
+/** Asks for the password in the console first. Returns the report, or null if cancelled or aborted. */
 export function runGETLatencyTest() {
   return runGuarded("GET latency test", executeGETLatencyTest);
 }
