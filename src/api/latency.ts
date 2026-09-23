@@ -81,7 +81,7 @@ const WARMUP_REQUESTS = 5;
 const MEASUREMENT_REQUESTS = 100;
 
 // Use fixed sizes so results are comparable between runs.
-const PAYLOAD_SIZES_KB = [1, 100];
+const PAYLOAD_SIZES_KB = [1, 10, 50, 100];
 
 function generateRandomBytes(sizeInBytes: number): Uint8Array {
   const bytes = new Uint8Array(sizeInBytes);
