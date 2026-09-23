@@ -21,6 +21,8 @@ const layer8Enabled = import.meta.env.VITE_LAYER8_ENABLED === "true";
 const forward_proxy_url = import.meta.env.VITE_FORWARD_PROXY_URL;
 const backend_url = import.meta.env.VITE_API_BASE_URL;
 
+console.log("propagate URLs:", import.meta.env.VITE_OTEL_PROPAGATE_URLS)
+
 function Layer8Init() {
   try {
     const providers = [ServiceProvider.new(backend_url)];
