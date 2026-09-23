@@ -24,6 +24,18 @@
         >
           Run Latency Test
         </div>
+        <div
+          class="flex items-center text-base font-semibold cursor-pointer"
+          @click="runPOSTLatencyTest"
+        >
+          Run POST Latency Test
+        </div>
+        <div
+          class="flex items-center text-base font-semibold cursor-pointer"
+          @click="runGETLatencyTest"
+        >
+          Run GET Latency Test
+        </div>
       </nav>
 
       <div
@@ -66,7 +78,7 @@ import logo from "@/assets/logo.svg";
 import telegram from "@/assets/icons/telegram.svg";
 import github from "@/assets/icons/github.svg";
 import discord from "@/assets/icons/discord.svg";
-import { runLatencyTest } from "@/api/latency";
+import {runGETLatencyTest, runLatencyTest, runPOSTLatencyTest} from "@/api/latency";
 </script>
 
 <style scoped>
