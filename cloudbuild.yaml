@@ -7,15 +7,16 @@ steps:
     entrypoint: npm
     args: ["run", "build"]
     secretEnv:
+      - VITE_LAYER8_ENABLED
       - VITE_API_BASE_URL
       - VITE_FORWARD_PROXY_URL
       - VITE_LAYER8_BASE_URL_PROD
+      - VITE_LAYER8_BASE_URL_DEV
+      - VITE_APP_VERSION
+      - VITE_OTEL_ENABLED
       - VITE_OTEL_COLLECTOR_URL
       - VITE_OTEL_PROPAGATE_URLS
-      - VITE_APP_VERSION
-    env:
-      - "VITE_OTEL_ENABLED=true"
-      - "VITE_SERVICE_NAME=globeandcitizen-fe-origin"
+      - VITE_SERVICE_NAME
     # env:
     #   - "VITE_API_BASE_URL=$$VITE_API_BASE_URL"
     #   - "VITE_FORWARD_PROXY_URL=$$VITE_FORWARD_PROXY_URL"
@@ -39,6 +40,14 @@ availableSecrets:
       env: VITE_OTEL_PROPAGATE_URLS
     - versionName: projects/1865275255/secrets/_VITE_APP_VERSION/versions/latest
       env: VITE_APP_VERSION
+    - versionName: projects/1865275255/secrets/_VITE_LAYER8_ENABLED/versions/latest
+      env: VITE_LAYER8_ENABLED
+    - versionName: projects/1865275255/secrets/_VITE_LAYER8_BASE_URL_DEV/versions/latest
+      env: VITE_LAYER8_BASE_URL_DEV
+    - versionName: projects/1865275255/secrets/_VITE_OTEL_ENABLED/versions/latest
+      env: VITE_OTEL_ENABLED
+    - versionName: projects/1865275255/secrets/_VITE_SERVICE_NAME/versions/latest
+      env: VITE_SERVICE_NAME
 
 options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
