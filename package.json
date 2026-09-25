@@ -59,7 +59,7 @@
     "echarts": "^6.1.0",
     "ethers": "^6.17.0",
     "idb": "^8.0.3",
-    "l8-intercept": "^0.4.4",
+    "l8-intercept": "^0.5.0",
     "leaflet": "^1.9.4",
     "lightgallery": "^2.9.0",
     "pinia": "^3.0.2",
