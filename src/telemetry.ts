@@ -1,10 +1,10 @@
-import { WebTracerProvider } from '@opentelemetry/sdk-trace-web'
-import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base'
-import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http'
-import { registerInstrumentations } from '@opentelemetry/instrumentation'
-import { FetchInstrumentation } from '@opentelemetry/instrumentation-fetch'
-import { resourceFromAttributes } from '@opentelemetry/resources'
-import { ZoneContextManager } from '@opentelemetry/context-zone'
+import {WebTracerProvider} from '@opentelemetry/sdk-trace-web'
+import {BatchSpanProcessor} from '@opentelemetry/sdk-trace-base'
+import {OTLPTraceExporter} from '@opentelemetry/exporter-trace-otlp-http'
+import {registerInstrumentations} from '@opentelemetry/instrumentation'
+import {FetchInstrumentation} from '@opentelemetry/instrumentation-fetch'
+import {resourceFromAttributes} from '@opentelemetry/resources'
+import {ZoneContextManager} from '@opentelemetry/context-zone'
 
 const enabled = import.meta.env.VITE_OTEL_ENABLED === 'true'
 
@@ -38,10 +38,11 @@ if (enabled) {
   })
 
   // Register instrumentations for Fetch and XMLHttpRequest to automatically create spans for network requests
-  const propagateTraceHeaderCorsUrls =
-    import.meta.env.VITE_OTEL_PROPAGATE_URLS
-      .split(',')
-      .map((url: string) => new RegExp(url.trim()))
+  const propagateTraceHeaderCorsUrls = (import.meta.env.VITE_OTEL_PROPAGATE_URLS ?? '')
+    .split(',')
+    .map((url: string) => url.trim())
+    .filter(Boolean)
+    .map((url: string) => new RegExp(url))
 
   const collectorUrl = import.meta.env.VITE_OTEL_COLLECTOR_URL
 

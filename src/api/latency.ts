@@ -287,24 +287,6 @@ async function runGuarded<T>(
 // Payload / statistics helpers
 // --------------------------------------------------
 
-function generateRandomBytes(sizeInBytes: number): Uint8Array {
-  const bytes = new Uint8Array(sizeInBytes);
-  const MAX_CHUNK = 65536; // crypto.getRandomValues limit per call
-
-  for (let offset = 0; offset < sizeInBytes; offset += MAX_CHUNK) {
-    const end = Math.min(offset + MAX_CHUNK, sizeInBytes);
-    crypto.getRandomValues(bytes.subarray(offset, end));
-  }
-
-  return bytes;
-}
-
-function generateRandomPayload(sizeInKB: number): string {
-  const sizeInBytes = sizeInKB * 1024;
-  const bytes = generateRandomBytes(sizeInBytes);
-  return btoa(String.fromCharCode(...bytes));
-}
-
 function getPercentile(sortedValues: number[], percentile: number): number {
   if (sortedValues.length === 0) {
     return 0;
@@ -401,7 +383,7 @@ async function executePOSTLatencyTest() {
     console.log(`📦 Payload size: ${sizeInKB} KB`);
 
     const sizeRetries: RetryCounter = {retries: 0};
-    const payload = generateRandomPayload(sizeInKB);
+    const payload = "x".repeat(sizeInKB * 1024);
 
     // --------------------------------------------------
     // Warm-up
