@@ -11,6 +11,7 @@ import { createVfm } from "vue-final-modal";
 import Vue3Toastify, { toast } from "vue3-toastify";
 import "vue3-toastify/dist/index.css";
 import * as Sentry from "@sentry/vue";
+import './telemetry';
 
 const app = createApp(App);
 const vfm = createVfm();
