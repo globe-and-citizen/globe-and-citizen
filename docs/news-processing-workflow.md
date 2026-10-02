@@ -2,51 +2,41 @@
 
 ## Summary
 
-The article workflow now uses one canonical Polymarket prediction instead of separate Prediction and Hedge selections. The form and market picker also use tighter, responsive spacing and consistent shared control states.
-
-The selected prediction is persisted with the article and is read-only after publication.
+The article workflow persists paired Polymarket Prediction and Hedge selections alongside the written analysis. Creation, editing, preview, and published-article views share the same structured market data and responsive presentation.
 
 ## Changes
 
-- Removed Hedge fields, validation, selection state, modal handling, review output, generated content, and reset behavior.
-- Kept Prediction as the required market selection and article source.
-- Retained the title, slug, TLGP, rules analysis, full analysis, and cover image requirements.
-- Added explicit field labels and normalized responsive input, button, counter, error, focus, and disabled states.
-- Made the market picker header, results, footer, and cover image controls wrap without horizontal overflow.
-- Count rich-text limits from visible text instead of generated HTML markup.
-- Kept uploaded and Polymarket image choices available so switching images does not discard an upload.
-- Sends the selected market URL, identifiers, question, outcome, token, image, and unique Polymarket tag labels in the post `prediction` field.
-- Shows persisted predictions as locked information in the edit dialog and omits prediction source fields from edit payloads.
-- Renders one shared read-only prediction section in article editing, admin preview, and the published post view.
-- Aligns Edit Post with the creation workflow: Title & Slug, locked Prediction, TLGP, Rules Analysis, Full Analysis, and the same Polymarket/uploaded cover-image choices.
-- Parses persisted workflow HTML into its individual edit sections and recomposes the same canonical HTML structure on save.
-- Keeps prediction data outside editable article HTML; older generated prediction blocks are removed from display and edit content when structured prediction data exists.
-- Surfaces backend update errors instead of treating non-success responses as successful edits.
+- Requires Prediction and Hedge market selections for structured prediction articles.
+- Uses the shared market picker for event search, URL loading, market selection, and Yes/No outcomes.
+- Persists market URLs, identifiers, questions, outcomes, token IDs, images, and normalized tag labels.
+- Allows either Prediction or Hedge to be replaced from Edit Post.
+- Shows responsive light-theme price-history charts automatically during creation and beside published Prediction and Hedge details.
+- Routes chart data through the G&C backend and Layer8-aware fetch path; the SPA never calls Polymarket directly.
+- Keeps title, slug, TLGP, Rules Analysis, Full Analysis, and cover-image behavior aligned between creation and editing.
+- Enforces Rules Analysis limits of 650 words and 3000 characters.
+- Keeps uploaded and Polymarket image choices available when selections change.
+- Parses persisted workflow HTML into editable sections and recomposes the canonical structure on save.
+- No database or schema changes were required for price charts.
 
 ## Design Decisions
 
-Prediction is canonical because the published article source, generated article section, cover image context, and analysis copy already use prediction semantics. Shared form, dialog, input, textarea, button, and editor styles are reused rather than introducing workflow-specific controls.
+Prediction and Hedge use the same structured market shape but remain separate domain fields. Stored CLOB token IDs are sufficient to generate charts automatically, so iframe markup and embed configuration are not persisted. The shared backend price-history proxy remains the only Polymarket data boundary for the SPA.
 
-Prediction immutability is enforced in both layers: the edit UI has no prediction controls, and the backend rejects attempted prediction or prediction URL changes.
-
-Only the Polymarket tag `label` values are retained. Labels are collected from event and market responses, trimmed, and deduplicated case-insensitively so the persisted data is suitable for later filtering without coupling posts to the rest of Polymarket's tag metadata.
+Charts use a white background, visible border, percentage y-axis, date x-axis, horizontal grid rows, and tooltips. Trading controls, live activity, and dark mode are intentionally excluded. Market details and charts sit side by side on tablet and desktop widths and stack on mobile.
 
 ## Usage
 
-Open the news creation page, enter the article fields, and select one Polymarket market and Yes/No position in the Prediction section. Choose the market thumbnail or an uploaded cover image, then publish the article.
-
-When editing a published article, use the same TLGP, Rules Analysis, Full Analysis, and cover-image sections used during creation. The persisted prediction is displayed for reference and cannot be changed. Changing the title regenerates the read-only slug.
+Create or edit an article and select Prediction and Hedge markets. Their price-history charts load automatically as soon as token IDs are available and appear with the published article. Choose the Prediction thumbnail or an uploaded image, complete the analysis sections, and save or publish normally.
 
 ## Limitations
 
-- The workflow supports one selected Polymarket market per article.
+- Legacy articles without structured market token IDs cannot show automatic charts.
+- Price-history availability depends on the backend proxy and upstream Polymarket service.
+- The workflow supports one Prediction market and one Hedge market per article.
 - Cover image uploads are limited to 2 MB.
-- Publishing still uses the existing news article API and its current author/source defaults.
-- Existing articles created before the prediction migration can still edit their legacy source fields because they do not have structured prediction data.
-- Tag labels are captured when a prediction is selected; existing posts are not backfilled with Polymarket tags.
-- Legacy articles without workflow headings open their existing content in Full Analysis and may require the missing workflow sections before saving.
+- Legacy articles without workflow headings may require missing analysis sections before saving.
 
 ## Future Improvements
 
-- Add focused component tests for market selection and publish payload generation.
-- Persist drafts so partially completed articles can be resumed.
+- Add authenticated browser coverage for market replacement and responsive chart layouts.
+- Add configurable chart ranges if article readers need shorter time windows.
