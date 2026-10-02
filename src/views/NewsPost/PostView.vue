@@ -38,20 +38,23 @@
                         @update:model-value="showAnnotations = $event"
                     />
                 </div>
+                <div
+                    v-if="post.prediction || post.hedge"
+                    class="space-y-6 py-4 font-lato lg:py-6"
+                >
+                    <PostPredictionSection
+                        v-if="post.prediction"
+                        :prediction="post.prediction"
+                    />
+                    <PostPredictionSection
+                        v-if="post.hedge"
+                        :prediction="post.hedge"
+                        title="Hedge"
+                    />
+                </div>
                 <div v-if="post" class="lg:pb-10 flex flex-col lg:flex-row font-lato">
                     <div class="w-full lg:w-7/12">
                         <div class="gc-container">
-                            <PostPredictionSection
-                                v-if="post.prediction"
-                                :prediction="post.prediction"
-                                class="mb-6"
-                            />
-                            <PostPredictionSection
-                                v-if="post.hedge"
-                                :prediction="post.hedge"
-                                title="Hedge"
-                                class="mb-6"
-                            />
                             <div class="prose prose-sm md:prose-lg max-w-none">
                                 <div class="ql-editor !pl-0">
                                     <Segmented

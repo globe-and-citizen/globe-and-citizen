@@ -117,6 +117,12 @@
                 Open on Polymarket
               </a>
             </div>
+            <PolymarketPriceChart
+              v-if="predictionSelection?.tokenId"
+              :token-id="predictionSelection.tokenId"
+              label="Prediction"
+              accent-color="#0ea5e9"
+            />
           </div>
           <p v-if="errors.predictionUrl" class="text-sm text-destructive">
             {{ errors.predictionUrl }}
@@ -182,6 +188,12 @@
                 Open on Polymarket
               </a>
             </div>
+            <PolymarketPriceChart
+              v-if="hedgeSelection?.tokenId"
+              :token-id="hedgeSelection.tokenId"
+              label="Hedge"
+              accent-color="#84cc16"
+            />
           </div>
           <p v-if="errors.hedgeUrl" class="text-sm text-destructive">
             {{ errors.hedgeUrl }}
@@ -474,6 +486,7 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
 import TipTap from "@/components/Editor/TipTap.vue";
+import PolymarketPriceChart from "@/components/Charts/PolymarketPriceChart.vue";
 import type { NewPostType } from "@/models/Posts";
 import { useForm } from "vee-validate";
 import { formSchema, getTextLength, getWordCount } from "./types";
