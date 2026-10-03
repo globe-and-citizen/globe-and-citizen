@@ -1,187 +1,272 @@
 <template>
-  <div class="px-4 md:px-8 lg:px-[120px]">
-    <div v-if="isLoading" class="animate-pulse">
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
-      >
-        <div v-for="n in 8" :key="n" class="rounded-lg p-4 space-y-4">
-          <div class="bg-gray-300 h-40 w-full rounded-md"></div>
-          <div class="h-6 bg-gray-300 rounded w-3/4"></div>
-          <div class="h-4 bg-gray-300 rounded w-full"></div>
-          <div class="h-4 bg-gray-300 rounded w-full"></div>
-          <div class="h-4 bg-gray-300 rounded w-5/6"></div>
-        </div>
-      </div>
-    </div>
-    <div class="gc-container">
-      <div
-        v-if="!isLoading && news.length === 0"
-        class="w-full py-20 flex flex-col items-center text-center"
-      >
-        <img
-          src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
-          alt="No articles"
-          class="w-32 h-32 opacity-70 mb-4"
-        />
-        <h2 class="text-xl font-semibold text-gray-700">No articles found</h2>
-        <p class="text-gray-500 mt-1">
-          Try adjusting your filters or check again later.
-        </p>
-      </div>
-      <!-- Articles Grid -->
-      <div
-        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mx-auto mt-12"
-      >
-        <div v-for="(article, index) in news" :key="index">
-          <RouterLink
-            v-if="!article.is_external"
-            :to="{
-                    name: 'PostEntryView',
-                    params: { id: article.post_slug, opinionId: article.slug },
-                  }
-            "
-          >
-            <VerticalCard
-              :post="{
-                id: index,
-                title: article.title,
-                description: article.description || '',
-                content: article.content || '',
-                author: article.author ? article.author : article.user.username,
-                created_at: article.created_at || '',
-                updated_at: article.publishedAt || '',
-                url_to_image: article.url_to_image || '',
-                user_id: 0,
-                categories: [],
-                is_external: true,
-
-                slug: article.slug || `external-${index}`,
-                source_url: article.url || '',
-                source_name: article.source?.name || 'Unknown Source',
-                version: 1,
-                comments: [],
-                sentences: [],
-                total_comments: 0,
-                user: {
-                  id: 0,
-                  username: article.source?.name || 'Unknown Source',
-                  email: '',
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-                  website: '',
-                  profile_picture_url:
-                    'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png',
-                  date_of_birth: '',
-                  role_id: 0,
-                  role: { id: 0, description: '', level: 0, name: 'user' },
-                  description: '',
-                  layer8_metadata: {
-                    bio: '',
-                    display_name: article.source?.name || 'Unknown Source',
-                    favorite_color: '',
-                    is_email_verified: false,
-                    location: '',
-
-                    display_name_l8_updated_at: '',
-                    bio_l8_updated_at: '',
-                    favorite_color_l8_updated_at: '',
-                    is_email_verified_l8_updated_at: '',
-                    location_l8_updated_at: '',
-
-                    display_name_updated_at: '',
-                    bio_updated_at: '',
-                    favorite_color_updated_at: '',
-                    is_email_verified_updated_at: '',
-                    location_updated_at: '',
-
-                    updated_at: new Date().toISOString(),
-                  }
-                },
-              }"
-              :show-reading-time-and-comments="false"
+  <div class="px-4 sm:px-6 lg:px-8">
+    <div class="gc-container py-8">
+      <div class="mb-6 flex items-center justify-end">
+        <Button
+          variant="ghost"
+          class="gap-2 px-0 hover:bg-transparent hover:underline hover:underline-offset-4"
+          @click="filtersOpen = !filtersOpen"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" class="h-4 w-4" fill="none">
+            <path
+              d="M4 7h16M7 12h10M10 17h4"
+              stroke="currentColor"
+              stroke-width="1.75"
+              stroke-linecap="round"
             />
-          </RouterLink>
-        </div>
+          </svg>
+          {{ filtersOpen ? "Hide filter" : "Filter" }}
+          <span
+            v-if="activeFilterCount"
+            class="rounded-full bg-foreground px-1.5 text-xs text-background"
+          >
+            {{ activeFilterCount }}
+          </span>
+        </Button>
       </div>
 
-      <!-- Pagination -->
       <div
-        v-if="!isLoading && news.length > 0"
-        class="flex flex-col sm:flex-row items-center justify-between py-4"
+        :class="[
+          'grid items-start transition-[grid-template-columns,column-gap] duration-300 ease-in-out',
+          filtersOpen
+            ? 'gap-6 lg:grid-cols-[240px_minmax(0,1fr)]'
+            : 'gap-0 lg:grid-cols-[0px_minmax(0,1fr)]',
+        ]"
       >
-        <div class="flex items-center space-x-2 mx-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="isLoading || !canGoPrev"
-            @click="currentPage--"
-          >
-            Previous
-          </Button>
-
-          <span class="text-sm mx-2">
-            Page {{ currentPage }} of {{ totalPages }}
-          </span>
-
-          <Button
-            variant="outline"
-            size="sm"
-            :disabled="isLoading || !canGoNext"
-            @click="currentPage++"
-          >
-            Next
-          </Button>
+        <div
+          :class="[
+            'min-w-0 overflow-hidden transition-[max-height,opacity,transform] duration-300 ease-in-out lg:max-h-none',
+            filtersOpen
+              ? 'max-h-[1000px] translate-x-0 opacity-100'
+              : 'pointer-events-none max-h-0 -translate-x-3 opacity-0',
+          ]"
+          :aria-hidden="!filtersOpen"
+          :inert="!filtersOpen"
+        >
+          <ContentFiltersSidebar
+            v-model:open="filtersOpen"
+            :authors="authors"
+            :authors-loading="authorsLoading"
+            :is-fetching="isFetching"
+          />
         </div>
+
+        <main class="min-w-0">
+          <div v-if="isLoading" class="animate-pulse">
+            <div
+              :class="[
+                'grid grid-cols-1 gap-6 sm:grid-cols-2',
+                filtersOpen
+                  ? 'xl:grid-cols-3'
+                  : 'lg:grid-cols-3 xl:grid-cols-4',
+              ]"
+            >
+              <div v-for="n in 6" :key="n" class="space-y-4 rounded-lg p-4">
+                <div class="h-40 w-full rounded-md bg-gray-300"></div>
+                <div class="h-6 w-3/4 rounded bg-gray-300"></div>
+                <div class="h-4 w-full rounded bg-gray-300"></div>
+                <div class="h-4 w-full rounded bg-gray-300"></div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-else-if="isError"
+            class="flex w-full flex-col items-center py-20 text-center"
+          >
+            <h2 class="text-xl font-semibold text-gray-700">
+              Viewpoints could not be loaded
+            </h2>
+            <p class="mt-1 text-gray-500">Please try again.</p>
+            <Button class="mt-4" variant="outline" @click="refetch()">
+              Retry
+            </Button>
+          </div>
+
+          <div
+            v-else-if="viewpoints.length === 0"
+            class="flex w-full flex-col items-center py-20 text-center"
+          >
+            <img
+              src="https://cdn-icons-png.flaticon.com/512/4076/4076549.png"
+              alt="No viewpoints"
+              class="mb-4 h-32 w-32 opacity-70"
+            />
+            <h2 class="text-xl font-semibold text-gray-700">
+              No viewpoints found
+            </h2>
+            <p class="mt-1 text-gray-500">
+              Try adjusting the period or author filter.
+            </p>
+          </div>
+
+          <template v-else>
+            <div class="mb-4 text-sm text-muted-foreground">
+              {{ totalCount }} viewpoint{{ totalCount === 1 ? "" : "s" }} found
+            </div>
+
+            <div
+              :class="[
+                'grid grid-cols-1 gap-6 sm:grid-cols-2',
+                filtersOpen
+                  ? 'xl:grid-cols-3'
+                  : 'lg:grid-cols-3 xl:grid-cols-4',
+              ]"
+            >
+              <div v-for="viewpoint in viewpoints" :key="viewpoint.id">
+                <RouterLink
+                  :to="{
+                    name: 'PostEntryView',
+                    params: {
+                      id: viewpoint.post_slug,
+                      opinionId: viewpoint.slug,
+                    },
+                  }"
+                >
+                  <VerticalCard
+                    :post="{
+                      id: viewpoint.id,
+                      title: viewpoint.title,
+                      description: viewpoint.description || '',
+                      content: viewpoint.content || '',
+                      author: viewpoint.author || viewpoint.user.username,
+                      created_at: viewpoint.created_at || '',
+                      updated_at: viewpoint.updated_at || '',
+                      url_to_image: viewpoint.url_to_image || '',
+                      user_id: viewpoint.user_id ?? viewpoint.user.id,
+                      categories: [],
+                      is_external: true,
+                      slug: viewpoint.slug,
+                      source_url: '',
+                      source_name: '',
+                      version: viewpoint.version ?? 1,
+                      comments: [],
+                      sentences: [],
+                      total_comments: 0,
+                      user: viewpoint.user,
+                    }"
+                    :show-reading-time-and-comments="false"
+                  />
+                </RouterLink>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-center py-6">
+              <div class="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  :disabled="isFetching || !canGoPrev"
+                  @click="goToPage(currentPage - 1)"
+                >
+                  Previous
+                </Button>
+                <span class="mx-2 text-sm">
+                  Page {{ currentPage }} of {{ totalPages }}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  :disabled="isFetching || !canGoNext"
+                  @click="goToPage(currentPage + 1)"
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </template>
+        </main>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {fetchAllOpinions} from "@/api/opinions";
-import type {AllNewsResponseType} from "@/models/Posts";
-import {useQuery} from "@tanstack/vue-query";
-import {computed, ref, watch} from "vue";
+import type { ContentFilters } from "@/api/contentFilters";
+import { fetchAllOpinions, fetchOpinionAuthors } from "@/api/opinions";
+import ContentFiltersSidebar from "@/components/ContentFiltersSidebar.vue";
 import VerticalCard from "@/components/VerticalCard.vue";
-import {RouterLink, useRoute, useRouter} from "vue-router";
+import { Button } from "@/components/ui/button";
+import type { AllNewsResponseType } from "@/models/Posts";
+import { useQuery } from "@tanstack/vue-query";
+import { computed, ref } from "vue";
+import { RouterLink, useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
-const pageSize = ref(10);
 const router = useRouter();
+const pageSize = 10;
+const filtersOpen = ref(false);
 
-const currentPage = ref(Number(route.query.page) || 1);
-
-const fetchFn = async () => {
-    return fetchAllOpinions(pageSize.value, currentPage.value);
-};
-
-const {data, isLoading, refetch} = useQuery<AllNewsResponseType>({
-    queryKey: ["viewpoints", currentPage.value, pageSize.value],
-    queryFn: fetchFn,
-    refetchOnWindowFocus: true,
+const currentPage = computed(() => {
+  const parsed = Number(firstQueryValue(route.query.page));
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1;
 });
 
-watch(currentPage, (newPage) => {
+const appliedFilters = computed<ContentFilters>(() => {
+  const parsedAuthorId = Number(firstQueryValue(route.query.author));
+  return {
+    month: firstQueryValue(route.query.month) || undefined,
+    from: firstQueryValue(route.query.from) || undefined,
+    to: firstQueryValue(route.query.to) || undefined,
+    authorId:
+      Number.isInteger(parsedAuthorId) && parsedAuthorId > 0
+        ? parsedAuthorId
+        : undefined,
+  };
+});
+
+const queryKey = computed(() => [
+  "viewpoints",
+  currentPage.value,
+  pageSize,
+  appliedFilters.value.month ?? "",
+  appliedFilters.value.from ?? "",
+  appliedFilters.value.to ?? "",
+  appliedFilters.value.authorId ?? "",
+]);
+
+const { data, isLoading, isFetching, isError, refetch } =
+  useQuery<AllNewsResponseType>({
+    queryKey,
+    queryFn: () =>
+      fetchAllOpinions(pageSize, currentPage.value, appliedFilters.value),
+    refetchOnWindowFocus: true,
+  });
+
+const { data: authorsData, isLoading: authorsLoading } = useQuery({
+  queryKey: ["viewpoint-authors"],
+  queryFn: fetchOpinionAuthors,
+  staleTime: 5 * 60 * 1000,
+});
+
+const authors = computed(() => authorsData.value?.data ?? []);
+const viewpoints = computed(() => data.value?.data.posts ?? []);
+const totalCount = computed(() => data.value?.data.totalCount ?? 0);
+const totalPages = computed(() => Math.ceil(totalCount.value / pageSize));
+const canGoPrev = computed(() => currentPage.value > 1);
+const canGoNext = computed(() => currentPage.value < totalPages.value);
+const activeFilterCount = computed(
+  () =>
+    Number(
+      Boolean(
+        appliedFilters.value.month ||
+          appliedFilters.value.from ||
+          appliedFilters.value.to,
+      ),
+    ) + Number(Boolean(appliedFilters.value.authorId)),
+);
+
+function goToPage(page: number) {
   router.replace({
     query: {
       ...route.query,
-      page: newPage,
+      page: page > 1 ? page.toString() : undefined,
     },
   });
-});
+}
 
-watch(
-  () => route.query.page,
-  (newPage) => {
-    currentPage.value = Number(newPage) || 1;
-    refetch();
-  }
-);
-
-const news = computed(() => data.value?.data.posts ?? []);
-const totalCount = computed(() => data.value?.data.totalCount ?? 0);
-const totalPages = computed(() => Math.ceil(totalCount.value / pageSize.value));
-
-const canGoPrev = computed(() => currentPage.value > 1);
-const canGoNext = computed(() => currentPage.value < totalPages.value);
+function firstQueryValue(value: unknown): string {
+  if (Array.isArray(value)) return String(value[0] ?? "");
+  return typeof value === "string" ? value : "";
+}
 </script>

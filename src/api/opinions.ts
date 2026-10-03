@@ -2,6 +2,7 @@ import type { AllNewsResponseType, FetchPostsType } from "@/models/Posts";
 import { fetchWithAuth, interceptorFetch } from "./auth";
 import { API_BASE_URL, ENTRIES_URL } from "./constants";
 import type { OpinionPatchPayload, OpinionPayload } from "@/models/Opinions";
+import type { ContentAuthor, ContentFilters } from "@/api/contentFilters";
 
 export async function patchOpinion(
   payload: OpinionPatchPayload
@@ -104,15 +105,27 @@ export async function getUsersArticles(
 
 export async function fetchAllOpinions(
   size: number,
-  page: number
+  page: number,
+  filters: ContentFilters = {}
 ): Promise<AllNewsResponseType> {
   try {
+    const params = new URLSearchParams({
+      size: size.toString(),
+      page: page.toString(),
+    });
+    if (filters.month) params.set("month", filters.month);
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+    if (filters.authorId) {
+      params.set("author_id", filters.authorId.toString());
+    }
+
     const response = await interceptorFetch(
-      `${API_BASE_URL}${ENTRIES_URL}?size=${size}&page=${page}`
+      `${API_BASE_URL}${ENTRIES_URL}?${params.toString()}`
     );
 
-    if (!response) {
-      throw new Error(`Error fetching opinions: ${response}`);
+    if (!response.ok) {
+      throw new Error(`Error fetching opinions: ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -121,4 +134,16 @@ export async function fetchAllOpinions(
     console.error("Error fetching opinions:", error);
     throw error;
   }
+}
+
+export async function fetchOpinionAuthors(): Promise<{
+  data: ContentAuthor[];
+}> {
+  const response = await interceptorFetch(
+    `${API_BASE_URL}${ENTRIES_URL}/authors`,
+  );
+  if (!response.ok) {
+    throw new Error(`Error fetching viewpoint authors: ${response.statusText}`);
+  }
+  return response.json();
 }
