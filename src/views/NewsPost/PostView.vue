@@ -203,6 +203,7 @@
     <EditDialog
         :is-open="postEditDialogOpen"
         :post="selectedPost"
+        :is-saving="updatePostPending"
         @close="postEditDialogOpen = false"
         @save="handlePostEditAction"
     />
@@ -243,6 +244,7 @@ import EditDialog from "@/components/AdminPanel/NewsTable/EditDialog.vue";
 import ExploreMore from "@/views/Home/sections/ExploreMore.vue";
 import PostPredictionSection from "@/components/PostPredictionSection.vue";
 import {withoutEmbeddedPrediction} from "@/utils/postPrediction";
+import {buildPostUpdatePayload} from "@/utils/postUpdate";
 
 import {toast} from "vue3-toastify";
 
@@ -398,7 +400,7 @@ const displayedEntries = computed(() => {
         : post.value.entries.slice(0, entriesLimit);
 });
 
-const {mutate: updatePost} = useMutation({
+const {mutate: updatePost, isPending: updatePostPending} = useMutation({
     mutationFn: async ({
                            postId,
                            article,
@@ -411,6 +413,7 @@ const {mutate: updatePost} = useMutation({
     onSuccess: () => {
         queryClient.invalidateQueries({queryKey: ["allPosts"]});
         queryClient.invalidateQueries({queryKey: ["post", postId]});
+        postEditDialogOpen.value = false;
         setTimeout(() => {
             toast("News post updated", {
                 autoClose: 3000,
@@ -467,14 +470,8 @@ function handleConfirmPostDelete() {
 function handlePostEditAction(formData: Partial<Post>) {
     updatePost({
         postId: selectedPost.value?.slug || "",
-        article: {
-            title: formData.title || "",
-            url_to_image: formData.url_to_image || "",
-            content: formData.content || "",
-            description: formData.description || "",
-        },
+        article: buildPostUpdatePayload(formData, selectedPost.value),
     });
-    postEditDialogOpen.value = false;
 }
 </script>
 

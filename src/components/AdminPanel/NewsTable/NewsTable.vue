@@ -257,6 +257,7 @@ import type { NewPostType, Post, AllNewsResponseType } from "@/models/Posts";
 import { useQueryClient } from "@tanstack/vue-query";
 import { deleteOpinion, patchOpinion } from "@/api/opinions";
 import type { OpinionPatchPayload } from "@/models/Opinions";
+import { buildPostUpdatePayload } from "@/utils/postUpdate";
 
 const queryClient = useQueryClient();
 
@@ -428,24 +429,9 @@ function handleEdit(post: Post) {
 }
 
 function handleSaveEdit(formData: Partial<Post>) {
-  const article: Partial<NewPostType> = {
-    title: formData.title || "",
-    slug: formData.slug || "",
-    description: formData.description || "",
-    url_to_image: formData.url_to_image || "",
-    content: formData.content || "",
-    prediction: formData.prediction,
-    hedge: formData.hedge,
-  };
-
-  if (!selectedPost.value?.prediction) {
-    article.source_name = formData.source_name || "";
-    article.source_url = formData.source_url || "";
-  }
-
   updatePost({
     postId: selectedPost.value?.slug || "",
-    article,
+    article: buildPostUpdatePayload(formData, selectedPost.value),
   });
 }
 
