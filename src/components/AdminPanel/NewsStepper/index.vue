@@ -117,6 +117,12 @@
                 Open on Polymarket
               </a>
             </div>
+            <PolymarketPriceChart
+              v-if="predictionSelection?.tokenId"
+              :token-id="predictionSelection.tokenId"
+              label="Prediction"
+              accent-color="#0ea5e9"
+            />
           </div>
           <p v-if="errors.predictionUrl" class="text-sm text-destructive">
             {{ errors.predictionUrl }}
@@ -182,6 +188,12 @@
                 Open on Polymarket
               </a>
             </div>
+            <PolymarketPriceChart
+              v-if="hedgeSelection?.tokenId"
+              :token-id="hedgeSelection.tokenId"
+              label="Hedge"
+              accent-color="#84cc16"
+            />
           </div>
           <p v-if="errors.hedgeUrl" class="text-sm text-destructive">
             {{ errors.hedgeUrl }}
@@ -230,7 +242,7 @@
           <h2 class="text-lg font-semibold">Rules Analysis</h2>
           <p class="text-sm text-muted-foreground">
             Analyze the rules of the selected market to avoid gotchas. Maximum
-            400 words, 2600 characters.
+            650 words, 3000 characters.
           </p>
 
           <FormField v-slot="{ componentField }" name="rulesAnalysis">
@@ -248,8 +260,8 @@
                 class="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between"
               >
                 <p class="text-xs text-muted-foreground">
-                  {{ rulesAnalysisWordCount }} / 400 words ·
-                  {{ rulesAnalysisCharacterCount }} / 2600 characters
+                  {{ rulesAnalysisWordCount }} / 650 words ·
+                  {{ rulesAnalysisCharacterCount }} / 3000 characters
                 </p>
                 <FormMessage />
               </div>
@@ -474,10 +486,11 @@ import {
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
 import TipTap from "@/components/Editor/TipTap.vue";
+import PolymarketPriceChart from "@/components/Charts/PolymarketPriceChart.vue";
 import type { NewPostType } from "@/models/Posts";
 import { useForm } from "vee-validate";
 import { formSchema, getTextLength, getWordCount } from "./types";
-import { postNewsArticle } from "@/api/posts.ts";
+import { PostArticleError, postNewsArticle } from "@/api/posts.ts";
 import { generateSlug } from "@/composables/utils.ts";
 import { uploadToCloudinary } from "@/api/images.ts";
 import { useRouter } from "vue-router";
@@ -692,6 +705,26 @@ const publishMutation = useMutation({
     form.resetForm();
     form.setValues(initialValues);
   },
+  onError: (error) => {
+    if (!(error instanceof PostArticleError)) return;
+
+    const fieldEntries = Object.entries(error.fieldErrors) as Array<
+      ["title" | "slug", string]
+    >;
+    for (const [field, message] of fieldEntries) {
+      form.setFieldError(field, message);
+      form.setFieldTouched(field, true);
+    }
+
+    const firstField = fieldEntries[0]?.[0];
+    if (firstField) {
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLInputElement>(`[name="${firstField}"]`)
+          ?.focus();
+      });
+    }
+  },
 });
 
 async function onSubmit() {
@@ -706,7 +739,7 @@ async function onSubmit() {
   const title = (v.title as string)?.trim() || "Untitled Article";
   const slug = (v.slug as string)?.trim() || generateSlug(title);
 
-  // Prediction is stored separately so it stays immutable in article edits.
+  // Prediction is stored separately from the editable article analysis.
   const content = composeNewsWorkflowContent({
     tlgp: (v.tlgp as string) || "",
     rulesAnalysis: (v.rulesAnalysis as string) || "",

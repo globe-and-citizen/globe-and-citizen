@@ -8,14 +8,39 @@ import { useAuthStore } from "../store/authStore";
 
 import { API_BASE_URL, ENTRIES_URL, POSTS_URL, USER_FEED } from "./constants";
 import { toast } from "vue3-toastify";
+import type { ContentAuthor, ContentFilters } from "@/api/contentFilters";
+
+export type PostFieldErrors = Partial<Record<"title" | "slug", string>>;
+
+export class PostArticleError extends Error {
+  readonly fieldErrors: PostFieldErrors;
+
+  constructor(message: string, fieldErrors: PostFieldErrors = {}) {
+    super(message);
+    this.name = "PostArticleError";
+    this.fieldErrors = fieldErrors;
+  }
+}
 
 export async function fetchAllPosts(
   size: number,
-  page: number
+  page: number,
+  filters: ContentFilters = {}
 ): Promise<AllNewsResponseType> {
   try {
+    const params = new URLSearchParams({
+      size: size.toString(),
+      page: page.toString(),
+    });
+    if (filters.month) params.set("month", filters.month);
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+    if (filters.authorId) {
+      params.set("author_id", filters.authorId.toString());
+    }
+
     const response = await interceptorFetch(
-      `${API_BASE_URL}${POSTS_URL}?size=${size}&page=${page}`,
+      `${API_BASE_URL}${POSTS_URL}?${params.toString()}`,
       {
         method: "GET",
         headers: {
@@ -32,6 +57,19 @@ export async function fetchAllPosts(
     console.error("Error fetching all posts:", error);
     throw error;
   }
+}
+
+export async function fetchPostAuthors(): Promise<{ data: ContentAuthor[] }> {
+  const response = await interceptorFetch(`${API_BASE_URL}${POSTS_URL}/authors`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "Application/Json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`Error fetching post authors: ${response.statusText}`);
+  }
+  return response.json();
 }
 
 export async function fetchUsersFeed(
@@ -129,16 +167,18 @@ export async function postNewsArticle(
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      toast(errorData.message || response.statusText, {
+      const errorData = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+        field_errors?: PostFieldErrors;
+      };
+      const message =
+        errorData.error || errorData.message || response.statusText;
+      toast(message, {
         autoClose: 3000,
         type: "error",
       });
-      throw new Error(
-        `Error posting news article: ${
-          errorData.message || response.statusText
-        }`
-      );
+      throw new PostArticleError(message, errorData.field_errors);
     }
     toast("News article published", {
       autoClose: 3000,

@@ -38,20 +38,23 @@
                         @update:model-value="showAnnotations = $event"
                     />
                 </div>
+                <div
+                    v-if="post.prediction || post.hedge"
+                    class="space-y-6 py-4 font-lato lg:py-6"
+                >
+                    <PostPredictionSection
+                        v-if="post.prediction"
+                        :prediction="post.prediction"
+                    />
+                    <PostPredictionSection
+                        v-if="post.hedge"
+                        :prediction="post.hedge"
+                        title="Hedge"
+                    />
+                </div>
                 <div v-if="post" class="lg:pb-10 flex flex-col lg:flex-row font-lato">
                     <div class="w-full lg:w-7/12">
                         <div class="gc-container">
-                            <PostPredictionSection
-                                v-if="post.prediction"
-                                :prediction="post.prediction"
-                                class="mb-6"
-                            />
-                            <PostPredictionSection
-                                v-if="post.hedge"
-                                :prediction="post.hedge"
-                                title="Hedge"
-                                class="mb-6"
-                            />
                             <div class="prose prose-sm md:prose-lg max-w-none">
                                 <div class="ql-editor !pl-0">
                                     <Segmented
@@ -200,6 +203,7 @@
     <EditDialog
         :is-open="postEditDialogOpen"
         :post="selectedPost"
+        :is-saving="updatePostPending"
         @close="postEditDialogOpen = false"
         @save="handlePostEditAction"
     />
@@ -240,6 +244,7 @@ import EditDialog from "@/components/AdminPanel/NewsTable/EditDialog.vue";
 import ExploreMore from "@/views/Home/sections/ExploreMore.vue";
 import PostPredictionSection from "@/components/PostPredictionSection.vue";
 import {withoutEmbeddedPrediction} from "@/utils/postPrediction";
+import {buildPostUpdatePayload} from "@/utils/postUpdate";
 
 import {toast} from "vue3-toastify";
 
@@ -395,7 +400,7 @@ const displayedEntries = computed(() => {
         : post.value.entries.slice(0, entriesLimit);
 });
 
-const {mutate: updatePost} = useMutation({
+const {mutate: updatePost, isPending: updatePostPending} = useMutation({
     mutationFn: async ({
                            postId,
                            article,
@@ -408,6 +413,7 @@ const {mutate: updatePost} = useMutation({
     onSuccess: () => {
         queryClient.invalidateQueries({queryKey: ["allPosts"]});
         queryClient.invalidateQueries({queryKey: ["post", postId]});
+        postEditDialogOpen.value = false;
         setTimeout(() => {
             toast("News post updated", {
                 autoClose: 3000,
@@ -464,14 +470,8 @@ function handleConfirmPostDelete() {
 function handlePostEditAction(formData: Partial<Post>) {
     updatePost({
         postId: selectedPost.value?.slug || "",
-        article: {
-            title: formData.title || "",
-            url_to_image: formData.url_to_image || "",
-            content: formData.content || "",
-            description: formData.description || "",
-        },
+        article: buildPostUpdatePayload(formData, selectedPost.value),
     });
-    postEditDialogOpen.value = false;
 }
 </script>
 

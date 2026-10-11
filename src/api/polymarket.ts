@@ -89,22 +89,50 @@ export type PolymarketPriceHistoryResponse = {
   history: PolymarketPriceHistoryPoint[];
 };
 
+export type PolymarketPriceHistoryInterval =
+  | "max"
+  | "all"
+  | "1m"
+  | "1w"
+  | "1d"
+  | "6h"
+  | "1h";
+
 export const getPolymarketPricesHistory = async (params: {
   market: string;
-  startTs: number;
+  startTs?: number;
+  endTs?: number;
+  interval?: PolymarketPriceHistoryInterval;
 }): Promise<PolymarketPriceHistoryResponse> => {
-  const { market, startTs } = params;
+  const { market, startTs, endTs, interval } = params;
   if (!market?.trim()) {
     throw new Error("Missing CLOB token id");
   }
 
-  if (!Number.isFinite(startTs) || startTs < 0) {
-    throw new Error("Invalid start timestamp");
+  const hasRange = startTs !== undefined || endTs !== undefined;
+  if (!interval && !hasRange) {
+    throw new Error("Missing price history interval or time range");
+  }
+  if (
+    hasRange &&
+    (typeof startTs !== "number" ||
+      typeof endTs !== "number" ||
+      !Number.isFinite(startTs) ||
+      !Number.isFinite(endTs) ||
+      startTs < 0 ||
+      endTs <= startTs)
+  ) {
+    throw new Error("Invalid price history time range");
   }
 
   const url = new URL(`${API_V1_BASE_URL}/polymarket/prices-history`);
   url.searchParams.set("market", market);
-  url.searchParams.set("startTs", String(Math.floor(startTs)));
+  if (interval) {
+    url.searchParams.set("interval", interval);
+  } else {
+    url.searchParams.set("startTs", String(Math.floor(startTs!)));
+    url.searchParams.set("endTs", String(Math.floor(endTs!)));
+  }
 
   const response = await interceptorFetch(url.toString(), { method: "GET" });
   if (!response.ok) {

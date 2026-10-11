@@ -22,6 +22,7 @@ export function usePolymarketSeriesFetch() {
         getPolymarketPricesHistory({
           market: outcomeId,
           startTs: options.fromTs,
+          endTs: options.toTs ?? Math.floor(Date.now() / 1000),
         }),
       ),
     );
