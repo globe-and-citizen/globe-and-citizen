@@ -3,6 +3,7 @@ import settings from "@/assets/icons/settings.svg";
 import password from "@/assets/icons/lock.svg";
 import articles from "@/assets/icons/articles.svg";
 import journals from "@/assets/icons/journals.svg";
+import priceTrackerGraph from "@/assets/icons/graph-chart-data.svg";
 import analyticsGraph from "@/assets/icons/graph-analytics-business.svg";
 import correlationGraph from "@/assets/icons/graph-correlation.svg";
 import table from "@/assets/icons/table.svg";
@@ -47,6 +48,13 @@ export const profileMenuItems = [
   },
   {
     section: "Tools",
+    icon: priceTrackerGraph,
+    title: "Polymarket price alerts",
+    url: "/polymarket-price-tracker",
+    summary: "Get a Telegram message when a selected Polymarket price reaches your target.",
+  },
+  {
+    section: "Tools",
     icon: analyticsGraph,
     title: "CSV Builder",
     url: "/csv-builder",
@@ -78,6 +86,11 @@ export const profileMenuItems = [
 ];
 
 export const serviceMenuItems = [
+  {
+    section: "Services",
+    title: "Polymarket price alerts",
+    url: "/polymarket-price-tracker",
+  },
   {
     section: "Services",
     title: "CSV Builder",

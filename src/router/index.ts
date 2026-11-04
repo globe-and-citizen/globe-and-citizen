@@ -28,6 +28,7 @@ import UserNewsView from "@/views/UserProfile/UserNewsView.vue";
 import PredictionsView from "@/views/PredictionsView.vue";
 import ChangePasswordView from "@/views/UserProfile/ChangePasswordView.vue";
 import PolymarketAnalytics from "@/views/UserProfile/PolymarketAnalytics.vue";
+import PolymarketPriceTracker from "@/views/UserProfile/PolymarketPriceTracker.vue";
 // import CorrelationGraphView from "@/views/UserProfile/CorrelationGraphView.vue";
 // import ServicesPageView from "@/views/ServicesPageView.vue";
 // import LiveFeedView from "@/views/LiveNewsFeed/LiveFeedView.vue";
@@ -139,7 +140,7 @@ const routes = [
           { path: "my-comments", component: PublicView },
           {
             path: "polymarket-price-tracker",
-            redirect: "/profile",
+            component: PolymarketPriceTracker,
           },
           {
             path: "csv-builder",

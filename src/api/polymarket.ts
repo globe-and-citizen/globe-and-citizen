@@ -8,7 +8,7 @@ const API_V1_BASE_URL = (() => {
   return base.endsWith("/v1") ? base : `${base}/v1`;
 })();
 
-export type AlertOperator = "lt" | "lte" | "gt" | "gte" | "eq";
+export type AlertOperator = "lt" | "lte" | "gt" | "gte";
 
 export type AlertMarketFields = {
   market_url?: string;
@@ -30,8 +30,8 @@ export type CreateSumAlertPayload = {
   threshold: number;
   direction: "buy" | "sell";
   legs: SumAlertLeg[];
-  notify_discord: boolean;
-  discord_webhook?: string;
+  notify_telegram: boolean;
+  telegram_chat_id?: string;
   repeat: boolean;
 } & AlertMarketFields;
 
@@ -43,9 +43,9 @@ export type CreateSingleAlertPayload = {
   direction: "buy" | "sell";
   operator: AlertOperator;
   target_price: number;
-  notify_discord: boolean;
+  notify_telegram: boolean;
   threshold: number;
-  discord_webhook?: string;
+  telegram_chat_id?: string;
   repeat: boolean;
 };
 
@@ -78,6 +78,83 @@ export const getPolymarketDataBySlug = async (
   const res = await response.json();
 
   return res.data[0];
+};
+
+export const getPolymarketForPriceAlerts = async (url: string) => {
+  const response = await fetchWithAuth(`${API_V1_BASE_URL}/profile/price-alert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  if (!response.ok) throw new Error("Failed to fetch Polymarket data");
+  return response.json();
+};
+
+export const createAlert = async (payload: CreateAlertPayload) => {
+  const response = await fetchWithAuth(`${API_V1_BASE_URL}/alerts`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Failed to create alert");
+  return response.json();
+};
+
+export const fetchAlerts = async () => {
+  const response = await fetchWithAuth(`${API_V1_BASE_URL}/alerts`);
+  if (!response.ok) throw new Error("Failed to fetch alerts");
+  return response.json();
+};
+
+export const deleteAlert = async (alertId: string | number) => {
+  const response = await fetchWithAuth(`${API_V1_BASE_URL}/alerts/${alertId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete alert");
+  return response.json().catch(() => ({}));
+};
+
+export const updateAlert = async (
+  alertId: string | number,
+  payload: UpdateAlertPayload,
+) => {
+  const response = await fetchWithAuth(`${API_V1_BASE_URL}/alerts/${alertId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error("Failed to update alert");
+  return response.json();
+};
+
+export type TelegramConnection = {
+  connected: boolean;
+  chat_type?: string;
+  chat_title?: string;
+  updated_at?: string;
+};
+
+export const createTelegramLink = async (): Promise<{ url: string; expires_in: number }> => {
+  const response = await fetchWithAuth(`${API_V1_BASE_URL}/telegram/link`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Failed to create Telegram connection link");
+  const result = await response.json();
+  return result.data;
+};
+
+export const getTelegramConnection = async (): Promise<TelegramConnection> => {
+  const response = await fetchWithAuth(`${API_V1_BASE_URL}/telegram/connection`);
+  if (!response.ok) throw new Error("Failed to check Telegram connection");
+  const result = await response.json();
+  return result.data;
+};
+
+export const disconnectTelegram = async (): Promise<void> => {
+  const response = await fetchWithAuth(`${API_V1_BASE_URL}/telegram/connection`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to disconnect Telegram");
 };
 
 export type PolymarketPriceHistoryPoint = {
