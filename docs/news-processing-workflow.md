@@ -2,11 +2,11 @@
 
 ## Summary
 
-The article workflow persists paired Polymarket Prediction and Hedge selections alongside the written analysis. Creation, editing, preview, and published-article views share the same structured market data and responsive presentation.
+The article workflow persists a Polymarket Prediction and an optional Hedge selection alongside the written analysis. Creation, editing, preview, and published-article views share the same structured market data and responsive presentation.
 
 ## Changes
 
-- Requires Prediction and Hedge market selections for structured prediction articles.
+- Requires a Prediction market selection and allows the Hedge to be omitted for solo-bet articles.
 - Uses the shared market picker for event search, URL loading, market selection, and Yes/No outcomes.
 - Persists market URLs, identifiers, questions, outcomes, token IDs, images, and normalized tag labels.
 - Allows either Prediction or Hedge to be replaced from Edit Post.
@@ -26,13 +26,13 @@ Charts use a white background, visible border, percentage y-axis, date x-axis, h
 
 ## Usage
 
-Create or edit an article and select Prediction and Hedge markets. Their price-history charts load automatically as soon as token IDs are available and appear with the published article. Choose the Prediction thumbnail or an uploaded image, complete the analysis sections, and save or publish normally.
+Create or edit an article and select a Prediction market. Add a Hedge market when the analysis needs one, or leave it empty for a solo bet. Price-history charts load automatically for the selected markets and appear with the published article. Choose the Prediction thumbnail or an uploaded image, complete the analysis sections, and save or publish normally.
 
 ## Limitations
 
 - Legacy articles without structured market token IDs cannot show automatic charts.
 - Price-history availability depends on the backend proxy and upstream Polymarket service.
-- The workflow supports one Prediction market and one Hedge market per article.
+- The workflow supports one required Prediction market and up to one optional Hedge market per article.
 - Cover image uploads are limited to 2 MB.
 - Legacy articles without workflow headings may require missing analysis sections before saving.
 
