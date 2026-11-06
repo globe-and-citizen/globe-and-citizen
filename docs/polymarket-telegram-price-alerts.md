@@ -15,6 +15,7 @@ The Polymarket price tracker is available again. Authenticated users securely co
 - Updated the alert worker to format Telegram messages for single and sum alerts and to retain an active alert when delivery fails.
 - Added a bounded Telegram transport retry, an isolated HTTP/1.1 client for reliable Bot API delivery, and redacted transport errors so bot tokens cannot appear in worker logs.
 - Removed the unsupported equality operator from the restored alert form.
+- Reloaded saved Polymarket metadata when editing an alert so the original event and market names remain visible instead of falling back to a numeric market ID.
 
 ## Design Decisions
 
@@ -27,6 +28,7 @@ The Telegram bot token is stored only in the backend environment as `TELEGRAM_BO
 3. Deploy migrations `000041` and `000042`.
 4. Open **Profile → Polymarket price alerts**, enable Telegram, click **Connect Telegram**, and press Start in the bot conversation.
 5. Return to the alert form after it displays **Telegram connected**, then save the alert. The worker evaluates active alerts every 30 seconds.
+6. When editing an existing alert, the wizard reloads its saved Polymarket URL and restores the selected market and outcome while displaying their current names.
 
 For local Telegram API testing, `TELEGRAM_API_URL` can override the default `https://api.telegram.org` endpoint.
 
@@ -38,6 +40,7 @@ For local Telegram API testing, `TELEGRAM_API_URL` can override the default `htt
 - The current connection button links a private bot conversation; guided group/channel linking is not yet exposed in the UI.
 - Existing Discord-only alerts are preserved but will not send until the user connects Telegram and edits the alert to enable Telegram delivery.
 - The worker still depends on PostgreSQL, Redis, and current Polymarket price data.
+- If Polymarket metadata cannot be fetched while opening an alert for editing, the saved identifiers remain selected but the form may temporarily show the numeric market fallback.
 
 ## Future Improvements
 
