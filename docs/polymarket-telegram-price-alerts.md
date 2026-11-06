@@ -15,7 +15,7 @@ The Polymarket price tracker is available again. Authenticated users securely co
 - Updated the alert worker to format Telegram messages for single and sum alerts and to retain an active alert when delivery fails.
 - Added a bounded Telegram transport retry, an isolated HTTP/1.1 client for reliable Bot API delivery, and redacted transport errors so bot tokens cannot appear in worker logs.
 - Removed the unsupported equality operator from the restored alert form.
-- Reloaded saved Polymarket metadata automatically when an editor enters the market-selection step so its dropdowns show the original event and market names instead of falling back to a numeric market ID.
+- Reloaded saved Polymarket metadata automatically when an editor enters the market-selection step and made the selected-market label react directly to the refreshed options, so the dropdown shows the market name immediately instead of retaining a numeric market ID until it is clicked.
 
 ## Design Decisions
 
