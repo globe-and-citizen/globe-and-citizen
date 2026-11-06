@@ -486,7 +486,9 @@
               "
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select market" />
+                <SelectValue placeholder="Select market">
+                  {{ selectedMarketTitle(leg) || "Select market" }}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
@@ -969,5 +971,13 @@ function updateLegField(index: number, field: MutableLegField, value: string) {
 function updateActiveLegField(field: MutableLegField, value: string) {
   if (!props.activeLeg) return;
   props.setLegField(props.activeLegIndex, field, value);
+}
+
+function selectedMarketTitle(leg: LegState): string {
+  return (
+    props
+      .getMarketSelectOptions(leg)
+      .find((market) => market.id === leg.selectedMarketId)?.title ?? ""
+  );
 }
 </script>
