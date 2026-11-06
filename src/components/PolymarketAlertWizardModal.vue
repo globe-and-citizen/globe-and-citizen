@@ -1648,6 +1648,12 @@ watch(
     }
 
     applyInitialAlert(props.initialAlert);
+
+    // Saved alerts only contain market/outcome identifiers. Reload each saved
+    // Polymarket URL so the edit form can display the original event and market
+    // names instead of falling back to "Market <id>". loadLeg preserves the
+    // restored identifiers while applying the fetched metadata.
+    await Promise.allSettled(legs.value.map((_, index) => loadLeg(index)));
   },
   { immediate: true },
 );
