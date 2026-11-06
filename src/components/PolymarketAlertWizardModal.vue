@@ -288,10 +288,10 @@
           </Button>
           <Button
             v-if="step < 3"
-            :disabled="!canProceed || isSubmitting"
-            @click="step++"
+            :disabled="!canProceed || isSubmitting || isLoadingEditMarkets"
+            @click="handleNext"
           >
-            Next
+            {{ isLoadingEditMarkets ? "Loading markets…" : "Next" }}
           </Button>
           <Button
             v-else
@@ -943,6 +943,7 @@ const telegramChatId = ref<string>("");
 const repeat = ref<boolean>(true);
 
 const isSubmitting = ref(false);
+const isLoadingEditMarkets = ref(false);
 const submitError = ref<string>("");
 
 const legs = ref<LegState[]>([
@@ -1536,6 +1537,7 @@ watch(
 
       submitError.value = "";
       isSubmitting.value = false;
+      isLoadingEditMarkets.value = false;
     };
 
     const applyInitialAlert = (alert: ExistingAlert) => {
@@ -1648,12 +1650,6 @@ watch(
     }
 
     applyInitialAlert(props.initialAlert);
-
-    // Saved alerts only contain market/outcome identifiers. Reload each saved
-    // Polymarket URL so the edit form can display the original event and market
-    // names instead of falling back to "Market <id>". loadLeg preserves the
-    // restored identifiers while applying the fetched metadata.
-    await Promise.allSettled(legs.value.map((_, index) => loadLeg(index)));
   },
   { immediate: true },
 );
@@ -2794,6 +2790,26 @@ function handleBackOrClose() {
     return;
   }
   step.value -= 1;
+}
+
+async function handleNext() {
+  if (step.value !== 1) {
+    step.value += 1;
+    return;
+  }
+
+  step.value = 2;
+  if (!isEditMode.value) return;
+
+  // The market controls only exist on step two. Hydrate them as that step
+  // opens so their option lists receive the current Polymarket event and
+  // market names while loadLeg keeps the saved selections intact.
+  isLoadingEditMarkets.value = true;
+  try {
+    await Promise.allSettled(legs.value.map((_, index) => loadLeg(index)));
+  } finally {
+    isLoadingEditMarkets.value = false;
+  }
 }
 
 async function handleSubmit() {
