@@ -131,10 +131,15 @@
 
         <!-- Hedge -->
         <section class="space-y-3">
-          <h2 class="text-lg font-semibold">Hedge</h2>
+          <h2 class="text-lg font-semibold">
+            Hedge
+            <span class="text-sm font-normal text-muted-foreground">
+              (Optional)
+            </span>
+          </h2>
           <p class="text-sm text-muted-foreground">
-            Choose the Polymarket market and Yes or No position that hedges the
-            prediction.
+            Optionally choose a Polymarket market and Yes or No position that
+            hedges the prediction. Leave this empty for a solo bet.
           </p>
 
           <div class="space-y-3 rounded-lg border bg-muted/20 p-4">
@@ -734,7 +739,7 @@ async function onSubmit() {
   const v = result.values ?? {};
   const prediction = predictionSelection.value;
   const hedge = hedgeSelection.value;
-  if (!prediction || !hedge) return;
+  if (!prediction) return;
 
   const title = (v.title as string)?.trim() || "Untitled Article";
   const slug = (v.slug as string)?.trim() || generateSlug(title);
@@ -781,17 +786,19 @@ async function onSubmit() {
       image: prediction.image,
       tags: prediction.tags,
     },
-    hedge: {
-      url: hedge.url,
-      event_title: hedge.eventTitle,
-      market_id: hedge.marketId,
-      market_slug: hedge.marketSlug,
-      market_question: hedge.marketQuestion,
-      outcome: hedge.outcome,
-      token_id: hedge.tokenId,
-      image: hedge.image,
-      tags: hedge.tags,
-    },
+    ...(hedge && {
+      hedge: {
+        url: hedge.url,
+        event_title: hedge.eventTitle,
+        market_id: hedge.marketId,
+        market_slug: hedge.marketSlug,
+        market_question: hedge.marketQuestion,
+        outcome: hedge.outcome,
+        token_id: hedge.tokenId,
+        image: hedge.image,
+        tags: hedge.tags,
+      },
+    }),
   };
   publishMutation.mutate(finalData as NewPostType);
 }

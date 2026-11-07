@@ -76,7 +76,7 @@ export const formSchema = [
     predictionMarketQuestion: z.string(),
     predictionOutcome: z.enum(["Yes", "No"]),
     predictionTokenId: z.string(),
-    hedgeUrl: z.string().min(1, "Hedge is required"),
+    hedgeUrl: z.string(),
     hedgeEventTitle: z.string(),
     hedgeMarketId: z.string(),
     hedgeMarketSlug: z.string(),
